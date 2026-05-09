@@ -3,15 +3,15 @@ import LockIcon from '@mui/icons-material/Lock';
 export default function Login() {
   return (
     <div className="bg-[#F5F3FF]">
-      <section className="w-[90%] h-250 m-auto py-10 flex">
+      <section className="w-[90%] h-screen m-auto py-10 flex">
         <div className="w-[50%]">
           <img
             src="/study.svg"
-            className=" h-[920px] bg-[#EEE8FF] rounded-l-[20px]"
+            className=" h-207 bg-[#EEE8FF] rounded-l-[20px]"
             alt=""
           />
         </div>
-        <div className="w-[50%] bg-white rounded-r-[20px] h-230 flex flex-col items-center pt-20 gap-5">
+        <div className="w-[50%] bg-white rounded-r-[20px] h-207 flex flex-col items-center pt-20 gap-2">
           <h2 className="text-center w-90 text-[#4338CA] text-[16px] font-semibold">
             MUHAMMAD AL-XORAZMIY NOMIDAGI TOSHKENT AXBOROT TEXNOLOGIYALARI
             UNIVERSITETI
@@ -65,7 +65,7 @@ export default function Login() {
             </div>
             <input type="submit"  className="outline-0 w-140 h-14 text-white bg-[#7C4DFF] rounded-xl  text-[14px] font-medium"/>
           </form>
-          <hr className="w-140 h-0.5 text-[#00000011] bg-[#00000011] mt-22"/>
+          <hr className="w-140 h-0.5 text-[#00000011] bg-[#00000011] mt-14"/>
           <h2 className="text-[#555555b2]">Copyright © 2021 of Tashkent University of Information Technologies</h2>
         </div>
       </section>
