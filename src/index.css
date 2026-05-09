@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+.box {
+    background: linear-gradient(180deg, #F5F3FF 0%, #EEE8FF 100%);
+}
+
+body {
+    font-family: "Poppins", sans-serif;
+}
+
+.loginput:focus {
+    border: 2px solid #7C4DFF;
+}
