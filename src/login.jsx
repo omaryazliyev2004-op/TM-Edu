@@ -7,11 +7,11 @@ export default function Login() {
         <div className="w-[50%]">
           <img
             src="/study.svg"
-            className=" h-207 bg-[#EEE8FF] rounded-l-[20px]"
+            className=" h-full bg-[#EEE8FF] rounded-l-[20px]"
             alt=""
           />
         </div>
-        <div className="w-[50%] bg-white rounded-r-[20px] h-207 flex flex-col items-center pt-20 gap-2">
+        <div className="w-[50%] bg-white rounded-r-[20px] h-full flex flex-col items-center pt-20 gap-2">
           <h2 className="text-center w-90 text-[#4338CA] text-[16px] font-semibold">
             MUHAMMAD AL-XORAZMIY NOMIDAGI TOSHKENT AXBOROT TEXNOLOGIYALARI
             UNIVERSITETI
