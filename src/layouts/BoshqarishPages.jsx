@@ -336,12 +336,12 @@ function SubPage({ pageKey }) {
 }
 
 const initialKurslar = [
-  { id: 1, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#F5F8FF", borderColor: "#E2E8F0" },
-  { id: 2, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#FDF5FF", borderColor: "#F3E8FF" },
-  { id: 3, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#FFFDF5", borderColor: "#FEF3C7" },
-  { id: 4, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#F5FFF9", borderColor: "#D1FAE5" },
-  { id: 5, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#F5F8FF", borderColor: "#E2E8F0" },
-  { id: 6, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#FFF5F8", borderColor: "#FCE7F3" },
+  { id: 1, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#ffffff", borderColor: "#e2e8f0" },
+  { id: 2, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#ffffff", borderColor: "#e2e8f0" },
+  { id: 3, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#ffffff", borderColor: "#e2e8f0" },
+  { id: 4, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#ffffff", borderColor: "#e2e8f0" },
+  { id: 5, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#ffffff", borderColor: "#e2e8f0" },
+  { id: 6, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#ffffff", borderColor: "#e2e8f0" },
 ];
 
 export function Kurslar() {
