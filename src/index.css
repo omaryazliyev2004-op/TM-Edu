@@ -5,9 +5,191 @@
 }
 
 body {
-    font-family: "Poppins", sans-serif;
+    font-family: "Montserrat", sans-serif;
 }
 
 .loginput:focus {
     border: 2px solid #7C4DFF;
+}
+
+.active {
+    color: white;
+}
+.boxx:hover{
+    box-shadow: 0 0 20px #7c4dff72;
+}
+
+/* --- Global Dark Mode --- */
+body.dark {
+  background: #1a1d24;
+  color: #e2e8f0;
+}
+
+body.dark .layout-root, 
+body.dark .main-content {
+  background: #1a1d24 !important;
+}
+
+body.dark .sidebar-inner, 
+body.dark .side-panel, 
+body.dark .kurs-drawer, 
+body.dark .oqit-drawer,
+body.dark .xona-drawer,
+body.dark .MuiInputBase-root,
+body.dark .MuiPaper-root {
+  background: #232833 !important;
+  color: #e2e8f0 !important;
+  border-color: #3b3e52 !important;
+}
+
+body.dark .topbar,
+body.dark .boshqarish-tabs {
+  background: transparent !important;
+}
+
+body.dark .nav-item, 
+body.dark .panel-link {
+  color: #a0aec0 !important;
+}
+
+body.dark .nav-item:hover, 
+body.dark .panel-link:hover,
+body.dark .nav-item.active,
+body.dark .panel-link.active {
+  background: rgba(118, 91, 207, 0.2) !important;
+  color: #fff !important;
+}
+
+body.dark h1, body.dark h2, body.dark h3, 
+body.dark .panel-title, body.dark .oq-title,
+body.dark .k-card-title, body.dark .xona-title,
+body.dark .room-name, body.dark .xona-drawer-title,
+body.dark .text-\[\#222\] {
+  color: #f8fafc !important;
+}
+
+body.dark p, body.dark span, body.dark label,
+body.dark .oq-subtitle, body.dark .k-card-desc,
+body.dark .xona-desc, body.dark .room-sigim,
+body.dark .xona-label,
+body.dark .text-\[\#555\],
+body.dark .text-\[\#555555\],
+body.dark .text-\[\#666\],
+body.dark .text-\[\#888\] {
+  color: #cbd5e1 !important;
+}
+
+/* Cards & Tables */
+body.dark .k-card, 
+body.dark .oq-table,
+body.dark .xona-card,
+body.dark .room-card,
+body.dark .stat-card,
+body.dark .bg-white {
+  background: #232833 !important;
+  border-color: #3b3e52 !important;
+}
+
+body.dark .oq-table th,
+body.dark .oq-table td,
+body.dark .oq-header,
+body.dark .oq-footer,
+body.dark .kurs-drawer-header,
+body.dark .kurs-drawer-footer,
+body.dark .xona-drawer-header,
+body.dark .xona-drawer-footer,
+body.dark th,
+body.dark td {
+  border-color: #3b3e52 !important;
+}
+
+body.dark th[style*="background: #fafafa"],
+body.dark td[style*="background: #fafafa"],
+body.dark th[style*="background: rgb(250, 250, 250)"],
+body.dark td[style*="background: rgb(250, 250, 250)"] {
+  background: #1e222d !important;
+}
+
+body.dark .border-\[\#e0e0e0\] {
+  border-color: #3b3e52 !important;
+}
+body.dark .border-\[\#f0f0f0\] {
+  border-color: #3b3e52 !important;
+}
+body.dark .border-b, body.dark .border-t {
+  border-color: #3b3e52 !important;
+}
+
+body.dark .obuna-box {
+  background: rgba(222, 76, 43, 0.1) !important;
+  border-color: rgba(222, 76, 43, 0.2) !important;
+}
+
+/* Inputs, Selects, Textareas */
+body.dark input, 
+body.dark select, 
+body.dark textarea,
+body.dark .kurs-input, 
+body.dark .kurs-select, 
+body.dark .kurs-textarea, 
+body.dark .xona-input,
+body.dark .oq-input {
+  background: #1a1d24 !important;
+  border-color: #4a5568 !important;
+  color: #f8fafc !important;
+}
+
+body.dark input:focus, 
+body.dark select:focus, 
+body.dark textarea:focus {
+  border-color: #765bcf !important;
+}
+
+/* Badges and small UI elements */
+body.dark .k-badge, 
+body.dark .badge,
+body.dark .custom-cb,
+body.dark .radio-circle {
+  background: #1a1d24 !important;
+  border-color: #4a5568 !important;
+  color: #cbd5e1 !important;
+}
+
+body.dark .custom-cb.checked,
+body.dark .radio-circle.active,
+body.dark .custom-checkbox {
+  background: #765bcf !important;
+  border-color: #765bcf !important;
+}
+
+body.dark .radio-circle.active::after {
+  background: #765bcf !important;
+}
+
+/* Buttons */
+body.dark button.btn-outline, 
+body.dark button.k-btn-cancel,
+body.dark .btn-cancel,
+body.dark .k-action-btn,
+body.dark .act-btn,
+body.dark button[style*="background: #fff"],
+body.dark button[style*="background: #fafafa"],
+body.dark button[style*="background: #f5f5f5"] {
+  background: #232833 !important;
+  border-color: #4a5568 !important;
+  color: #e2e8f0 !important;
+}
+
+body.dark button.btn-outline:hover, 
+body.dark button.k-btn-cancel:hover,
+body.dark .btn-cancel:hover {
+  background: #2d3748 !important;
+}
+
+/* Topbar utilities */
+body.dark .topbar > div {
+  background: #232833 !important;
+}
+body.dark .MuiSelect-select {
+  color: #f8fafc !important;
 }
