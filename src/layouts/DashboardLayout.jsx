@@ -69,7 +69,7 @@ export default function DashboardLayout() {
           overflow: hidden;
           background: #fff;
           box-shadow: 6px 0 24px rgba(0,0,0,0.12);
-          border-radius: 0 14px 14px 0;
+          border-radius: 14px;
           transition: width 0.30s cubic-bezier(0.4,0,0.2,1),
                       opacity 0.25s ease;
           opacity: 0;
