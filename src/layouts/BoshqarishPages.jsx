@@ -1,23 +1,46 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { fetchApi } from "../api/user.api";
 
 /* ── dastlabki xonalar ── */
 const initialRooms = [
   { id: 1, nom: "genious room", sigim: 15 },
-  { id: 2, nom: "Impact room",  sigim: 12 },
-  { id: 3, nom: "1A",           sigim: 25 },
-  { id: 4, nom: "205-xona",     sigim: 32 },
-  { id: 5, nom: "16-xona",      sigim: 18 },
-  { id: 6, nom: "5 xona",       sigim: 30 },
+  { id: 2, nom: "Impact room", sigim: 12 },
+  { id: 3, nom: "1A", sigim: 25 },
+  { id: 4, nom: "205-xona", sigim: 32 },
+  { id: 5, nom: "16-xona", sigim: 18 },
+  { id: 6, nom: "5 xona", sigim: 30 },
   { id: 7, nom: "IELTS with islombek", sigim: 20 },
-  { id: 8, nom: "Beginner",     sigim: 18 },
+  { id: 8, nom: "Beginner", sigim: 18 },
 ];
 
 export function Xonalar() {
-  const [rooms, setRooms]       = useState(initialRooms);
+
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    async function datas() {
+      try {
+        const data = await fetchApi(
+          `rooms`,
+        );
+        if (data.status === 200) {
+          setUsers(data.data);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    datas();
+
+  }, []);
+
+
+
+  const [rooms, setRooms] = useState(initialRooms);
   const [drawerOpen, setDrawer] = useState(false);
-  const [editRoom, setEditRoom]  = useState(null); // null = qo'shish, obj = tahrirlash
-  const [nom, setNom]           = useState("");
-  const [sigim, setSigim]       = useState("");
+  const [editRoom, setEditRoom] = useState(null); // null = qo'shish, obj = tahrirlash
+  const [nom, setNom] = useState("");
+  const [sigim, setSigim] = useState("");
 
   function openAdd() {
     setEditRoom(null);
@@ -131,30 +154,31 @@ export function Xonalar() {
         /* Room card */
         .room-card {
           display: flex; align-items: center; justify-content: space-between;
-          padding: 10px 14px; border-radius: 10px;
-          border: 1px solid #eee; background: #fafafa;
-          transition: box-shadow 0.15s;
+          padding: 20px 24px; border-radius: 14px;
+          border: 1px solid #eef0f5; background: #fff;
+          box-shadow: 0 4px 14px rgba(0,0,0,0.02);
+          transition: box-shadow 0.15s, transform 0.2s;
         }
-        .room-card:hover { box-shadow: 0 2px 10px rgba(118,91,207,0.10); }
-        .room-name { font-size: 14px; font-weight: 600; color: #222; }
-        .room-sigim { font-size: 12px; color: #888; margin-top: 2px; }
-        .room-actions { display: flex; gap: 8px; }
+        .room-card:hover { box-shadow: 0 6px 20px rgba(118,91,207,0.08); transform: translateY(-2px); }
+        .room-name { font-size: 16px; font-weight: 700; color: #222; }
+        .room-sigim { font-size: 13px; color: #888; margin-top: 4px; }
+        .room-actions { display: flex; gap: 14px; align-items: center; }
         .room-btn {
-          width: 30px; height: 30px; border-radius: 7px;
-          border: none; cursor: pointer;
+          background: none; border: none; font-size: 16px;
+          cursor: pointer; padding: 0;
           display: flex; align-items: center; justify-content: center;
-          font-size: 13px; transition: background 0.15s;
+          transition: color 0.15s;
         }
-        .room-btn.delete { background: rgba(229,57,53,0.09); color: #e53935; }
-        .room-btn.delete:hover { background: rgba(229,57,53,0.18); }
-        .room-btn.edit { background: rgba(118,91,207,0.09); color: #765bcf; }
-        .room-btn.edit:hover { background: rgba(118,91,207,0.18); }
+        .room-btn.delete { color: #e53935; }
+        .room-btn.delete:hover { color: #c62828; }
+        .room-btn.edit { color: #765bcf; }
+        .room-btn.edit:hover { color: #5e48a8; }
 
         /* Grid */
         .rooms-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 10px;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 20px;
         }
       `}</style>
 
@@ -199,16 +223,16 @@ export function Xonalar() {
       </div>
 
       {/* ── Page content ── */}
-      <div style={{ padding: "20px 0 24px" }}>
+      <div style={{ padding: "24px", background: "#fff", borderRadius: 16, marginTop: 10 }}>
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#222", margin: 0 }}>Xonalar</h2>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 30 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: "#222", margin: 0 }}>Xonalar</h2>
             <button style={{
-              width: 28, height: 28, borderRadius: 7,
-              border: "none", background: "rgba(118,91,207,0.10)",
-              color: "#765bcf", cursor: "pointer", fontSize: 13,
+              background: "none", border: "none",
+              color: "#aaa", cursor: "pointer", fontSize: 16,
               display: "flex", alignItems: "center", justifyContent: "center",
+              padding: 0
             }}>
               <i className="fa-solid fa-rotate-right"></i>
             </button>
@@ -216,9 +240,9 @@ export function Xonalar() {
           <button
             onClick={openAdd}
             style={{
-              height: 36, padding: "0 16px", borderRadius: 8,
+              height: 40, padding: "0 20px", borderRadius: 8,
               border: "none", background: "#765bcf",
-              color: "#fff", fontSize: 13, fontWeight: 600,
+              color: "#fff", fontSize: 14, fontWeight: 600,
               cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
               transition: "background 0.15s",
             }}
@@ -228,79 +252,40 @@ export function Xonalar() {
           </button>
         </div>
 
-        {/* Sub Tabs */}
-        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 16 }}>
-          {["AICoder markazi", "Fizika va Matematika", "4-maktab", "Niner markazi", "IELTS full mock", "IELTS full mock centre", "Arxiv"].map((tab, i) => (
-            <button
-              key={i}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 8,
-                border: "none",
-                background: i === 0 ? "rgba(118,91,207,0.05)" : "#f5f5f5",
-                color: i === 0 ? "#765bcf" : "#666",
-                fontSize: 13,
-                fontWeight: i === 0 ? 600 : 500,
-                cursor: "pointer",
-                whiteSpace: "nowrap"
-              }}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
         {/* Rooms grid */}
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 14,
-            border: "1px solid #ececec",
-            padding: 20,
-          }}
-        >
-          {rooms.length === 0 ? (
-            <div style={{ textAlign: "center", color: "#bbb", padding: "40px 0" }}>
-              <i className="fa-solid fa-door-open" style={{ fontSize: 40, marginBottom: 10 }}></i>
-              <p style={{ fontWeight: 500 }}>Hozircha xona yo'q</p>
-            </div>
-          ) : (
-            <div className="rooms-grid">
-              {rooms.map(room => (
-                <div key={room.id} className="room-card">
-                  <div>
-                    <div className="room-name">{room.nom}</div>
-                    <div className="room-sigim">Sig'imi: {room.sigim}</div>
-                  </div>
-                  <div className="room-actions">
-                    <button className="room-btn delete" onClick={() => handleDelete(room.id)}>
-                      <i className="fa-solid fa-trash"></i>
-                    </button>
-                    <button className="room-btn edit" onClick={() => openEdit(room)}>
-                      <i className="fa-solid fa-pen"></i>
-                    </button>
-                  </div>
+        {rooms.length === 0 ? (
+          <div style={{ textAlign: "center", color: "#bbb", padding: "40px 0" }}>
+            <i className="fa-solid fa-door-open" style={{ fontSize: 40, marginBottom: 10 }}></i>
+            <p style={{ fontWeight: 500 }}>Hozircha xona yo'q</p>
+          </div>
+        ) : (
+          <div className="rooms-grid">
+            {users?.data?.map(room => (
+              <div key={room.id} className="room-card">
+                <div>
+                  <div className="room-name">{room.name === "genious room" ? "Autodesk" : room.name}</div>
+                  <div className="room-sigim">Sig'imi: {room.capacity}</div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <div className="room-actions">
+                  <button className="room-btn delete" onClick={() => handleDelete(room.id)}>
+                    <i className="fa-solid fa-trash"></i>
+                  </button>
+                  <button className="room-btn edit" onClick={() => openEdit(room)}>
+                    <i className="fa-solid fa-pen"></i>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );
 }
 
-/* ── Boshqa sub-sahifalar (oddiy placeholder) ── */
+/* ── Boshqa sub-sahifalar ── */
 const pages = {
-  kurslar:   { icon: "fa-graduation-cap", title: "Kurslar",        color: "#7C4DFF" },
-  filial:    { icon: "fa-code-branch",    title: "Filial",         color: "#FF9800" },
-  hodimlar:  { icon: "fa-users",          title: "Hodimlar",       color: "#4CAF50" },
-  sabablar:  { icon: "fa-circle-exclamation", title: "Sabablar",   color: "#FF6B6B" },
-  rollar:    { icon: "fa-user-shield",    title: "Rollar",         color: "#9C27B0" },
-  coin:      { icon: "fa-coins",          title: "Coin",           color: "#FFB300" },
-  xabar:     { icon: "fa-paper-plane",    title: "Xabar Yuborish", color: "#00BCD4" },
-  faq:       { icon: "fa-circle-question","title": "FAQ",          color: "#607D8B" },
-  tekshiruv: { icon: "fa-shield-halved",  title: "Tekshiruv",      color: "#E91E63" },
+  hodimlar: { icon: "fa-users", title: "Hodimlar", color: "#4CAF50" },
 };
 
 function SubPage({ pageKey }) {
@@ -335,41 +320,72 @@ function SubPage({ pageKey }) {
   );
 }
 
-const initialKurslar = [
-  { id: 1, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#ffffff", borderColor: "#e2e8f0" },
-  { id: 2, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#ffffff", borderColor: "#e2e8f0" },
-  { id: 3, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#ffffff", borderColor: "#e2e8f0" },
-  { id: 4, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#ffffff", borderColor: "#e2e8f0" },
-  { id: 5, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#ffffff", borderColor: "#e2e8f0" },
-  { id: 6, nomi: "Human Resources Manager", desc: "A little about the company and the team that you'll be working with. A li...", davomiylikDars: "90 min", davomiylikOy: "3 oy", narx: "1 000 000 mln", color: "#ffffff", borderColor: "#e2e8f0" },
-];
+
 
 export function Kurslar() {
-  const [kurslar, setKurslar] = useState(initialKurslar);
+
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    async function datas() {
+      try {
+        const data = await fetchApi(
+          `courses`,
+        );
+        if (data.status === 200) {
+          setUsers(data.data);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    datas();
+
+  }, []);
+
+
+
+
   const [drawerOpen, setDrawer] = useState(false);
   const [editKurs, setEditKurs] = useState(null);
 
   const [nomi, setNomi] = useState("");
-  const [filial1, setFilial1] = useState(true);
-  const [filial2, setFilial2] = useState(true);
-  const [darsDavomiyligi, setDarsDavomiyligi] = useState("");
-  const [oyDavomiyligi, setOyDavomiyligi] = useState("");
-  const [narx, setNarx] = useState("");
+  const [darsDavomiyligi, setDarsDavomiyligi] = useState(0);
+  const [oyDavomiyligi, setOyDavomiyligi] = useState(0);
+  const [narx, setNarx] = useState(0);
   const [desc, setDesc] = useState("");
-  const [selectedColor, setSelectedColor] = useState("#2A3042");
 
-  const colors = ["#2A3042", "#765BCF", "#E53935", "#F57C00", "#00897B", "#039BE5", "#3949AB", "#8E24AA", "#D81B60"];
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetchApi.post("courses", {
+        name: nomi,
+        description: desc,
+        price: Number(narx),
+        duration_month: Number(oyDavomiyligi),
+        duration_hours: Number(darsDavomiyligi)
+      });
+      if (res.status === 200 || res.status === 201) {
+        setDrawer(false);
+        window.location.reload();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   function openAdd() {
     setEditKurs(null);
-    setNomi(""); setDarsDavomiyligi(""); setOyDavomiyligi(""); setNarx(""); setDesc(""); setSelectedColor("#2A3042");
+    setNomi(""); setDarsDavomiyligi(""); setOyDavomiyligi(""); setNarx(""); setDesc("");
     setDrawer(true);
   }
   function closeDrawer() {
     setDrawer(false);
   }
   function handleDelete(id) {
-    setKurslar(r => r.filter(x => x.id !== id));
+    if (!users?.data) return;
+    setUsers({ ...users, data: users.data.filter(x => x.id !== id) });
   }
 
   return (
@@ -439,25 +455,6 @@ export function Kurslar() {
         .kurs-input:focus, .kurs-select:focus, .kurs-textarea:focus { border-color: #765bcf; }
         .kurs-field { margin-bottom: 20px; }
 
-        .checkbox-row {
-          display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-        }
-        .custom-checkbox {
-          width: 18px; height: 18px; border-radius: 4px;
-          background: #765bcf; display: flex; align-items: center; justify-content: center;
-          color: #fff; font-size: 10px; cursor: pointer;
-        }
-        .custom-checkbox.unchecked {
-          background: #fff; border: 1.5px solid #ccc;
-        }
-
-        /* Colors */
-        .color-circle {
-          width: 24px; height: 24px; border-radius: 50%;
-          cursor: pointer; border: 2px solid transparent;
-        }
-        .color-circle.selected { transform: scale(1.1); box-shadow: 0 0 0 2px #fff, 0 0 0 4px #765bcf; }
-
         /* Buttons */
         .k-btn-cancel {
           height: 40px; padding: 0 20px; border-radius: 10px;
@@ -479,23 +476,20 @@ export function Kurslar() {
           gap: 20px;
         }
         .k-card {
-          padding: 22px; border-radius: 16px;
-          border: 1px solid transparent;
-          transition: box-shadow 0.2s, transform 0.2s;
-          display: flex; flex-direction: column;
+          padding: 24px;
+          border-radius: 16px;
+          background: #f4f6fa;
+          transition: transform 0.2s;
         }
-        .k-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.06); transform: translateY(-2px); }
-        .k-card-title { font-size: 16px; font-weight: 700; color: #222; margin-bottom: 10px; }
-        .k-card-desc { font-size: 13px; color: #666; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0; flex: 1; }
-        
+        .k-card-title { font-size: 16px; font-weight: 700; color: #222; margin: 0 0 10px 0; }
+        .k-card-status { font-size: 14px; color: #999; font-weight: 500; }
         .k-badge {
-          display: inline-block; padding: 6px 10px; border-radius: 6px;
-          background: #fff; border: 1px solid #e2e8f0;
-          font-size: 12px; font-weight: 600; color: #555; margin-right: 8px; margin-bottom: 8px;
+          display: inline-block; padding: 6px 12px; border-radius: 6px;
+          background: #fff;
+          font-size: 12px; font-weight: 700; color: #444; margin-right: 8px;
         }
-        
-        .k-action-btn { background: none; border: none; color: #888; font-size: 15px; cursor: pointer; padding: 4px; transition: color 0.15s; }
-        .k-action-btn:hover { color: #222; }
+        .k-action-btn { background: none; border: none; color: #999; font-size: 15px; cursor: pointer; padding: 0; transition: color 0.15s; }
+        .k-action-btn:hover { color: #444; }
         .k-action-btn.delete:hover { color: #e53935; }
       `}</style>
 
@@ -520,30 +514,11 @@ export function Kurslar() {
           </div>
 
           <div className="kurs-field">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <label className="kurs-label" style={{ marginBottom: 0 }}>Kurs mavjud boledigon filiallar</label>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#765bcf", cursor: "pointer" }}>Hammasini tanlash</span>
-            </div>
-            <div className="checkbox-row" onClick={() => setFilial1(!filial1)}>
-              <div className={`custom-checkbox ${!filial1 ? "unchecked" : ""}`}>
-                {filial1 && <i className="fa-solid fa-check"></i>}
-              </div>
-              <span style={{ fontSize: 14, color: "#444" }}>Filial 1</span>
-            </div>
-            <div className="checkbox-row" onClick={() => setFilial2(!filial2)}>
-              <div className={`custom-checkbox ${!filial2 ? "unchecked" : ""}`}>
-                {filial2 && <i className="fa-solid fa-check"></i>}
-              </div>
-              <span style={{ fontSize: 14, color: "#444" }}>Filial 2</span>
-            </div>
-          </div>
-
-          <div className="kurs-field">
             <label className="kurs-label">Dars davomiyligi</label>
             <select className="kurs-select" value={darsDavomiyligi} onChange={e => setDarsDavomiyligi(e.target.value)}>
               <option value="">Tanlang</option>
-              <option value="60 min">60 min</option>
-              <option value="90 min">90 min</option>
+              <option value="60">60 min</option>
+              <option value="90">90 min</option>
             </select>
           </div>
 
@@ -551,9 +526,9 @@ export function Kurslar() {
             <label className="kurs-label">Kurs davomiyligi (oylarda)</label>
             <select className="kurs-select" value={oyDavomiyligi} onChange={e => setOyDavomiyligi(e.target.value)}>
               <option value="">Tanlang</option>
-              <option value="1 oy">1 oy</option>
-              <option value="3 oy">3 oy</option>
-              <option value="6 oy">6 oy</option>
+              <option value="1">1 oy</option>
+              <option value="3">3 oy</option>
+              <option value="6">6 oy</option>
             </select>
           </div>
 
@@ -570,38 +545,23 @@ export function Kurslar() {
             <textarea className="kurs-textarea" placeholder="A little about the company and the team that you'll be working with." value={desc} onChange={e => setDesc(e.target.value)}></textarea>
             <p style={{ fontSize: 12, color: "#888", marginTop: 6 }}>This is a hint text to help user.</p>
           </div>
-
-          <div className="kurs-field">
-            <label className="kurs-label">Rangi</label>
-            <p style={{ fontSize: 12, color: "#888", marginBottom: 10, lineHeight: 1.4 }}>The color you choose will be displayed to users and in the list of roles.</p>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              {colors.map(c => (
-                <div
-                  key={c}
-                  className={`color-circle ${selectedColor === c ? "selected" : ""}`}
-                  style={{ background: c }}
-                  onClick={() => setSelectedColor(c)}
-                ></div>
-              ))}
-            </div>
-          </div>
         </div>
         <div className="kurs-drawer-footer">
           <button className="k-btn-cancel" onClick={closeDrawer}>Bekor qilish</button>
-          <button className="k-btn-save" onClick={closeDrawer}>Saqlash</button>
+          <button className="k-btn-save" onClick={handleLogin}>Saqlash</button>
         </div>
       </div>
 
       {/* Page content */}
-      <div style={{ padding: "10px 0 24px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: "#222", margin: 0 }}>Kurslar</h2>
+      <div style={{ padding: "24px", background: "#fff", borderRadius: 16, marginTop: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 30 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#222", margin: 0 }}>Kurslar</h2>
           <button
             onClick={openAdd}
             style={{
-              height: 36, padding: "0 16px", borderRadius: 8,
+              height: 40, padding: "0 20px", borderRadius: 8,
               border: "none", background: "#765bcf",
-              color: "#fff", fontSize: 13, fontWeight: 600,
+              color: "#fff", fontSize: 14, fontWeight: 600,
               cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
             }}
           >
@@ -610,44 +570,26 @@ export function Kurslar() {
           </button>
         </div>
 
-        {/* Sub Tabs */}
-        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 16 }}>
-          {["Filial 1", "Filial 2", "Arxiv"].map((tab, i) => (
-            <button
-              key={i}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 8,
-                border: "1px solid #eee",
-                background: i === 0 ? "#fff" : "#fafafa",
-                color: i === 0 ? "#222" : "#666",
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: "pointer",
-                whiteSpace: "nowrap"
-              }}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
         {/* Grid */}
         <div className="kurslar-grid">
-          {kurslar.map(k => (
-            <div key={k.id} className="k-card" style={{ background: k.color, borderColor: k.borderColor }}>
-              <h3 className="k-card-title">{k.nomi}</h3>
-              <div style={{ display: "flex", gap: "12px", alignItems: "flex-end", marginBottom: "16px" }}>
-                <p className="k-card-desc">{k.desc}</p>
-                <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                  <button className="k-action-btn delete" onClick={() => handleDelete(k.id)}><i className="fa-solid fa-trash"></i></button>
-                  <button className="k-action-btn"><i className="fa-solid fa-pen"></i></button>
+          {users?.data?.map(row => (
+            <div key={row.id} className="k-card">
+              <h3 className="k-card-title">{row.name}</h3>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+                <span className="k-card-status">{row.description}</span>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <button className="k-action-btn delete" onClick={() => handleDelete(row.id)}>
+                    <i className="fa-solid fa-trash"></i>
+                  </button>
+                  <button className="k-action-btn">
+                    <i className="fa-solid fa-pen"></i>
+                  </button>
                 </div>
               </div>
-              <div style={{ marginTop: "auto" }}>
-                <span className="k-badge">{k.davomiylikDars}</span>
-                <span className="k-badge">{k.davomiylikOy}</span>
-                <span className="k-badge">{k.narx}</span>
+              <div style={{ display: "flex", gap: 8 }}>
+                <span className="k-badge">{row.duration_hours} min</span>
+                <span className="k-badge">{row.duration_month} oy</span>
+                <span className="k-badge">{row.price} so'm</span>
               </div>
             </div>
           ))}
@@ -656,11 +598,11 @@ export function Kurslar() {
     </>
   );
 }
-export function Filial()        { return <SubPage pageKey="filial" />; }
-export function Hodimlar()      { return <SubPage pageKey="hodimlar" />; }
-export function Sabablar()      { return <SubPage pageKey="sabablar" />; }
-export function Rollar()        { return <SubPage pageKey="rollar" />; }
-export function Coin()          { return <SubPage pageKey="coin" />; }
+export function Filial() { return <SubPage pageKey="filial" />; }
+export function Hodimlar() { return <SubPage pageKey="hodimlar" />; }
+export function Sabablar() { return <SubPage pageKey="sabablar" />; }
+export function Rollar() { return <SubPage pageKey="rollar" />; }
+export function Coin() { return <SubPage pageKey="coin" />; }
 export function XabarYuborish() { return <SubPage pageKey="xabar" />; }
-export function FAQ()           { return <SubPage pageKey="faq" />; }
-export function Tekshiruv()     { return <SubPage pageKey="tekshiruv" />; }
+export function FAQ() { return <SubPage pageKey="faq" />; }
+export function Tekshiruv() { return <SubPage pageKey="tekshiruv" />; }

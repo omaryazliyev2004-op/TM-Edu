@@ -4,7 +4,7 @@ import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import { useState, useEffect } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 const boshqarishMenuItems = [
   { icon: "fa-graduation-cap", label: "Kurslar", to: "/dashboard/boshqarish/kurslar" },
@@ -23,6 +23,8 @@ export default function DashboardLayout() {
   const [isDark, setIsDark] = useState(false);
   const [boshqarishOpen, setBoshqarishOpen] = useState(false);
 
+  const location = useLocation();
+
   useEffect(() => {
     if (isDark) {
       document.body.classList.add("dark");
@@ -30,6 +32,11 @@ export default function DashboardLayout() {
       document.body.classList.remove("dark");
     }
   }, [isDark]);
+
+  // Sahifa o'zgarganda panelni yop
+  useEffect(() => {
+    setBoshqarishOpen(false);
+  }, [location.pathname]);
 
   return (
     <>
@@ -167,9 +174,17 @@ export default function DashboardLayout() {
         }
         .nav-item:hover  { background: rgba(118,91,207,0.07); color: #765bcf; }
         .nav-item.active { background: rgba(118,91,207,0.12); color: #765bcf; }
-        .nav-item.boshqarish-active {
-          background: rgba(118,91,207,0.13);
+        .panel-link.active {
+          background: rgba(118,91,207,0.12);
           color: #765bcf;
+        }
+
+        /* ---- SIDE PANEL OVERLAY ---- */
+        .side-panel-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 299;
+          background: transparent;
         }
 
         .chevron {
@@ -285,6 +300,14 @@ export default function DashboardLayout() {
           </div>
 
           {/* ===== YON PANEL — sidebar-wrapper ichida, absolute ===== */}
+          {/* Overlay — tashqariga bosilganda panelni yop */}
+          {boshqarishOpen && (
+            <div
+              className="side-panel-overlay"
+              onClick={() => setBoshqarishOpen(false)}
+            />
+          )}
+
           <div className={`side-panel${boshqarishOpen ? " open" : ""}`}>
             <div className="panel-header">
               <span className="panel-title">Menu</span>

@@ -1,102 +1,217 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { fetchApi } from "../api/user.api";
 
-const initialData = Array(10).fill({}).map((_, i) => ({
-  id: i,
-  nomi: "Qwerty qwert",
-  guruh: i % 2 === 0 ? ["Label"] : ["Label", "Label", "Label", "+4"],
-  telefon: "+998(33)4082808",
-  tugilganSana: "24 Jan 2022",
-  yaratilganSana: "24 Jan 2022",
-  coin: "123 123",
-  avatar: "https://i.pravatar.cc/150?img=" + (i + 1),
-  selected: i < 2
-}));
+
 
 export default function Oqituvchilar() {
-  const [data, setData] = useState(initialData);
+
+  const [users, setUsers] = useState([]);
+  const [allGroups, setAllGroups] = useState([]);
+
+  useEffect(() => {
+    async function datas() {
+      try {
+        const data = await fetchApi(`teachers`);
+        if (data.status === 200) {
+          setUsers(data.data);
+        }
+        const gData = await fetchApi(`groups/all`);
+        if (gData.status === 200) {
+          setAllGroups(gData.data?.data || gData.data || []);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    datas();
+  }, []);
+
+
+
   const [drawerOpen, setDrawer] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   // Drawer fields
   const [tel, setTel] = useState("+998");
   const [email, setEmail] = useState("");
   const [fio, setFio] = useState("");
-  const [sana, setSana] = useState("01.03.1990");
-  const [jinsi, setJinsi] = useState("Erkak");
+  const [manzil, setManzil] = useState("");
+  const [parol, setParol] = useState("");
+  const [rasm, setRasm] = useState(null);
+
+
+
+  const create = async () => {
+    try {
+      const formData = new FormData();
+
+      formData.append("full_name", fio);
+      formData.append("email", email);
+      formData.append("password", parol);
+      formData.append("phone", tel);
+      if (rasm) {
+        formData.append("photo", rasm);
+      }
+      formData.append("address", manzil);
+
+      // agar array bo'lsa
+      selectedGuruhlar.forEach((g) => {
+        formData.append("groups[]", g);
+      });
+
+      const res = await fetchApi.post("teachers", formData);
+
+      if (res.status === 200 || res.status === 201) {
+        setDrawer(false);
+        window.location.reload();
+      }
+    } catch (error) {
+      alert("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring.");
+      console.log(error);
+    }
+  };
+
+  // Guruh modal
+  const [selectedGuruhlar, setSelectedGuruhlar] = useState([]);
+  const [guruhQidiruv, setGuruhQidiruv] = useState("");
+  const [tempSelected, setTempSelected] = useState([]);
 
   const toggleSelectAll = () => {
-    const allSelected = data.every(d => d.selected);
-    setData(data.map(d => ({ ...d, selected: !allSelected })));
+    if (!users?.data) return;
+    const allSelected = users.data.every(d => d.selected);
+    setUsers({ ...users, data: users.data.map(d => ({ ...d, selected: !allSelected })) });
   };
 
   const toggleSelect = (id) => {
-    setData(data.map(d => d.id === id ? { ...d, selected: !d.selected } : d));
+    if (!users?.data) return;
+    setUsers({ ...users, data: users.data.map(d => d.id === id ? { ...d, selected: !d.selected } : d) });
   };
+
+  const handleDelete = (id) => {
+    if (!users?.data) return;
+    setUsers({ ...users, data: users.data.filter(d => d.id !== id) });
+  };
+
+  const openGuruhModal = () => {
+    setTempSelected([...selectedGuruhlar]);
+    setGuruhQidiruv("");
+    setModalOpen(true);
+  };
+  const saveGuruhlar = () => {
+    setSelectedGuruhlar([...tempSelected]);
+    setModalOpen(false);
+  };
+  const toggleGuruh = (id) => {
+    setTempSelected(prev =>
+      prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
+    );
+  };
+
+  const filteredGuruhlar = allGroups?.filter(g => 
+    (g.name || g.nomi || "").toLowerCase().includes(guruhQidiruv.toLowerCase())
+  ) || [];
 
   return (
     <div style={{ padding: "10px 0" }}>
       <style>{`
         .oqit-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 400; opacity: 0; pointer-events: none; transition: 0.3s; }
         .oqit-overlay.open { opacity: 1; pointer-events: all; }
-        
+
         .oqit-drawer { position: fixed; right: 0; top: 0; height: 100vh; width: 420px; background: #fff; z-index: 500; transform: translateX(100%); transition: 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: -4px 0 24px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
         .oqit-drawer.open { transform: translateX(0); }
-        
+
         .oq-header { padding: 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: flex-start; }
         .oq-title { font-size: 20px; font-weight: 700; color: #222; margin: 0 0 6px 0; }
         .oq-subtitle { font-size: 13px; color: #666; margin: 0; line-height: 1.4; }
         .oq-close { background: none; border: none; font-size: 18px; color: #999; cursor: pointer; }
-        
+
         .oq-body { flex: 1; overflow-y: auto; padding: 24px; }
-        .oq-footer { padding: 16px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 12px; }
-        
+        .oq-footer { padding: 16px 24px; border-top: 1px solid #f0f0f0; display: flex; gap: 12px; }
+
         .oq-label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 8px; }
-        .oq-input { width: 100%; height: 44px; border-radius: 8px; border: 1.5px solid #e2e8f0; padding: 0 14px; font-size: 14px; outline: none; transition: border-color 0.15s; margin-bottom: 16px; background: #fff; }
+        .oq-input { width: 100%; height: 44px; border-radius: 8px; border: 1.5px solid #e2e8f0; padding: 0 14px; font-size: 14px; outline: none; transition: border-color 0.15s; margin-bottom: 16px; background: #fff; box-sizing: border-box; }
         .oq-input:focus { border-color: #765bcf; }
-        
-        .oq-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #eee; }
-        .oq-th { padding: 14px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #888; border-bottom: 1px solid #eee; white-space: nowrap; }
-        .oq-td { padding: 12px 16px; font-size: 13px; color: #444; border-bottom: 1px solid #f5f5f5; vertical-align: middle; white-space: nowrap; }
+
+        .oq-table { width: 100%; border-collapse: collapse; }
+        .oq-th { padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #888; border-bottom: 1px solid #eee; white-space: nowrap; }
+        .oq-td { padding: 14px 16px; font-size: 13px; color: #444; border-bottom: 1px solid #f5f5f5; vertical-align: middle; white-space: nowrap; }
         .table-row { transition: background 0.15s; }
         .table-row:hover { background: #fafafa; }
-        
-        .custom-cb { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; }
+
+        .custom-cb { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; flex-shrink: 0; }
         .custom-cb.checked { background: #765bcf; border-color: #765bcf; color: #fff; font-size: 10px; }
-        
-        .badge { display: inline-flex; padding: 4px 8px; border-radius: 6px; border: 1px solid #eee; font-size: 12px; margin-right: 4px; color: #555; background: #fff; font-weight: 500; }
-        .coin-wrap { display: flex; align-items: center; gap: 6px; font-weight: 600; color: #222; }
-        
-        .action-btns { display: flex; align-items: center; gap: 2px; }
+
+        .badge { display: inline-flex; padding: 3px 8px; border-radius: 6px; border: 1px solid #eee; font-size: 12px; margin-right: 4px; color: #555; background: #f5f5f5; font-weight: 500; }
+
         .act-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid transparent; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #888; transition: 0.15s; font-size: 13px; }
-        .act-btn:hover { background: #f0f0f0; color: #222; }
-        .act-btn.red { color: #e53935; }
-        .act-btn.red:hover { background: #ffebee; }
-        .act-btn.green { color: #4caf50; }
-        .act-btn.green:hover { background: #e8f5e9; }
-        
+        .act-btn:hover { background: #f0f0f0; color: #333; }
+        .act-btn.red:hover { background: #ffebee; color: #e53935; }
+
         .top-btn { height: 38px; padding: 0 16px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.15s; }
         .btn-outline { border: 1px solid #e0e0e0; background: #fff; color: #444; }
         .btn-outline:hover { background: #f5f5f5; }
         .btn-primary { border: none; background: #765bcf; color: #fff; }
         .btn-primary:hover { background: #5e48a8; }
-        
+
         .drag-drop { border: 2px dashed #e2e8f0; border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; margin-bottom: 16px; transition: 0.2s; }
         .drag-drop:hover { border-color: #765bcf; background: #f8f7ff; }
 
-        .radio-wrap { display: flex; gap: 16px; margin-bottom: 20px; }
-        .radio-item { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #444; cursor: pointer; }
-        .radio-circle { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #ccc; display: flex; align-items: center; justify-content: center; }
-        .radio-circle.active { border-color: #765bcf; }
-        .radio-circle.active::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: #765bcf; }
+        /* ── Guruh modal ── */
+        .oq-modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 700; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.25s; }
+        .oq-modal-wrap.open { opacity: 1; pointer-events: all; }
+        .oq-modal { background: #fff; width: 400px; max-height: 70vh; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); display: flex; flex-direction: column; transform: scale(0.95); transition: 0.25s; }
+        .oq-modal-wrap.open .oq-modal { transform: scale(1); }
+        .oq-modal-header { padding: 20px 24px 14px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: flex-start; }
+        .oq-modal-title { font-size: 16px; font-weight: 700; color: #222; margin: 0 0 4px; }
+        .oq-modal-sub { font-size: 12px; color: #888; margin: 0; }
+        .oq-modal-body { flex: 1; overflow-y: auto; padding: 16px 24px; }
+        .oq-modal-footer { padding: 14px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 10px; }
+        .oq-modal-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+        .oq-modal-row:last-child { border-bottom: none; }
       `}</style>
 
+      {/* ── Guruh tanlash modali ── */}
+      <div className={`oq-modal-wrap ${modalOpen ? "open" : ""}`}>
+        <div className="oq-modal">
+          <div className="oq-modal-header">
+            <div>
+              <p className="oq-modal-title">Guruhga biriktirish</p>
+              <p className="oq-modal-sub">Bir yoki bir nechta guruhni tanlang</p>
+            </div>
+            <button className="oq-close" onClick={() => setModalOpen(false)}><i className="fa-solid fa-xmark"></i></button>
+          </div>
+          <div className="oq-modal-body">
+            <input
+              className="oq-input"
+              placeholder="Guruh qidirish..."
+              value={guruhQidiruv}
+              onChange={e => setGuruhQidiruv(e.target.value)}
+              style={{ marginBottom: 8 }}
+            />
+            {filteredGuruhlar.map(g => (
+              <div key={g.id} className="oq-modal-row" onClick={() => toggleGuruh(g.id)}>
+                <div className={`custom-cb ${tempSelected.includes(g.id) ? "checked" : ""}`}>
+                  {tempSelected.includes(g.id) && <i className="fa-solid fa-check"></i>}
+                </div>
+                <span style={{ fontSize: 14, color: "#222" }}>{g.name || g.nomi}</span>
+              </div>
+            ))}
+          </div>
+          <div className="oq-modal-footer">
+            <button className="top-btn btn-outline" style={{ padding: "0 20px" }} onClick={() => setModalOpen(false)}>Bekor qilish</button>
+            <button className="top-btn btn-primary" style={{ padding: "0 20px" }} onClick={saveGuruhlar}>Qo'shish</button>
+          </div>
+        </div>
+      </div>
+
       {/* Drawer Overlay */}
-      <div className={`oqit-overlay ${drawerOpen ? "open" : ""}`} onClick={() => setDrawer(false)}></div>
+      <div className={`oqit-overlay ${drawerOpen ? "open" : ""}`} onClick={() => setDrawer(false)} />
 
       {/* Drawer */}
       <div className={`oqit-drawer ${drawerOpen ? "open" : ""}`}>
         <div className="oq-header">
           <div>
-            <h2 className="oq-title">O'qituvchi qoshish</h2>
+            <h2 className="oq-title">O'qituvchi qo'shish</h2>
             <p className="oq-subtitle">Bu yerda siz yangi o'qituvchi qo'shishingiz mumkin.</p>
           </div>
           <button className="oq-close" onClick={() => setDrawer(false)}><i className="fa-solid fa-xmark"></i></button>
@@ -106,170 +221,203 @@ export default function Oqituvchilar() {
           <input className="oq-input" value={tel} onChange={e => setTel(e.target.value)} />
 
           <label className="oq-label">Mail</label>
-          <div style={{ position: "relative" }}>
-            <i className="fa-regular fa-envelope" style={{ position: "absolute", left: 14, top: 14, color: "#999" }}></i>
-            <input className="oq-input" style={{ paddingLeft: 40 }} placeholder="Elektron pochtani kiriting" value={email} onChange={e => setEmail(e.target.value)} />
-          </div>
+          <input className="oq-input" placeholder="Elektron pochtani kiriting" value={email} onChange={e => setEmail(e.target.value)} />
 
           <label className="oq-label">O'qituvchi FIO</label>
           <input className="oq-input" placeholder="Ma'lumotni kiriting" value={fio} onChange={e => setFio(e.target.value)} />
 
-          <label className="oq-label">Tug'ilgan sanasi</label>
-          <div style={{ position: "relative" }}>
-            <i className="fa-regular fa-calendar" style={{ position: "absolute", left: 14, top: 14, color: "#999" }}></i>
-            <input className="oq-input" style={{ paddingLeft: 40 }} value={sana} onChange={e => setSana(e.target.value)} />
-          </div>
+          <label className="oq-label">Manzil</label>
+          <input className="oq-input" placeholder="Manzilni kiriting" value={manzil} onChange={e => setManzil(e.target.value)} />
+
+          <label className="oq-label">Parol</label>
+          <input className="oq-input" placeholder="Parolni kiriting" type="password" value={parol} onChange={e => setParol(e.target.value)} />
 
           <label className="oq-label">Guruh</label>
-          <div className="oq-input" style={{ height: "auto", padding: "8px 12px", display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-            <i className="fa-solid fa-magnifying-glass" style={{ color: "#999" }}></i>
-            <span style={{ background: "#f5f5f5", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", display: "flex", alignItems: "center", gap: "6px" }}>dFDFASC <i className="fa-solid fa-xmark" style={{ cursor: "pointer" }}></i></span>
-            <span style={{ background: "#f5f5f5", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", display: "flex", alignItems: "center", gap: "6px" }}>JDCCXH <i className="fa-solid fa-xmark" style={{ cursor: "pointer" }}></i></span>
-          </div>
-
-          <label className="oq-label">Jinsi</label>
-          <div className="radio-wrap">
-            <div className="radio-item" onClick={() => setJinsi("Erkak")}>
-              <div className={`radio-circle ${jinsi === "Erkak" ? "active" : ""}`}></div> Erkak
+          {selectedGuruhlar.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+              {selectedGuruhlar.map(id => {
+                const g = guruhlarList.find(gl => gl.id === id);
+                return g ? (
+                  <span key={id} style={{ background: "rgba(118,91,207,0.1)", color: "#765bcf", borderRadius: 6, padding: "3px 10px", fontSize: 13, fontWeight: 600 }}>
+                    {g.name || g.nomi}
+                  </span>
+                ) : null;
+              })}
             </div>
-            <div className="radio-item" onClick={() => setJinsi("Ayol")}>
-              <div className={`radio-circle ${jinsi === "Ayol" ? "active" : ""}`}></div> Ayol
-            </div>
-          </div>
+          )}
+          <button
+            onClick={openGuruhModal}
+            style={{
+              width: "100%", height: 48, borderRadius: 8,
+              border: "1.5px solid #e2e8f0", background: "#fff",
+              display: "flex", alignItems: "center", gap: 10,
+              paddingLeft: 16, cursor: "pointer", marginBottom: 16,
+              color: "#765bcf", fontWeight: 600, fontSize: 15
+            }}
+          >
+            <i className="fa-solid fa-plus"></i> {selectedGuruhlar.length > 0 ? `${selectedGuruhlar.length} ta guruh tanlandi` : "Qo'shish"}
+          </button>
 
           <label className="oq-label">Surati</label>
-          <div className="drag-drop">
-            <i className="fa-solid fa-cloud-arrow-up" style={{ fontSize: 24, color: "#765bcf", marginBottom: 10 }}></i>
-            <div style={{ fontSize: 13, color: "#765bcf", fontWeight: 600 }}>Click to upload <span style={{ color: "#888", fontWeight: 400 }}>or drag and drop</span></div>
-            <div style={{ fontSize: 12, color: "#999", marginTop: 4 }}>JPG or PNG (max. 800x800px)</div>
-          </div>
-
-          <div style={{ textAlign: "right", marginTop: 8 }}>
-            <span style={{ color: "#765bcf", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>+ Parol qo'shish</span>
-          </div>
+          <label className="drag-drop" style={{ display: "block" }}>
+            <input
+              type="file"
+              accept="image/jpeg, image/png"
+              style={{ display: "none" }}
+              onChange={(e) => setRasm(e.target.files[0])}
+            />
+            {rasm ? (
+              <div style={{ color: "#765bcf", fontWeight: 600, fontSize: 14 }}>
+                <i className="fa-solid fa-file-image" style={{ marginRight: 8 }}></i>
+                {rasm.name}
+              </div>
+            ) : (
+              <>
+                <i className="fa-solid fa-cloud" style={{ fontSize: 28, color: "#aaa", marginBottom: 10 }}></i>
+                <div style={{ fontSize: 13 }}>
+                  <span style={{ color: "#765bcf", fontWeight: 600, cursor: "pointer" }}>Click to upload</span>
+                  <span style={{ color: "#888" }}> or drag and drop</span>
+                </div>
+                <div style={{ fontSize: 12, color: "#aaa", marginTop: 4 }}>JPG or PNG (max. 800x800px)</div>
+              </>
+            )}
+          </label>
         </div>
         <div className="oq-footer">
-          <button className="top-btn btn-outline" onClick={() => setDrawer(false)}>Bekor qilish</button>
-          <button className="top-btn btn-primary" onClick={() => setDrawer(false)}>Saqlash</button>
+          <button
+            onClick={() => setDrawer(false)}
+            style={{
+              flex: 1, height: 44, borderRadius: 10,
+              border: "1px solid #e0e0e0", background: "#fff",
+              color: "#444", fontSize: 14, fontWeight: 600, cursor: "pointer"
+            }}
+          >
+            Bekor qilish
+          </button>
+          <button
+            onClick={create}
+            style={{
+              flex: 1, height: 44, borderRadius: 10,
+              border: "none", background: "#765bcf",
+              color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer"
+            }}
+          >
+            Saqlash
+          </button>
         </div>
       </div>
 
       {/* Page Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#222", margin: "0 0 8px 0" }}>O'qituvchilar</h1>
-        <p style={{ fontSize: 14, color: "#666", margin: 0 }}>
-          Ushbu sahifada siz o'qituvchilar ro'yxatini va ularning ma'lumotlarini topasiz. Har bir o'qituvchining ismi, fanlari va aloqa ma'lumotlari keltirilgan.
-        </p>
-      </div>
-
-      {/* Toolbar 1 */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <button className="top-btn btn-outline">
-          <i className="fa-solid fa-filter"></i> Filters
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#222", margin: 0 }}>O'qituvchilar</h1>
+        <button
+          className="top-btn btn-primary"
+          onClick={() => setDrawer(true)}
+          style={{ height: 36, fontSize: 13 }}
+        >
+          <i className="fa-solid fa-plus" style={{ fontSize: 12 }}></i> O'qituvchi qo'shish
         </button>
-        <div style={{ display: "flex", gap: 12 }}>
-          <button className="top-btn btn-outline">
-            <i className="fa-solid fa-cloud-arrow-up"></i> Export
-          </button>
-          <button className="top-btn btn-primary" onClick={() => setDrawer(true)}>
-            <i className="fa-solid fa-plus"></i> O'qituvchi qo'shish
-          </button>
-        </div>
       </div>
+      <p style={{ fontSize: 13, color: "#666", margin: "0 0 20px 0" }}>
+        Ushbu sahifada siz o'qituvchilar ro'yxatini va ularning ma'lumotlarini topasiz. Har bir o'qituvchining ismi, fanlari va aloqa ma'lumotlari keltirilgan.
+      </p>
 
-      {/* Toolbar 2 (Table Actions) */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <div style={{ display: "flex", gap: 16 }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#444", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-            <i className="fa-solid fa-cloud-arrow-up"></i> Export
-          </span>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#e53935", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-            <i className="fa-regular fa-trash-can"></i> Delete
-          </span>
-        </div>
-        <div style={{ display: "flex", gap: 12 }}>
-          <div style={{ position: "relative" }}>
-            <i className="fa-solid fa-magnifying-glass" style={{ position: "absolute", left: 12, top: 12, color: "#999" }}></i>
-            <input placeholder="Search" style={{ height: 38, width: 220, borderRadius: 8, border: "1px solid #e0e0e0", paddingLeft: 36, outline: "none" }} />
-          </div>
-          <button className="top-btn btn-outline" style={{ color: "#666" }}>
-            Arxiv <i className="fa-solid fa-chevron-down" style={{ fontSize: 10 }}></i>
-          </button>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div style={{ overflowX: "auto" }}>
-        <table className="oq-table">
-          <thead>
-            <tr>
-              <th className="oq-th" style={{ width: 40 }}>
-                <div className={`custom-cb ${data.every(d => d.selected) ? "checked" : ""}`} onClick={toggleSelectAll}>
-                  {data.every(d => d.selected) && <i className="fa-solid fa-check"></i>}
-                </div>
-              </th>
-              <th className="oq-th">Nomi <i className="fa-solid fa-arrow-down" style={{ fontSize: 10, marginLeft: 4 }}></i></th>
-              <th className="oq-th">Guruh</th>
-              <th className="oq-th">Telefon raqamlari</th>
-              <th className="oq-th">Tug'ilgan sanasi</th>
-              <th className="oq-th">Yaratilgan sana</th>
-              <th className="oq-th">Coin</th>
-              <th className="oq-th" style={{ textAlign: "right" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row) => (
-              <tr key={row.id} className="table-row">
-                <td className="oq-td">
-                  <div className={`custom-cb ${row.selected ? "checked" : ""}`} onClick={() => toggleSelect(row.id)}>
-                    {row.selected && <i className="fa-solid fa-check"></i>}
-                  </div>
-                </td>
-                <td className="oq-td">
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <img src={row.avatar} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
-                    <span style={{ fontWeight: 600 }}>{row.nomi}</span>
-                  </div>
-                </td>
-                <td className="oq-td">
-                  {row.guruh.map((g, idx) => <span key={idx} className="badge">{g}</span>)}
-                </td>
-                <td className="oq-td">{row.telefon}</td>
-                <td className="oq-td">{row.tugilganSana}</td>
-                <td className="oq-td">{row.yaratilganSana}</td>
-                <td className="oq-td">
-                  <div className="coin-wrap">
-                    <img src="/logoedu.png" alt="coin" style={{ width: 16, height: 16 }} />
-                    {row.coin}
-                  </div>
-                </td>
-                <td className="oq-td">
-                  <div className="action-btns" style={{ justifyContent: "flex-end" }}>
-                    <button className="act-btn red"><i className="fa-solid fa-minus"></i></button>
-                    <button className="act-btn green"><i className="fa-solid fa-plus"></i></button>
-                    <button className="act-btn"><i className="fa-regular fa-eye"></i></button>
-                    <button className="act-btn"><i className="fa-solid fa-cloud-arrow-up"></i></button>
-                    <button className="act-btn"><i className="fa-regular fa-trash-can"></i></button>
-                    <button className="act-btn"><i className="fa-solid fa-pen"></i></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 20 }}>
-        <button className="top-btn btn-outline" style={{ color: "#666" }}><i className="fa-solid fa-arrow-left"></i> Previous</button>
-        <div style={{ display: "flex", gap: 8 }}>
-          {[1, 2, 3, "...", 8, 9, 10].map((page, i) => (
-            <button key={i} style={{ width: 32, height: 32, borderRadius: 8, border: "none", background: page === 1 ? "rgba(118,91,207,0.1)" : "transparent", color: page === 1 ? "#765bcf" : "#666", fontWeight: page === 1 ? 700 : 500, cursor: page !== "..." ? "pointer" : "default" }}>
-              {page}
+      {/* Table Card */}
+      <div className="bg-white" style={{ border: "1px solid #eee", borderRadius: 12, overflow: "hidden" }}>
+        {/* Toolbar */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 20px", borderBottom: "1px solid #f0f0f0" }}>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="top-btn btn-outline">
+              <i className="fa-solid fa-filter" style={{ fontSize: 12 }}></i> Filters
             </button>
-          ))}
+            <button className="top-btn btn-outline">Arxiv</button>
+          </div>
+          <div style={{ position: "relative" }}>
+            <i className="fa-solid fa-magnifying-glass" style={{ position: "absolute", left: 12, top: 12, color: "#bbb", fontSize: 13 }}></i>
+            <input
+              placeholder="Search"
+              style={{
+                height: 38, width: 220, borderRadius: 8, border: "1px solid #eee",
+                paddingLeft: 36, outline: "none", fontSize: 14, background: "#fafafa"
+              }}
+            />
+          </div>
         </div>
-        <button className="top-btn btn-outline" style={{ color: "#666" }}>Next <i className="fa-solid fa-arrow-right"></i></button>
+
+        {/* Table */}
+        <div style={{ overflowX: "auto" }}>
+          <table className="oq-table">
+            <thead>
+              <tr>
+                <th className="oq-th" style={{ width: 40 }}>
+                  <div className={`custom-cb ${users?.data?.length > 0 && users.data.every(d => d.selected) ? "checked" : ""}`} onClick={toggleSelectAll}>
+                    {users?.data?.length > 0 && users.data.every(d => d.selected) && <i className="fa-solid fa-check"></i>}
+                  </div>
+                </th>
+                <th className="oq-th">Nomi <i className="fa-solid fa-arrow-down" style={{ fontSize: 10, marginLeft: 2 }}></i></th>
+                <th className="oq-th">Guruh</th>
+                <th className="oq-th">Telefon raqamlari</th>
+                <th className="oq-th">Email</th>
+                <th className="oq-th">Manzil</th>
+                <th className="oq-th">Yaratilgan sana</th>
+                <th className="oq-th" style={{ textAlign: "right" }}>Amallar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users?.data?.map((row, index) => (
+                <tr key={row.id || index} className="table-row">
+                  <td className="oq-td">
+                    <div className={`custom-cb ${row.selected ? "checked" : ""}`} onClick={() => toggleSelect(row.id)}>
+                      {row.selected && <i className="fa-solid fa-check"></i>}
+                    </div>
+                  </td>
+                  <td className="oq-td">
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <img src={`https://najot-edu.softwareengineer.uz/files/${row.photo}`} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
+                      <span style={{ fontWeight: 600, color: "#222" }}>{row.full_name || "Ism yo'q"}</span>
+                    </div>
+                  </td>
+                  <td className="oq-td">
+                    {(row.groups || []).map((g, i) => <span key={i} className="badge">{g.name || g.nomi || g}</span>)}
+                  </td>
+                  <td className="oq-td">{row.phone || "Yo'q"}</td>
+                  <td className="oq-td">{row.email || "Yo'q"}</td>
+                  <td className="oq-td">{row.address || "Yo'q"}</td>
+                  <td className="oq-td">{row.created_at ? new Date(row.created_at).toLocaleDateString("ru-RU") : "Yo'q"}</td>
+                  <td className="oq-td">
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 4 }}>
+                      <button className="act-btn"><i className="fa-regular fa-eye"></i></button>
+                      <button className="act-btn red" onClick={() => handleDelete(row.id)}><i className="fa-regular fa-trash-can"></i></button>
+                      <button className="act-btn"><i className="fa-solid fa-pen"></i></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 20px", borderTop: "1px solid #f0f0f0" }}>
+          <button className="top-btn btn-outline" style={{ border: "none", color: "#666" }}>
+            <i className="fa-solid fa-arrow-left"></i> Previous
+          </button>
+          <div style={{ display: "flex", gap: 6 }}>
+            {[1, 2, 3, "...", 8, 9, 10].map((p, i) => (
+              <button key={i} style={{
+                width: 32, height: 32, borderRadius: 8, border: "none",
+                background: p === 1 ? "#765bcf" : "transparent",
+                color: p === 1 ? "#fff" : "#666",
+                fontWeight: p === 1 ? 700 : 400,
+                cursor: p !== "..." ? "pointer" : "default",
+                fontSize: 14
+              }}>{p}</button>
+            ))}
+          </div>
+          <button className="top-btn btn-outline" style={{ border: "none", color: "#666" }}>
+            Next <i className="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
       </div>
     </div>
   );

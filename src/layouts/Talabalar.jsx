@@ -1,14 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { fetchApi } from "../api/user.api";
 
-const initialData = [
-  { id: 1, nomi: "Ali Valiyev", guruh: ["N26", "n105"], telefon: "+998976541223", email: "ali@gmail.com", tugilganSana: "12.12.2010", manzil: "Sirdaryo", yaratilganSana: "12.05.2026", avatar: "https://i.pravatar.cc/150?img=11", selected: false },
-  { id: 2, nomi: "Salim Qodirov", guruh: ["n105"], telefon: "+998977777777", email: "salim@gmail.com", tugilganSana: "14.01.2007", manzil: "Buxoro", yaratilganSana: "14.05.2026", avatar: "https://i.pravatar.cc/150?img=12", selected: false },
-  { id: 3, nomi: "Bobur", guruh: ["n105"], telefon: "+998999999999", email: "bobur@gmail.com", tugilganSana: "14.03.2002", manzil: "Toshkent", yaratilganSana: "14.05.2026", avatar: "https://i.pravatar.cc/150?img=13", selected: false },
-  { id: 4, nomi: "Qodir Salimov", guruh: ["n105"], telefon: "+998911111111", email: "qodir@gmail.com", tugilganSana: "29.04.2026", manzil: "O'zbekcha", yaratilganSana: "14.05.2026", avatar: "https://i.pravatar.cc/150?img=14", selected: false },
-];
 
 export default function Talabalar() {
-  const [data, setData] = useState(initialData);
+
+
+  const [users, setUsers] = useState([]);
+  const [allGroups, setAllGroups] = useState([]);
+
+  useEffect(() => {
+    async function datas() {
+      try {
+        const data = await fetchApi(`students`);
+        if (data.status === 200) {
+          setUsers(data.data);
+        }
+        const gData = await fetchApi(`groups/all`);
+        if (gData.status === 200) {
+          setAllGroups(gData.data?.data || gData.data || []);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    datas();
+  }, []);
+
   const [drawerOpen, setDrawer] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -16,17 +33,75 @@ export default function Talabalar() {
   const [tel, setTel] = useState("+998");
   const [email, setEmail] = useState("");
   const [fio, setFio] = useState("");
-  const [sana, setSana] = useState("dd/mm/yyyy");
+  const [sana, setSana] = useState("");
   const [manzil, setManzil] = useState("");
   const [parol, setParol] = useState("");
+  const [rasm, setRasm] = useState(null);
+  const [selectedGuruhlar, setSelectedGuruhlar] = useState([]);
+  const [guruhQidiruv, setGuruhQidiruv] = useState("");
+  const [tempSelected, setTempSelected] = useState([]);
+
+  const openGuruhModal = () => {
+    setTempSelected([...selectedGuruhlar]);
+    setGuruhQidiruv("");
+    setModalOpen(true);
+  };
+
+  const saveGuruhlar = () => {
+    setSelectedGuruhlar([...tempSelected]);
+    setModalOpen(false);
+  };
+
+  const toggleGuruh = (id) => {
+    setTempSelected(prev => prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]);
+  };
+
+  const filteredGuruhlar = allGroups?.filter(g => 
+    (g.name || g.nomi || "").toLowerCase().includes(guruhQidiruv.toLowerCase())
+  ) || [];
+
+   const create = async () => {
+    try {
+      const formData = new FormData();
+
+      formData.append("full_name", fio);
+      formData.append("email", email);
+      formData.append("password", parol);
+      formData.append("phone", tel);
+      if (rasm) {
+        formData.append("photo", rasm);
+      }
+      formData.append("address", manzil);
+      formData.append("birth_date", sana);
+
+      // agar array bo'lsa
+      selectedGuruhlar.forEach((g) => {
+        formData.append("groups[]", g);
+      });
+
+      const res = await fetchApi.post("students", formData);
+
+      if (res.status === 200 || res.status === 201) {
+        setDrawer(false);
+        window.location.reload();
+      }
+    } catch (error) {
+      const xato = error.response?.data?.message || error.response?.data?.error || "Xatolik yuz berdi. Barcha maydonlarni tekshiring.";
+      alert(xato);
+      console.log(error.response?.data || error);
+    }
+  };
+
 
   const toggleSelectAll = () => {
-    const allSelected = data.every(d => d.selected);
-    setData(data.map(d => ({ ...d, selected: !allSelected })));
+    if (!users?.data) return;
+    const allSelected = users.data.every(d => d.selected);
+    setUsers({ ...users, data: users.data.map(d => ({ ...d, selected: !allSelected })) });
   };
 
   const toggleSelect = (id) => {
-    setData(data.map(d => d.id === id ? { ...d, selected: !d.selected } : d));
+    if (!users?.data) return;
+    setUsers({ ...users, data: users.data.map(d => d.id === id ? { ...d, selected: !d.selected } : d) });
   };
 
   return (
@@ -106,23 +181,37 @@ export default function Talabalar() {
             </div>
             <button className="modal-close" onClick={() => setModalOpen(false)}><i className="fa-solid fa-xmark"></i></button>
           </div>
-          <input className="oq-input" placeholder="Guruh qidirish..." style={{ marginBottom: 12, height: 40 }} />
-          
-          <div style={{ border: "1px solid #eee", borderRadius: 8, padding: 8, marginBottom: 20 }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px", cursor: "pointer" }}>
-              <input type="checkbox" style={{ width: 16, height: 16 }} />
-              <span style={{ fontSize: 14, color: "#222" }}>N26</span>
-            </label>
-            <div style={{ borderBottom: "1px solid #eee", margin: "0 8px" }}></div>
-            <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px", cursor: "pointer" }}>
-              <input type="checkbox" style={{ width: 16, height: 16 }} />
-              <span style={{ fontSize: 14, color: "#222" }}>n105</span>
-            </label>
+          <input 
+            className="oq-input" 
+            placeholder="Guruh qidirish..." 
+            value={guruhQidiruv}
+            onChange={e => setGuruhQidiruv(e.target.value)}
+            style={{ marginBottom: 12, height: 40 }} 
+          />
+
+          <div style={{ border: "1px solid #eee", borderRadius: 8, padding: 8, marginBottom: 20, maxHeight: 200, overflowY: "auto" }}>
+            {filteredGuruhlar.map((g, i) => (
+              <div key={g.id || i}>
+                <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px", cursor: "pointer" }}>
+                  <input 
+                    type="checkbox" 
+                    checked={tempSelected.includes(g.id)}
+                    onChange={() => toggleGuruh(g.id)}
+                    style={{ width: 16, height: 16 }} 
+                  />
+                  <span style={{ fontSize: 14, color: "#222" }}>{g.name || g.nomi}</span>
+                </label>
+                {i < filteredGuruhlar.length - 1 && <div style={{ borderBottom: "1px solid #eee", margin: "0 8px" }}></div>}
+              </div>
+            ))}
+            {filteredGuruhlar.length === 0 && (
+              <div style={{ padding: 8, fontSize: 13, color: "#999", textAlign: "center" }}>Guruh topilmadi</div>
+            )}
           </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
             <button className="top-btn btn-outline" onClick={() => setModalOpen(false)}>Bekor qilish</button>
-            <button className="top-btn btn-primary" onClick={() => setModalOpen(false)}>Qo'shish</button>
+            <button className="top-btn btn-primary" onClick={saveGuruhlar}>Qo'shish</button>
           </div>
         </div>
       </div>
@@ -144,38 +233,52 @@ export default function Talabalar() {
           <input className="oq-input" value={tel} onChange={e => setTel(e.target.value)} />
 
           <label className="oq-label">Mail</label>
-          <input className="oq-input" placeholder="Elektron pochtani kiriting" value={email} onChange={e => setEmail(e.target.value)} />
+          <input className="oq-input" type="email" placeholder="Elektron pochtani kiriting" value={email} onChange={e => setEmail(e.target.value)} />
 
           <label className="oq-label">Talaba FIO</label>
           <input className="oq-input" placeholder="Ma'lumotni kiriting" value={fio} onChange={e => setFio(e.target.value)} />
 
           <label className="oq-label">Tug'ilgan sanasi</label>
           <div style={{ position: "relative" }}>
-            <input className="oq-input" value={sana} onChange={e => setSana(e.target.value)} />
-            <i className="fa-regular fa-calendar" style={{ position: "absolute", right: 14, top: 14, color: "#222", cursor: "pointer" }}></i>
+            <input type="date" className="oq-input" value={sana} onChange={e => setSana(e.target.value)} />
           </div>
 
           <label className="oq-label">Manzil</label>
           <input className="oq-input" placeholder="Manzilni kiriting" value={manzil} onChange={e => setManzil(e.target.value)} />
 
           <label className="oq-label">Parol</label>
-          <input className="oq-input" placeholder="Parolni kiriting" value={parol} onChange={e => setParol(e.target.value)} />
+          <input className="oq-input" type="password" placeholder="Parolni kiriting" value={parol} onChange={e => setParol(e.target.value)} />
 
           <label className="oq-label">Guruh</label>
-          <button className="guruh-btn" onClick={() => setModalOpen(true)}>
-            <i className="fa-solid fa-plus"></i> Guruh qo'shish
+          <button className="guruh-btn" onClick={openGuruhModal}>
+            <i className="fa-solid fa-plus"></i> {selectedGuruhlar.length > 0 ? `${selectedGuruhlar.length} ta guruh tanlandi` : "Guruh qo'shish"}
           </button>
 
           <label className="oq-label">Surati</label>
-          <div className="drag-drop">
-            <i className="fa-solid fa-arrow-up-from-bracket" style={{ fontSize: 24, color: "#999", marginBottom: 10 }}></i>
-            <div style={{ fontSize: 13, color: "#765bcf", fontWeight: 600 }}>Click to upload <span style={{ color: "#888", fontWeight: 400 }}>or drag and drop</span></div>
-            <div style={{ fontSize: 12, color: "#999", marginTop: 4 }}>JPG or PNG (max. 2 MB)</div>
-          </div>
+          <label className="drag-drop" style={{ display: "block" }}>
+            <input 
+              type="file" 
+              accept="image/jpeg, image/png" 
+              style={{ display: "none" }} 
+              onChange={(e) => setRasm(e.target.files[0])} 
+            />
+            {rasm ? (
+              <div style={{ color: "#765bcf", fontWeight: 600, fontSize: 14 }}>
+                <i className="fa-solid fa-file-image" style={{ marginRight: 8 }}></i>
+                {rasm.name}
+              </div>
+            ) : (
+              <>
+                <i className="fa-solid fa-arrow-up-from-bracket" style={{ fontSize: 24, color: "#999", marginBottom: 10 }}></i>
+                <div style={{ fontSize: 13, color: "#765bcf", fontWeight: 600 }}>Click to upload <span style={{ color: "#888", fontWeight: 400 }}>or drag and drop</span></div>
+                <div style={{ fontSize: 12, color: "#999", marginTop: 4 }}>JPG or PNG (max. 2 MB)</div>
+              </>
+            )}
+          </label>
         </div>
         <div className="oq-footer">
           <button className="top-btn btn-outline" onClick={() => setDrawer(false)} style={{ flex: 1, justifyContent: "center" }}>Bekor qilish</button>
-          <button className="top-btn btn-primary" onClick={() => setDrawer(false)} style={{ flex: 1, justifyContent: "center", background: "#f0f0f0", color: "#888" }}>Saqlash</button>
+          <button className="top-btn btn-primary" onClick={create} style={{ flex: 1, justifyContent: "center", background: "#765bcf", color: "#fff", border: "none" }}>Saqlash</button>
         </div>
       </div>
 
@@ -215,8 +318,8 @@ export default function Talabalar() {
             <thead>
               <tr>
                 <th className="oq-th" style={{ width: 40, borderTop: "none" }}>
-                  <div className={`custom-cb ${data.every(d => d.selected) ? "checked" : ""}`} onClick={toggleSelectAll}>
-                    {data.every(d => d.selected) && <i className="fa-solid fa-check"></i>}
+                  <div className={`custom-cb ${users?.data?.length > 0 && users.data.every(d => d.selected) ? "checked" : ""}`} onClick={toggleSelectAll}>
+                    {users?.data?.length > 0 && users.data.every(d => d.selected) && <i className="fa-solid fa-check"></i>}
                   </div>
                 </th>
                 <th className="oq-th" style={{ borderTop: "none" }}>Nomi <i className="fa-solid fa-arrow-down" style={{ fontSize: 10, marginLeft: 4 }}></i></th>
@@ -230,8 +333,8 @@ export default function Talabalar() {
               </tr>
             </thead>
             <tbody>
-              {data.map((row) => (
-                <tr key={row.id} className="table-row">
+              {users?.data?.map((row, index) => (
+                <tr key={row.id || index} className="table-row">
                   <td className="oq-td">
                     <div className={`custom-cb ${row.selected ? "checked" : ""}`} onClick={() => toggleSelect(row.id)}>
                       {row.selected && <i className="fa-solid fa-check"></i>}
@@ -239,20 +342,19 @@ export default function Talabalar() {
                   </td>
                   <td className="oq-td">
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", color: "#765bcf", fontSize: 12 }}>
-                        {row.nomi[0]}
-                      </div>
-                      <span style={{ fontWeight: 600 }}>{row.nomi}</span>
+                      <img src={`https://najot-edu.softwareengineer.uz/files/${row.photo}`} alt="" style={{ width: 32, height: 32, borderRadius: "50%", background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", color: "#765bcf", fontSize: 12 }}>
+                      </img>
+                      <span style={{ fontWeight: 600 }}>{row.full_name}</span>
                     </div>
                   </td>
                   <td className="oq-td">
-                    {row.guruh.map((g, idx) => <span key={idx} className="badge">{g}</span>)}
+                    {(row.groups || []).map((g, idx) => <span key={idx} className="badge">{g.name || g.nomi || g}</span>)}
                   </td>
-                  <td className="oq-td">{row.telefon}</td>
+                  <td className="oq-td">{row.phone}</td>
                   <td className="oq-td">{row.email}</td>
-                  <td className="oq-td">{row.tugilganSana}</td>
-                  <td className="oq-td">{row.manzil}</td>
-                  <td className="oq-td">{row.yaratilganSana}</td>
+                  <td className="oq-td">{new Date(row.birth_date).toLocaleDateString("en-GB")}</td>
+                  <td className="oq-td">{row.address}</td>
+                  <td className="oq-td">{row.created_at ? new Date(row.created_at).toLocaleDateString("en-GB") : ""}</td>
                   <td className="oq-td">
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
                       <button className="act-btn"><i className="fa-regular fa-eye"></i></button>

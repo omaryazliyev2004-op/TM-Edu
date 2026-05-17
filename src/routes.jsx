@@ -11,14 +11,7 @@ import ProtectRoute from "./components/ProtectRoute";
 import {
   Kurslar,
   Xonalar,
-  Filial,
   Hodimlar,
-  Sabablar,
-  Rollar,
-  Coin,
-  XabarYuborish,
-  FAQ,
-  Tekshiruv,
 } from "./layouts/BoshqarishPages";
 
 export const route = createBrowserRouter([
@@ -60,14 +53,7 @@ export const route = createBrowserRouter([
         children: [
           { path: "kurslar",  element: <Kurslar /> },
           { path: "xonalar",  element: <Xonalar /> },
-          { path: "filial",   element: <Filial /> },
           { path: "hodimlar", element: <Hodimlar /> },
-          { path: "sabablar", element: <Sabablar /> },
-          { path: "rollar",   element: <Rollar /> },
-          { path: "coin",     element: <Coin /> },
-          { path: "xabar",    element: <XabarYuborish /> },
-          { path: "faq",      element: <FAQ /> },
-          { path: "tekshiruv",element: <Tekshiruv /> },
         ],
       },
     ],

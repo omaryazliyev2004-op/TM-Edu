@@ -10,13 +10,7 @@ export default function Boshqarish() {
   const tabs = [
     { name: "Kurslar", path: "/dashboard/boshqarish/kurslar" },
     { name: "Xonalar", path: "/dashboard/boshqarish/xonalar" },
-    { name: "Filiallar", path: "/dashboard/boshqarish/filial" },
     { name: "Xodimlar", path: "/dashboard/boshqarish/hodimlar" },
-    { name: "Sabablar", path: "/dashboard/boshqarish/sabablar" },
-    { name: "Rollar", path: "/dashboard/boshqarish/rollar" },
-    { name: "Coin", path: "/dashboard/boshqarish/coin" },
-    { name: "Xabar yuborish", path: "/dashboard/boshqarish/xabar" },
-    { name: "Tekshiruv", path: "/dashboard/boshqarish/tekshiruv" },
   ];
 
   return (
