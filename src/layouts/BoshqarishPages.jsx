@@ -40,7 +40,25 @@ export function Xonalar() {
   const [drawerOpen, setDrawer] = useState(false);
   const [editRoom, setEditRoom] = useState(null); // null = qo'shish, obj = tahrirlash
   const [nom, setNom] = useState("");
-  const [sigim, setSigim] = useState("");
+  const [sigim, setSigim] = useState(0);
+
+
+    const handleRoom = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetchApi.post("rooms", {
+        name: nom,
+        capacity: Number(sigim),
+      });
+      if (res.status === 200 || res.status === 201) {
+        setDrawer(false);
+        window.location.reload();
+      }
+    } catch (error) {
+      alert("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring.");
+      console.log(error);
+    }
+  };
 
   function openAdd() {
     setEditRoom(null);
@@ -218,7 +236,7 @@ export function Xonalar() {
         </div>
         <div className="xona-drawer-footer">
           <button className="btn-cancel" onClick={closeDrawer}>Bekor qilish</button>
-          <button className="btn-save" onClick={handleSave}>Saqlash</button>
+          <button className="btn-save" onClick={handleRoom}>Saqlash</button>
         </div>
       </div>
 
@@ -598,11 +616,4 @@ export function Kurslar() {
     </>
   );
 }
-export function Filial() { return <SubPage pageKey="filial" />; }
 export function Hodimlar() { return <SubPage pageKey="hodimlar" />; }
-export function Sabablar() { return <SubPage pageKey="sabablar" />; }
-export function Rollar() { return <SubPage pageKey="rollar" />; }
-export function Coin() { return <SubPage pageKey="coin" />; }
-export function XabarYuborish() { return <SubPage pageKey="xabar" />; }
-export function FAQ() { return <SubPage pageKey="faq" />; }
-export function Tekshiruv() { return <SubPage pageKey="tekshiruv" />; }
