@@ -31,3 +31,4 @@
           console.log(error);
         }
       };
+      // {`https://najot-edu.softwareengineer.uz/files/${row.photo}`}

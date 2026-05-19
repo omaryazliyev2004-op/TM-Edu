@@ -15,7 +15,7 @@ export default function GroupDetails() {
         if (res.status === 200) {
           setGroup(res.data?.data || res.data);
         }
-        console.log(res);
+        console.log(res.data?.data);
         
       } catch (err) {
         console.error(err);
@@ -269,7 +269,7 @@ export default function GroupDetails() {
           <button className="gd-back" onClick={() => navigate(-1)}>
             <i className="fa-solid fa-chevron-left"></i>
           </button>
-          {group?.name || group?.nomi || "Yuklanmoqda..."}
+          {group?.course?.name  || "Yuklanmoqda..."}
           <span className="gd-badge">Aktiv</span>
         </div>
         <button className="gd-stat-btn">
@@ -311,7 +311,7 @@ export default function GroupDetails() {
               </div>
               <div className="gd-panel-body">
                 <div className="gd-mentor">
-                  <img src="https://ui-avatars.com/api/?name=Teacher&background=random" alt="mentor" className="gd-mentor-img" />
+                  <img src={`https://najot-edu.softwareengineer.uz/files/${group?.teachers?.[0]?.photo}`} alt="mentor" className="gd-mentor-img" />
                   <span className="gd-mentor-role">Teacher</span>
                   <span className="gd-mentor-name">
                     {group?.teachers?.[0]?.full_name || group?.oqituvchi || "Mohirbek"}
@@ -333,7 +333,7 @@ export default function GroupDetails() {
                 </div>
                 <div className="gd-param-row">
                   <span className="gd-param-label">O'rta yosh:</span>
-                  <span className="gd-param-value">15</span>
+                  <span className="gd-param-value">{group?.averageAge}</span>
                 </div>
                 <div className="gd-param-row">
                   <span className="gd-param-label">O'quvchilar sig'imi:</span>
