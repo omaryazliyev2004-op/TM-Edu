@@ -56,11 +56,11 @@ export default function Talabalar() {
     setTempSelected(prev => prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]);
   };
 
-  const filteredGuruhlar = allGroups?.filter(g => 
+  const filteredGuruhlar = allGroups?.filter(g =>
     (g.name || g.nomi || "").toLowerCase().includes(guruhQidiruv.toLowerCase())
   ) || [];
 
-   const create = async () => {
+  const create = async () => {
     try {
       const formData = new FormData();
 
@@ -181,23 +181,23 @@ export default function Talabalar() {
             </div>
             <button className="modal-close" onClick={() => setModalOpen(false)}><i className="fa-solid fa-xmark"></i></button>
           </div>
-          <input 
-            className="oq-input" 
-            placeholder="Guruh qidirish..." 
+          <input
+            className="oq-input"
+            placeholder="Guruh qidirish..."
             value={guruhQidiruv}
             onChange={e => setGuruhQidiruv(e.target.value)}
-            style={{ marginBottom: 12, height: 40 }} 
+            style={{ marginBottom: 12, height: 40 }}
           />
 
           <div style={{ border: "1px solid #eee", borderRadius: 8, padding: 8, marginBottom: 20, maxHeight: 200, overflowY: "auto" }}>
             {filteredGuruhlar.map((g, i) => (
               <div key={g.id || i}>
                 <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px", cursor: "pointer" }}>
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     checked={tempSelected.includes(g.id)}
                     onChange={() => toggleGuruh(g.id)}
-                    style={{ width: 16, height: 16 }} 
+                    style={{ width: 16, height: 16 }}
                   />
                   <span style={{ fontSize: 14, color: "#222" }}>{g.name || g.nomi}</span>
                 </label>
@@ -256,11 +256,11 @@ export default function Talabalar() {
 
           <label className="oq-label">Surati</label>
           <label className="drag-drop" style={{ display: "block" }}>
-            <input 
-              type="file" 
-              accept="image/jpeg, image/png" 
-              style={{ display: "none" }} 
-              onChange={(e) => setRasm(e.target.files[0])} 
+            <input
+              type="file"
+              accept="image/jpeg, image/png"
+              style={{ display: "none" }}
+              onChange={(e) => setRasm(e.target.files[0])}
             />
             {rasm ? (
               <div style={{ color: "#765bcf", fontWeight: 600, fontSize: 14 }}>

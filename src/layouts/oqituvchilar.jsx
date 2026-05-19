@@ -14,6 +14,7 @@ export default function Oqituvchilar() {
         const data = await fetchApi(`teachers`);
         if (data.status === 200) {
           setUsers(data.data);
+          
         }
         const gData = await fetchApi(`groups/all`);
         if (gData.status === 200) {

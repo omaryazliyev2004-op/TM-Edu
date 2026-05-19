@@ -219,10 +219,42 @@ export default function DashboardLayout() {
           overflow: hidden; background: #f2f2f2;
         }
         .topbar {
-          display: flex; align-items: center; justify-content: flex-end;
-          gap: 12px; padding: 14px 20px; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 12px; padding: 4px 20px; flex-shrink: 0;
+          background: #f2f2f2;
+          margin-top: 10px;
         }
-        .page-content { flex: 1; overflow-y: auto; padding: 0 20px 20px; }
+        .topbar-left { display: flex; align-items: center; gap: 10px; }
+        .topbar-right { display: flex; align-items: center; gap: 10px; }
+        .tb-icon-btn {
+          width: 38px; height: 38px; border-radius: 10px;
+          background: #fff; border: none; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          color: #555; font-size: 15px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+          transition: background 0.15s;
+        }
+        .tb-icon-btn:hover { background: #f0eeff; color: #765bcf; }
+        .tb-add-btn {
+          height: 38px; padding: 0 16px;
+          border-radius: 10px; border: none;
+          background: #765bcf; color: #fff;
+          font-size: 13.5px; font-weight: 700;
+          cursor: pointer; display: flex; align-items: center; gap: 8px;
+          transition: background 0.15s;
+        }
+        .tb-add-btn:hover { background: #5e48a8; }
+        .tb-search {
+          height: 38px; width: 200px;
+          border-radius: 10px; border: 1.5px solid #eee;
+          background: #fff; padding: 0 14px 0 36px;
+          font-size: 13px; color: #555; outline: none;
+          transition: border-color 0.15s;
+        }
+        .tb-search:focus { border-color: #765bcf; }
+        .tb-search-wrap { position: relative; }
+        .tb-search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 13px; pointer-events: none; }
+        .page-content { flex: 1; overflow-y: auto; padding: 16px 20px 20px; }
       `}</style>
 
       <div className="layout-root">
@@ -327,37 +359,58 @@ export default function DashboardLayout() {
         {/* ===== MAIN CONTENT ===== */}
         <div className="main-content">
           <div className="topbar">
-            <FormControl>
-              <InputLabel id="lang-label"></InputLabel>
-              <Select
-                labelId="lang-label"
-                id="lang-select"
-                defaultValue={10}
-                sx={{ width: 180, height: 40, bgcolor: "white", borderRadius: "12px" }}
+            {/* Left side */}
+            <div className="topbar-left">
+              <button className="tb-icon-btn">
+                <i className="fa-regular fa-calendar"></i>
+              </button>
+
+              <button className="tb-add-btn">
+                <i className="fa-solid fa-plus"></i>
+                Qo'shish
+                <i className="fa-solid fa-chevron-down" style={{ fontSize: 11 }}></i>
+              </button>
+
+              <div className="tb-search-wrap">
+                <i className="fa-solid fa-magnifying-glass"></i>
+                <input className="tb-search" placeholder="Qidirish..." />
+              </div>
+            </div>
+
+            {/* Right side */}
+            <div className="topbar-right">
+              <FormControl>
+                <InputLabel id="lang-label"></InputLabel>
+                <Select
+                  labelId="lang-label"
+                  id="lang-select"
+                  defaultValue={10}
+                  sx={{ width: 150, height: 38, bgcolor: "white", borderRadius: "10px" }}
+                >
+                  <MenuItem value={10}>O'zbekcha</MenuItem>
+                  <MenuItem value={20}>Ruscha</MenuItem>
+                  <MenuItem value={30}>Ingilischa</MenuItem>
+                </Select>
+              </FormControl>
+
+              <button className="tb-icon-btn">
+                <i className="fa-regular fa-bell"></i>
+              </button>
+
+              <div
+                style={{
+                  backgroundColor: isDark ? "#fff" : "#3b4358",
+                  width: 38, height: 38, borderRadius: 12,
+                  display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+                  transition: "all 0.3s ease"
+                }}
+                onClick={() => setIsDark(!isDark)}
               >
-                <MenuItem value={10}>O'zbekcha</MenuItem>
-                <MenuItem value={20}>Ruscha</MenuItem>
-                <MenuItem value={30}>Ingilischa</MenuItem>
-              </Select>
-            </FormControl>
+                <i className={`fa-regular ${isDark ? "fa-sun" : "fa-moon"}`} style={{ color: isDark ? "#f59e0b" : "#fff", fontSize: 18 }}></i>
+              </div>
 
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-              <i className="fa-regular fa-bell"></i>
+              <Avatar alt="User" src="/logoedu.png" sx={{ width: 36, height: 36 }} />
             </div>
-
-            <div
-              style={{
-                backgroundColor: isDark ? "#fff" : "#3b4358",
-                width: 42, height: 42, borderRadius: 14,
-                display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-                transition: "all 0.3s ease"
-              }}
-              onClick={() => setIsDark(!isDark)}
-            >
-              <i className={`fa-regular ${isDark ? "fa-sun" : "fa-moon"}`} style={{ color: isDark ? "#f59e0b" : "#fff", fontSize: 20 }}></i>
-            </div>
-
-            <Avatar alt="User" src="/logoedu.png" />
           </div>
 
           <div className="page-content">

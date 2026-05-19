@@ -1,37 +1,73 @@
 import { useState } from "react";
-
-const statsData = [
-  { icon: "fa-solid fa-school", label: "Sinflar", count: 12 },
-  { icon: "fa-solid fa-book-open", label: "Fanlar", count: 80000 },
-  { icon: "fa-solid fa-graduation-cap", label: "Talabalar", count: 246 },
-  { icon: "fa-solid fa-gift", label: "Sovg'alar", count: 34 },
-  { icon: "fa-solid fa-user-check", label: "O'qituvchilar", count: 18 },
-];
+import { useAppContext } from "../context/AppContext";
 
 export default function Asosiy() {
-  const [open, setOpen] = useState(false);
+  const { stats } = useAppContext();
+
+  const [openAcc, setOpenAcc] = useState(null);
+
+  const toggleAcc = (idx) => {
+    setOpenAcc((prev) => (prev === idx ? null : idx));
+  };
+
+  const statsData = [
+    { icon: "fa-solid fa-graduation-cap", label: "Faol talabalar", count: stats?.talabalar || 0 },
+    { icon: "fa-solid fa-users", label: "Guruhlar", count: stats?.guruhlar || 0 },
+    { icon: "fa-solid fa-credit-card", label: "Joriy oy to'lovlar", count: 0 },
+    { icon: "fa-solid fa-triangle-exclamation", label: "Qarzdorlar", count: 104 },
+    { icon: "fa-solid fa-snowflake", label: "Muzlatilganlar", count: 0 },
+    { icon: "fa-solid fa-box-archive", label: "Arxivdagilar", count: 23 },
+  ];
+
+  const accordions = [
+    { id: 1, title: "Joriy oy uchun to'lovlar" },
+    { id: 2, title: "Yillik Foyda" },
+    { id: 3, title: "Dars jadvali" },
+  ];
 
   return (
     <>
       <style>{`
         .stat-card {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
+          border-radius: 12px;
         }
         .stat-card:hover {
           transform: translateY(-3px);
           box-shadow: 0 8px 24px rgba(124,77,255,0.13);
         }
-        .acc-body {
+        .acc-item {
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          margin-bottom: 12px;
           overflow: hidden;
+        }
+        .acc-header {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 18px 24px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-weight: 700;
+          font-size: 15px;
+          color: #222;
+        }
+        .acc-body {
           max-height: 0;
+          overflow: hidden;
           transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1);
+          background: #fafafa;
         }
         .acc-body.open {
-          max-height: 200px;
+          max-height: 300px;
+          border-top: 1px solid #e2e8f0;
         }
         .acc-chevron {
           transition: transform 0.3s ease;
-          font-size: 13px;
           color: #888;
         }
         .acc-chevron.open {
@@ -39,91 +75,36 @@ export default function Asosiy() {
         }
       `}</style>
 
-      <div className="flex flex-col gap-4">
-        <div>
-          <h2 className="text-[32px] font-semibold">Salom, Ahmadjon</h2>
-          <p className="font-medium text-[#555555]">
-            EduCoin platformasiga xush kelibsiz!
-          </p>
-        </div>
-
-        {/* Stat cards */}
-        <div className="grid grid-cols-5 gap-3">
+      <div className="flex flex-col gap-6 pt-2">
+        {/* Stat cards grid */}
+        <div className="grid grid-cols-6 gap-4">
           {statsData.map((item, idx) => (
             <div
               key={idx}
-              className="stat-card border h-36 rounded-xl bg-white border-[#e0e0e0] flex justify-center items-center flex-col gap-1 cursor-pointer"
+              className="stat-card border bg-white border-[#e2e8f0] flex justify-center items-center flex-col gap-2 cursor-pointer py-6"
             >
-              <div
-                style={{
-                  background: "rgba(124,77,255,0.10)",
-                  borderRadius: "50%",
-                  width: 40, height: 40,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}
-              >
-                <i className={item.icon + " text-[#7C4DFF] text-[18px]"}></i>
-              </div>
-              <h2 className="font-semibold text-[13px] text-[#555]">{item.label}</h2>
-              <h2 className="font-bold text-[22px] text-[#222]">{item.count}</h2>
+              <i className={item.icon + " text-[#765bcf] text-[20px]"}></i>
+              <h2 className="font-medium text-[12px] text-[#666]">{item.label}</h2>
+              <h2 className="font-bold text-[24px] text-[#222]">{item.count}</h2>
             </div>
           ))}
         </div>
 
-        {/* Dars Jadvali — Accordion */}
-        <div className="bg-white rounded-2xl border border-[#e0e0e0] overflow-hidden">
-          {/* Accordion header */}
-          <button
-            onClick={() => setOpen(o => !o)}
-            style={{
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "16px 20px",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              borderBottom: open ? "1px solid #f0f0f0" : "none",
-              transition: "border-bottom 0.3s",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div
-                style={{
-                  background: "rgba(124,77,255,0.12)",
-                  borderRadius: 8,
-                  width: 34, height: 34,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}
-              >
-                <i className="fa-solid fa-calendar-days text-[#7C4DFF] text-[15px]"></i>
+        {/* Accordions */}
+        <div className="flex flex-col mt-2">
+          {accordions.map((acc) => (
+            <div key={acc.id} className="acc-item">
+              <button className="acc-header" onClick={() => toggleAcc(acc.id)}>
+                <span>{acc.title}</span>
+                <i className={`fa-solid fa-chevron-down acc-chevron ${openAcc === acc.id ? "open" : ""}`}></i>
+              </button>
+              <div className={`acc-body ${openAcc === acc.id ? "open" : ""}`}>
+                <div style={{ padding: "24px", color: "#888", fontSize: 14, textAlign: "center" }}>
+                  Ma'lumot mavjud emas
+                </div>
               </div>
-              <span style={{ fontWeight: 700, fontSize: 17, color: "#222" }}>Dars Jadvali</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span
-                style={{
-                  background: "rgba(124,77,255,0.10)",
-                  color: "#7C4DFF",
-                  borderRadius: 8,
-                  padding: "4px 14px",
-                  fontWeight: 600,
-                  fontSize: 13,
-                }}
-              >
-                2025-2026 o'quv yili
-              </span>
-              <i className={`fa-solid fa-chevron-down acc-chevron${open ? " open" : ""}`}></i>
-            </div>
-          </button>
-
-          {/* Accordion body — bo'sh */}
-          <div className={`acc-body${open ? " open" : ""}`}>
-            <div style={{ padding: "24px 20px", color: "#aaa", fontSize: 14, textAlign: "center" }}>
-              Ma'lumot mavjud emas
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </>

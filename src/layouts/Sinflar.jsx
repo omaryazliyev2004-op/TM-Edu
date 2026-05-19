@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
+import { useAppContext } from "../context/AppContext";
 
 const initialGuruhlar = [
   {
@@ -35,33 +37,57 @@ const talabalarList = [
   { id: 4, nomi: "Qodir Salimov" },
 ];
 
-const kurslarList = ["Backend", "Frontend", "Flutter", "Android", "IOS", "UI/UX"];
-const xonalarList = ["Autodesk", "genious room", "Impact room", "1A", "205-xona"];
-const kunlarList = ["Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba", "Yakshanba"];
+const kunlarMap = {
+  Dushanba: "MONDAY",
+  Seshanba: "TUESDAY",
+  Chorshanba: "WEDNESDAY",
+  Payshanba: "THURSDAY",
+  Juma: "FRIDAY",
+  Shanba: "SATURDAY",
+  Yakshanba: "SUNDAY",
+};
+const kunlarList = Object.keys(kunlarMap);
 const kunShort = { Dushanba: "Du", Seshanba: "Se", Chorshanba: "Chor", Payshanba: "Pay", Juma: "Ju", Shanba: "Shan", Yakshanba: "Yak" };
 
 export default function Sinflar() {
+  const { stats } = useAppContext();
+  const navigate = useNavigate();
 
 
   const [users, setUsers] = useState([]);
+  const [teachersCount, setTeachersCount] = useState(0);
+  const [allTeachers, setAllTeachers] = useState([]);
+  const [allCourses, setAllCourses] = useState([]);
+  const [allRooms, setAllRooms] = useState([]);
 
   useEffect(() => {
     async function datas() {
       try {
-        const data = await fetchApi(
-          `groups/all`,
-        );
-        if (data.status === 200) {
-          setUsers(data.data);
+        const data = await fetchApi(`groups/all`);
+        if (data.status === 200) setUsers(data.data);
+
+        const tData = await fetchApi(`teachers`);
+        if (tData.status === 200) {
+          const list = tData.data?.data || tData.data || [];
+          setAllTeachers(Array.isArray(list) ? list : []);
+          setTeachersCount(Array.isArray(list) ? list.length : 0);
+        }
+
+        const cData = await fetchApi(`courses`);
+        if (cData.status === 200) {
+          setAllCourses(cData.data?.data || cData.data || []);
+        }
+
+        const rData = await fetchApi(`rooms`);
+        if (rData.status === 200) {
+          setAllRooms(rData.data?.data || rData.data || []);
         }
       } catch (error) {
         console.log(error);
       }
     }
     datas();
-
   }, []);
-
 
   const [guruhlar, setGuruhlar] = useState(initialGuruhlar);
   const [activeTab, setActiveTab] = useState("guruhlar");
@@ -71,16 +97,53 @@ export default function Sinflar() {
   const [guruhNomi, setGuruhNomi] = useState("");
   const [kurs, setKurs] = useState("");
   const [xona, setXona] = useState("");
+  const [maxStudent, setMaxStudent] = useState("");
   const [tanKunlar, setTanKunlar] = useState([]);
-  const [darsVaqti, setDarsVaqti] = useState("09:00");
+  const [darsVaqti, setDarsVaqti] = useState("");
   const [boshlanish, setBoshlanish] = useState("");
   const [tavsif, setTavsif] = useState("");
   const [selectedTalabalar, setSelectedTalabalar] = useState([]);
+  const [selectedTeachers, setSelectedTeachers] = useState([]);
+
+  const create = async () => {
+    try {
+      const formattedKunlar = tanKunlar.map(kun => kunlarMap[kun]);
+
+      const res = await fetchApi.post("groups", {
+        name: guruhNomi,
+        description: tavsif,
+        course_id: Number(kurs),
+        teachers: selectedTeachers,
+        students: selectedTalabalar,
+        room_id: Number(xona),
+        start_date: boshlanish,
+        week_day: formattedKunlar,
+        start_time: darsVaqti,
+        max_student: Number(maxStudent) || 20,
+      });
+
+      if (res.status === 200 || res.status === 201) {
+        setDrawer(false);
+        window.location.reload();
+      }
+    } catch (error) {
+      const xato = error.response?.data?.message || error.response?.data?.error || "Xatolik yuz berdi. Barcha maydonlarni tekshiring.";
+      alert(xato);
+      console.log(error.response?.data || error);
+    }
+  };
+
+
 
   // Talaba modal
   const [talabalarModalOpen, setTalabalarModal] = useState(false);
   const [talabaTanlangan, setTalabaTanlangan] = useState([]);
   const [talabalarQidiruv, setTalabalarQidiruv] = useState("");
+
+  // O'qituvchi modal
+  const [teacherModalOpen, setTeacherModal] = useState(false);
+  const [teacherTanlangan, setTeacherTanlangan] = useState([]);
+  const [teacherQidiruv, setTeacherQidiruv] = useState("");
 
   const toggleKun = (kun) => {
     setTanKunlar(prev =>
@@ -95,7 +158,7 @@ export default function Sinflar() {
   const openDrawer = () => {
     setGuruhNomi(""); setKurs(""); setXona("");
     setTanKunlar([]); setDarsVaqti("09:00"); setBoshlanish("");
-    setTavsif(""); setSelectedTalabalar([]);
+    setTavsif(""); setSelectedTalabalar([]); setSelectedTeachers([]);
     setDrawer(true);
   };
 
@@ -110,7 +173,9 @@ export default function Sinflar() {
       darsVaqti,
       kunlar: kunStr,
       xona: xona || "—",
-      oqituvchi: "—",
+      oqituvchi: selectedTeachers.length > 0
+        ? allTeachers.find(t => t.id === selectedTeachers[0])?.full_name || "—"
+        : "—",
       talabalar: selectedTalabalar.length,
       faol: true,
     }]);
@@ -122,22 +187,38 @@ export default function Sinflar() {
     setTalabalarQidiruv("");
     setTalabalarModal(true);
   };
-
   const closeTalabalarModal = () => setTalabalarModal(false);
-
   const saveTalabalar = () => {
     setSelectedTalabalar([...talabaTanlangan]);
     setTalabalarModal(false);
   };
-
   const toggleTalaba = (id) => {
     setTalabaTanlangan(prev =>
       prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
     );
   };
-
   const filteredTalabalar = talabalarList.filter(t =>
     t.nomi.toLowerCase().includes(talabalarQidiruv.toLowerCase())
+  );
+
+  // O'qituvchi modal functions
+  const openTeacherModal = () => {
+    setTeacherTanlangan([...selectedTeachers]);
+    setTeacherQidiruv("");
+    setTeacherModal(true);
+  };
+  const closeTeacherModal = () => setTeacherModal(false);
+  const saveTeachers = () => {
+    setSelectedTeachers([...teacherTanlangan]);
+    setTeacherModal(false);
+  };
+  const toggleTeacher = (id) => {
+    setTeacherTanlangan(prev =>
+      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
+    );
+  };
+  const filteredTeachers = allTeachers.filter(t =>
+    (t.full_name || "").toLowerCase().includes(teacherQidiruv.toLowerCase())
   );
 
   return (
@@ -218,6 +299,43 @@ export default function Sinflar() {
         .g-modal-row:last-child { border-bottom: none; }
       `}</style>
 
+      {/* ── O'qituvchilar Modal ── */}
+      <div className={`g-modal-wrap ${teacherModalOpen ? "open" : ""}`}>
+        <div className="g-modal bg-white">
+          <div className="g-modal-header">
+            <div>
+              <p className="g-modal-title">O'qituvchi qo'shish</p>
+              <p className="g-modal-sub">Bitta yoki bir nechta o'qituvchini tanlang</p>
+            </div>
+            <button className="g-dc" onClick={closeTeacherModal}><i className="fa-solid fa-xmark"></i></button>
+          </div>
+          <div className="g-modal-body">
+            <input
+              className="g-input"
+              placeholder="O'qituvchi qidirish..."
+              value={teacherQidiruv}
+              onChange={e => setTeacherQidiruv(e.target.value)}
+              style={{ marginBottom: 8 }}
+            />
+            {filteredTeachers.length === 0 && (
+              <p style={{ color: "#aaa", fontSize: 13, textAlign: "center", padding: "16px 0" }}>O'qituvchi topilmadi</p>
+            )}
+            {filteredTeachers.map(t => (
+              <div key={t.id} className="g-modal-row" onClick={() => toggleTeacher(t.id)}>
+                <div className={`g-cb ${teacherTanlangan.includes(t.id) ? "checked" : ""}`}>
+                  {teacherTanlangan.includes(t.id) && <i className="fa-solid fa-check"></i>}
+                </div>
+                <span style={{ fontSize: 14, color: "#222" }}>{t.full_name || t.name || "—"}</span>
+              </div>
+            ))}
+          </div>
+          <div className="g-modal-footer">
+            <button className="g-btn g-btn-outline" style={{ flex: "unset", padding: "0 20px" }} onClick={closeTeacherModal}>Bekor qilish</button>
+            <button className="g-btn g-btn-primary" style={{ flex: "unset", padding: "0 20px" }} onClick={saveTeachers}>Saqlash</button>
+          </div>
+        </div>
+      </div>
+
       {/* ── Talabalar Modal ── */}
       <div className={`g-modal-wrap ${talabalarModalOpen ? "open" : ""}`}>
         <div className="g-modal bg-white">
@@ -271,14 +389,17 @@ export default function Sinflar() {
           <label className="g-label">Kurs <span>*</span></label>
           <select className="g-select" value={kurs} onChange={e => setKurs(e.target.value)}>
             <option value="">Tanlang</option>
-            {kurslarList.map(k => <option key={k} value={k}>{k}</option>)}
+            {allCourses.map(k => <option key={k.id} value={k.id}>{k.name}</option>)}
           </select>
 
           <label className="g-label">Xona <span>*</span></label>
           <select className="g-select" value={xona} onChange={e => setXona(e.target.value)}>
             <option value="">Tanlang</option>
-            {xonalarList.map(x => <option key={x} value={x}>{x}</option>)}
+            {allRooms.map(x => <option key={x.id} value={x.id}>{x.name || x.nom}</option>)}
           </select>
+
+          <label className="g-label">Maksimal talabalar soni <span>*</span></label>
+          <input className="g-input" type="number" placeholder="Masalan: 15" value={maxStudent} onChange={e => setMaxStudent(e.target.value)} />
 
           <label className="g-label">Dars kunlari <span>*</span></label>
           <div className="g-kunlar">
@@ -302,8 +423,23 @@ export default function Sinflar() {
           <textarea className="g-textarea" placeholder="Guruh haqida qo'shimcha ma'lumot (ixtiyoriy)" value={tavsif} onChange={e => setTavsif(e.target.value)} />
 
           <label className="g-label">O'qituvchilar</label>
-          <button className="g-add-btn">
+          {selectedTeachers.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+              {selectedTeachers.map(id => {
+                const t = allTeachers.find(tl => tl.id === id);
+                return t ? (
+                  <span key={id} style={{ background: "rgba(118,91,207,0.1)", color: "#765bcf", borderRadius: 6, padding: "3px 10px", fontSize: 13, fontWeight: 600 }}>
+                    {t.full_name || t.name || "—"}
+                  </span>
+                ) : null;
+              })}
+            </div>
+          )}
+          <button className="g-add-btn" onClick={openTeacherModal}>
             <i className="fa-solid fa-plus"></i> Qo'shish
+            {selectedTeachers.length > 0 && (
+              <span style={{ marginLeft: 6, background: "#765bcf", color: "#fff", borderRadius: 10, padding: "1px 8px", fontSize: 12 }}>{selectedTeachers.length}</span>
+            )}
           </button>
 
           <label className="g-label">Talabalar</label>
@@ -325,7 +461,7 @@ export default function Sinflar() {
         </div>
         <div className="g-footer">
           <button className="g-btn g-btn-outline" onClick={() => setDrawer(false)}>Bekor qilish</button>
-          <button className="g-btn g-btn-primary" onClick={handleSave}>Saqlash</button>
+          <button className="g-btn g-btn-primary" onClick={create}>Saqlash</button>
         </div>
       </div>
 
@@ -367,7 +503,7 @@ export default function Sinflar() {
             <i className="fa-solid fa-users" style={{ color: "#765bcf", fontSize: 18 }}></i>
             <span style={{ fontSize: 13, color: "#888" }}>Jami guruhlar</span>
           </div>
-          <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{guruhlar.length}</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{stats?.guruhlar || 0}</div>
         </div>
 
         <div className="g-stat-card bg-white">
@@ -376,7 +512,7 @@ export default function Sinflar() {
             <i className="fa-solid fa-user-tie" style={{ color: "#765bcf", fontSize: 18 }}></i>
             <span style={{ fontSize: 13, color: "#888" }}>O'qituvchilar</span>
           </div>
-          <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>0</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{stats?.oqituvchilar || 0}</div>
         </div>
 
         <div className="g-stat-card bg-white">
@@ -385,12 +521,8 @@ export default function Sinflar() {
             <i className="fa-solid fa-user-graduate" style={{ color: "#765bcf", fontSize: 18 }}></i>
             <span style={{ fontSize: 13, color: "#888" }}>O'quvchilar</span>
           </div>
-          <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>0</div>
-          <div style={{ display: "flex", marginTop: 8 }}>
-            {["#765bcf", "#f57c00", "#e53935"].map((c, i) => (
-              <div key={i} style={{ width: 22, height: 22, borderRadius: "50%", background: c, border: "2px solid #fff", marginLeft: i === 0 ? 0 : -6 }} />
-            ))}
-          </div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{stats?.talabalar || 0}</div>
+         
         </div>
       </div>
 
@@ -430,7 +562,15 @@ export default function Sinflar() {
                       </span>
                     </div>
                   </td>
-                  <td className="g-td" style={{ fontWeight: 600, color: "#222" }}>{g.name}</td>
+                  <td 
+                    className="g-td" 
+                    style={{ fontWeight: 600, color: "#222", cursor: "pointer" }} 
+                    onClick={() => navigate(`/dashboard/sinflar/${g.id}`)}
+                  >
+                    <span style={{ borderBottom: "1px dashed #aaa", paddingBottom: "2px" }}>
+                      {g.name}
+                    </span>
+                  </td>
                   <td className="g-td">
                     <span style={{ color: "#765bcf", fontWeight: 600 }}>{g.course?.name || ""}</span>
                   </td>
