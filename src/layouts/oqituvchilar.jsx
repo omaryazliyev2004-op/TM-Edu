@@ -237,7 +237,7 @@ export default function Oqituvchilar() {
           {selectedGuruhlar.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
               {selectedGuruhlar.map(id => {
-                const g = guruhlarList.find(gl => gl.id === id);
+                const g = allGroups.find(gl => gl.id === id);
                 return g ? (
                   <span key={id} style={{ background: "rgba(118,91,207,0.1)", color: "#765bcf", borderRadius: 6, padding: "3px 10px", fontSize: 13, fontWeight: 600 }}>
                     {g.name || g.nomi}

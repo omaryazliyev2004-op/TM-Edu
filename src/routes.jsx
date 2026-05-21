@@ -5,6 +5,7 @@ import Asosiy from "./layouts/Dashboard";
 import Oqituvchilar from "./layouts/oqituvchilar";
 import Sinflar from "./layouts/Sinflar";
 import GroupDetails from "./layouts/GroupDetails";
+import HomeworkCreate from "./layouts/HomeworkCreate";
 import Sovgalar from "./layouts/Sovg'alar";
 import Boshqarish from "./layouts/Boshqarish";
 import Talabalar from "./layouts/Talabalar";
@@ -43,6 +44,10 @@ export const route = createBrowserRouter([
       {
         path: "/dashboard/sinflar/:id",
         element: <GroupDetails />,
+      },
+      {
+        path: "/dashboard/groups/:id/homework/create",
+        element: <HomeworkCreate />,
       },
       {
         path: "/dashboard/talabalar",

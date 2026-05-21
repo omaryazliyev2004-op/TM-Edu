@@ -3,15 +3,22 @@ import LockIcon from "@mui/icons-material/Lock";
 import { useNavigate } from "react-router-dom";
 import Alert from "@mui/material/Alert";
 import ErrorIcon from "@mui/icons-material/Error"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { fetchApi } from "../api/user.api";
 
 export default function Login() {
 
   const navigate = useNavigate();
   const [login, setLogin] = useState("");
-  const [password, setPassword] = useState(0);
+  const [password, setPassword] = useState("");
   const [showAlert, setShowAlert] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token && token !== "undefined") {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -20,8 +27,13 @@ export default function Login() {
         phone: login,
         password: password
       });
-      localStorage.setItem("token", res.data.accessToken);
-      navigate("/dashboard");
+      const token = res.data?.data?.accessToken || res.data?.accessToken;
+      if (token) {
+        localStorage.setItem("token", token);
+        navigate("/dashboard");
+      } else {
+        throw new Error("No token received");
+      }
     } catch (error) {
       setShowAlert(true);
       setTimeout(() => {

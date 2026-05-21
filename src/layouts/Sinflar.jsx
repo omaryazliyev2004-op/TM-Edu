@@ -3,40 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
 import { useAppContext } from "../context/AppContext";
 
-const initialGuruhlar = [
-  {
-    id: 1,
-    nomi: "N26",
-    kurs: "Backend",
-    davomiyligi: "6 oy",
-    darsVaqti: "09:30",
-    kunlar: "Du, Se, Chor, Pay, Ju",
-    xona: "Autodesk",
-    oqituvchi: "Mohirbek",
-    talabalar: 1,
-    faol: true,
-  },
-  {
-    id: 2,
-    nomi: "n105",
-    kurs: "Backend",
-    davomiyligi: "6 oy",
-    darsVaqti: "16:00",
-    kunlar: "Se, Pay, Shan",
-    xona: "Autodesk",
-    oqituvchi: "Mohirbek",
-    talabalar: 4,
-    faol: true,
-  },
-];
-
-const talabalarList = [
-  { id: 1, nomi: "Ali Valiyev" },
-  { id: 2, nomi: "Salim Qodirov" },
-  { id: 3, nomi: "Bobur" },
-  { id: 4, nomi: "Qodir Salimov" },
-];
-
 const kunlarMap = {
   Dushanba: "MONDAY",
   Seshanba: "TUESDAY",
@@ -47,7 +13,6 @@ const kunlarMap = {
   Yakshanba: "SUNDAY",
 };
 const kunlarList = Object.keys(kunlarMap);
-const kunShort = { Dushanba: "Du", Seshanba: "Se", Chorshanba: "Chor", Payshanba: "Pay", Juma: "Ju", Shanba: "Shan", Yakshanba: "Yak" };
 
 export default function Sinflar() {
   const { stats } = useAppContext();
@@ -55,7 +20,6 @@ export default function Sinflar() {
 
 
   const [users, setUsers] = useState([]);
-  const [teachersCount, setTeachersCount] = useState(0);
   const [allTeachers, setAllTeachers] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
   const [allRooms, setAllRooms] = useState([]);
@@ -70,7 +34,6 @@ export default function Sinflar() {
         if (tData.status === 200) {
           const list = tData.data?.data || tData.data || [];
           setAllTeachers(Array.isArray(list) ? list : []);
-          setTeachersCount(Array.isArray(list) ? list.length : 0);
         }
 
         const cData = await fetchApi(`courses`);
@@ -89,7 +52,6 @@ export default function Sinflar() {
     datas();
   }, []);
 
-  const [guruhlar, setGuruhlar] = useState(initialGuruhlar);
   const [activeTab, setActiveTab] = useState("guruhlar");
   const [drawerOpen, setDrawer] = useState(false);
 
@@ -99,11 +61,20 @@ export default function Sinflar() {
   const [xona, setXona] = useState("");
   const [maxStudent, setMaxStudent] = useState("");
   const [tanKunlar, setTanKunlar] = useState([]);
+  console.log( tanKunlar);
   const [darsVaqti, setDarsVaqti] = useState("");
   const [boshlanish, setBoshlanish] = useState("");
   const [tavsif, setTavsif] = useState("");
   const [selectedTalabalar, setSelectedTalabalar] = useState([]);
   const [selectedTeachers, setSelectedTeachers] = useState([]);
+
+  const togleKun = (kun) => {
+    setTanKunlar(prev =>
+      prev.includes(kun)
+        ? prev.filter(item => item !== kun)
+        : [...prev, kun]
+    );
+  };
 
   const create = async () => {
     try {
@@ -135,25 +106,10 @@ export default function Sinflar() {
 
 
 
-  // Talaba modal
-  const [talabalarModalOpen, setTalabalarModal] = useState(false);
-  const [talabaTanlangan, setTalabaTanlangan] = useState([]);
-  const [talabalarQidiruv, setTalabalarQidiruv] = useState("");
-
   // O'qituvchi modal
   const [teacherModalOpen, setTeacherModal] = useState(false);
   const [teacherTanlangan, setTeacherTanlangan] = useState([]);
   const [teacherQidiruv, setTeacherQidiruv] = useState("");
-
-  const toggleKun = (kun) => {
-    setTanKunlar(prev =>
-      prev.includes(kun) ? prev.filter(k => k !== kun) : [...prev, kun]
-    );
-  };
-
-  const toggleGuruhFaol = (id) => {
-    setGuruhlar(prev => prev.map(g => g.id === id ? { ...g, faol: !g.faol } : g));
-  };
 
   const openDrawer = () => {
     setGuruhNomi(""); setKurs(""); setXona("");
@@ -161,45 +117,6 @@ export default function Sinflar() {
     setTavsif(""); setSelectedTalabalar([]); setSelectedTeachers([]);
     setDrawer(true);
   };
-
-  const handleSave = () => {
-    if (!guruhNomi.trim()) return;
-    const kunStr = tanKunlar.map(k => kunShort[k] || k).join(", ");
-    setGuruhlar(prev => [...prev, {
-      id: Date.now(),
-      nomi: guruhNomi,
-      kurs: kurs || "—",
-      davomiyligi: "6 oy",
-      darsVaqti,
-      kunlar: kunStr,
-      xona: xona || "—",
-      oqituvchi: selectedTeachers.length > 0
-        ? allTeachers.find(t => t.id === selectedTeachers[0])?.full_name || "—"
-        : "—",
-      talabalar: selectedTalabalar.length,
-      faol: true,
-    }]);
-    setDrawer(false);
-  };
-
-  const openTalabalarModal = () => {
-    setTalabaTanlangan([...selectedTalabalar]);
-    setTalabalarQidiruv("");
-    setTalabalarModal(true);
-  };
-  const closeTalabalarModal = () => setTalabalarModal(false);
-  const saveTalabalar = () => {
-    setSelectedTalabalar([...talabaTanlangan]);
-    setTalabalarModal(false);
-  };
-  const toggleTalaba = (id) => {
-    setTalabaTanlangan(prev =>
-      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
-    );
-  };
-  const filteredTalabalar = talabalarList.filter(t =>
-    t.nomi.toLowerCase().includes(talabalarQidiruv.toLowerCase())
-  );
 
   // O'qituvchi modal functions
   const openTeacherModal = () => {
@@ -275,6 +192,14 @@ export default function Sinflar() {
         .g-td { padding: 14px 16px; font-size: 13px; color: #444; border-bottom: 1px solid #f5f5f5; vertical-align: middle; white-space: nowrap; }
         .g-row:hover { background: #fafafa; }
 
+        /* ── Teacher Column Scroll ── */
+        .g-oqituvchi-cell { max-height: 90px; overflow-y: auto; min-width: 150px; padding-right: 8px; }
+        .g-oqituvchi-cell::-webkit-scrollbar { width: 6px; }
+        .g-oqituvchi-cell::-webkit-scrollbar-track { background: transparent; }
+        .g-oqituvchi-cell::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+        .g-oqituvchi-cell::-webkit-scrollbar-thumb:hover { background: #bbb; }
+        .g-oqituvchi-name { display: block; font-size: 13px; padding: 4px 0; color: #222; white-space: nowrap; }
+
         /* ── Toggle ── */
         .g-toggle { width: 36px; height: 20px; border-radius: 20px; background: #ccc; position: relative; cursor: pointer; transition: background 0.25s; border: none; }
         .g-toggle.on { background: #765bcf; }
@@ -336,40 +261,6 @@ export default function Sinflar() {
         </div>
       </div>
 
-      {/* ── Talabalar Modal ── */}
-      <div className={`g-modal-wrap ${talabalarModalOpen ? "open" : ""}`}>
-        <div className="g-modal bg-white">
-          <div className="g-modal-header">
-            <div>
-              <p className="g-modal-title">Talaba qo'shish</p>
-              <p className="g-modal-sub">Bitta yoki bir nechta talabani tanlang</p>
-            </div>
-            <button className="g-dc" onClick={closeTalabalarModal}><i className="fa-solid fa-xmark"></i></button>
-          </div>
-          <div className="g-modal-body">
-            <input
-              className="g-input"
-              placeholder="Talaba qidirish..."
-              value={talabalarQidiruv}
-              onChange={e => setTalabalarQidiruv(e.target.value)}
-              style={{ marginBottom: 8 }}
-            />
-            {filteredTalabalar.map(t => (
-              <div key={t.id} className="g-modal-row" onClick={() => toggleTalaba(t.id)}>
-                <div className={`g-cb ${talabaTanlangan.includes(t.id) ? "checked" : ""}`}>
-                  {talabaTanlangan.includes(t.id) && <i className="fa-solid fa-check"></i>}
-                </div>
-                <span style={{ fontSize: 14, color: "#222" }}>{t.nomi}</span>
-              </div>
-            ))}
-          </div>
-          <div className="g-modal-footer">
-            <button className="g-btn g-btn-outline" style={{ flex: "unset", padding: "0 20px" }} onClick={closeTalabalarModal}>Bekor qilish</button>
-            <button className="g-btn g-btn-primary" style={{ flex: "unset", padding: "0 20px" }} onClick={saveTalabalar}>Saqlash</button>
-          </div>
-        </div>
-      </div>
-
       {/* ── Drawer Overlay ── */}
       <div className={`g-overlay ${drawerOpen ? "open" : ""}`} onClick={() => setDrawer(false)} />
 
@@ -402,15 +293,23 @@ export default function Sinflar() {
           <input className="g-input" type="number" placeholder="Masalan: 15" value={maxStudent} onChange={e => setMaxStudent(e.target.value)} />
 
           <label className="g-label">Dars kunlari <span>*</span></label>
-          <div className="g-kunlar">
-            {kunlarList.map(kun => (
-              <label key={kun} className="g-kun-item" onClick={() => toggleKun(kun)}>
-                <div className={`g-cb ${tanKunlar.includes(kun) ? "checked" : ""}`}>
-                  {tanKunlar.includes(kun) && <i className="fa-solid fa-check"></i>}
-                </div>
-                {kun}
-              </label>
-            ))}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {kunlarList.map(kun => {
+              const isSelected = tanKunlar.includes(kun);
+              return (
+                <button
+                  key={kun}
+                  type="button"
+                  onClick={() => togleKun(kun)}
+                  className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-medium transition ${isSelected ? "border-[#765bcf] bg-[#f5f0ff] text-[#1f2937]" : "border-[#d1d5db] bg-white text-[#374151]"}`}
+                >
+                  <span className={`flex h-5 w-5 items-center justify-center rounded border text-white ${isSelected ? "border-[#765bcf] bg-[#765bcf]" : "border-[#d1d5db] bg-white text-transparent"}`}>
+                    <i className="fa-solid fa-check text-[10px]" />
+                  </span>
+                  <span>{kun}</span>
+                </button>
+              );
+            })}
           </div>
 
           <label className="g-label">Dars vaqti <span>*</span></label>
@@ -440,23 +339,6 @@ export default function Sinflar() {
             {selectedTeachers.length > 0 && (
               <span style={{ marginLeft: 6, background: "#765bcf", color: "#fff", borderRadius: 10, padding: "1px 8px", fontSize: 12 }}>{selectedTeachers.length}</span>
             )}
-          </button>
-
-          <label className="g-label">Talabalar</label>
-          {selectedTalabalar.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
-              {selectedTalabalar.map(id => {
-                const t = talabalarList.find(tl => tl.id === id);
-                return t ? (
-                  <span key={id} style={{ background: "rgba(118,91,207,0.1)", color: "#765bcf", borderRadius: 6, padding: "3px 10px", fontSize: 13, fontWeight: 600 }}>
-                    {t.nomi}
-                  </span>
-                ) : null;
-              })}
-            </div>
-          )}
-          <button className="g-add-btn" onClick={openTalabalarModal}>
-            <i className="fa-solid fa-plus"></i> Qo'shish
           </button>
         </div>
         <div className="g-footer">
@@ -552,7 +434,7 @@ export default function Sinflar() {
                 <tr key={g.id} className="g-row">
                   <td className="g-td">
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <button className={`g-toggle ${g.id ? "on" : ""}`} onClick={() => toggleGuruhFaol(g.id)} />
+                      <button className={`g-toggle ${g.id ? "on" : ""}`} disabled />
                       <span style={{
                         fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
                         background: g.id ? "rgba(76,175,80,0.1)" : "rgba(200,200,200,0.2)",
@@ -581,7 +463,15 @@ export default function Sinflar() {
                   </td>
                   <td className="g-td">{g.room?.name || g.room || ""}</td>
                   <td className="g-td" style={{ fontWeight: 600, color: "#222" }}>
-                    {Array.isArray(g.teachers) ? g.teachers.map(t => t?.full_name || t?.name || "").join(', ') : (g.teachers?.full_name || g.teachers?.name || g.teachers || "")}
+                    {Array.isArray(g.teachers) && g.teachers.length > 0 ? (
+                      <div className="g-oqituvchi-cell">
+                        {g.teachers.map((t, idx) => (
+                          <div key={idx} className="g-oqituvchi-name">
+                            {t?.full_name || t?.name || ""}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (g.teachers?.full_name || g.teachers?.name || g.teachers || "")}
                   </td>
                   <td className="g-td" style={{ fontWeight: 600, color: "#222" }}>{g.student_count || 0}</td>
                   <td className="g-td">

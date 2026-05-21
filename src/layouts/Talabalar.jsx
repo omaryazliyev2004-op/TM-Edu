@@ -137,8 +137,12 @@ export default function Talabalar() {
         .custom-cb { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; }
         .custom-cb.checked { background: #765bcf; border-color: #765bcf; color: #fff; font-size: 10px; }
         
-        .badge { display: inline-flex; padding: 4px 8px; border-radius: 6px; border: 1px solid #eee; font-size: 12px; margin-right: 4px; color: #555; background: #f5f5f5; font-weight: 500; }
-        
+        .badge { display: inline-flex; padding: 4px 8px; border-radius: 6px; border: 1px solid #eee; font-size: 12px; margin-right: 4px; color: #555; background: #f5f5f5; font-weight: 500; white-space: nowrap; }
+        .badge-row { display: flex; align-items: center; gap: 6px; overflow-x: auto; max-width: 260px; padding-bottom: 2px; }
+        .badge-row::-webkit-scrollbar { height: 6px; }
+        .badge-row::-webkit-scrollbar-track { background: transparent; }
+        .badge-row::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+
         .act-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid transparent; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #888; transition: 0.15s; font-size: 13px; }
         .act-btn:hover { background: #f0f0f0; color: #222; }
         
@@ -348,7 +352,9 @@ export default function Talabalar() {
                     </div>
                   </td>
                   <td className="oq-td">
-                    {(row.groups || []).map((g, idx) => <span key={idx} className="badge">{g.name || g.nomi || g}</span>)}
+                    <div className="badge-row">
+                      {(row.groups || []).map((g, idx) => <span key={idx} className="badge">{g.name || g.nomi || g}</span>)}
+                    </div>
                   </td>
                   <td className="oq-td">{row.phone}</td>
                   <td className="oq-td">{row.email}</td>
