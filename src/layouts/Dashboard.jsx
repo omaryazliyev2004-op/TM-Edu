@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
 
 export default function Asosiy() {
-  const { stats } = useAppContext();
+  const { stats, fetchStats } = useAppContext();
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   const [openAcc, setOpenAcc] = useState(null);
 

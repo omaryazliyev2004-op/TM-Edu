@@ -7,6 +7,20 @@ export default function Talabalar() {
 
   const [users, setUsers] = useState([]);
   const [allGroups, setAllGroups] = useState([]);
+  const [groupsLoaded, setGroupsLoaded] = useState(false);
+
+  const fetchGroups = async () => {
+    if (groupsLoaded) return;
+    try {
+      const gData = await fetchApi(`groups/all`);
+      if (gData.status === 200) {
+        setAllGroups(gData.data?.data || gData.data || []);
+        setGroupsLoaded(true);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
     async function datas() {
@@ -15,9 +29,11 @@ export default function Talabalar() {
         if (data.status === 200) {
           setUsers(data.data);
         }
+        // Guruhlarni ham yuklab olamiz
         const gData = await fetchApi(`groups/all`);
         if (gData.status === 200) {
           setAllGroups(gData.data?.data || gData.data || []);
+          setGroupsLoaded(true);
         }
       } catch (error) {
         console.log(error);
@@ -28,6 +44,9 @@ export default function Talabalar() {
 
   const [drawerOpen, setDrawer] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [editingStudent, setEditingStudent] = useState(null);
 
   // Drawer fields
   const [tel, setTel] = useState("+998");
@@ -44,12 +63,81 @@ export default function Talabalar() {
   const openGuruhModal = () => {
     setTempSelected([...selectedGuruhlar]);
     setGuruhQidiruv("");
+    fetchGroups();
     setModalOpen(true);
   };
 
   const saveGuruhlar = () => {
     setSelectedGuruhlar([...tempSelected]);
     setModalOpen(false);
+  };
+
+  const resetForm = () => {
+    setTel("+998");
+    setEmail("");
+    setFio("");
+    setSana("");
+    setManzil("");
+    setParol("");
+    setRasm(null);
+    setSelectedGuruhlar([]);
+    setTempSelected([]);
+    setEditingStudent(null);
+  };
+
+  const openAddStudent = () => {
+    resetForm();
+    setEditingStudent(null);
+    setDrawer(true);
+  };
+
+  const openEditStudent = (student) => {
+    setEditingStudent(student);
+    setTel(student.phone || "+998");
+    setEmail(student.email || "");
+    setFio(student.full_name || "");
+    setSana(student.birth_date ? student.birth_date.slice(0, 10) : "");
+    setManzil(student.address || "");
+    setParol("");
+    setRasm(null);
+
+    // Faqat mavjud va aktiv guruh IDlarini filtrlab olamiz
+    const activeGroupIds = (student.groups || [])
+      .map((g) => (g && typeof g === "object" ? g.id : g))
+      .map(Number)
+      .filter((id) => !isNaN(id) && id > 0 && allGroups.some((ag) => ag.id === id));
+
+    setSelectedGuruhlar(activeGroupIds);
+    setTempSelected(activeGroupIds);
+    setDrawer(true);
+  };
+
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setDeleteModal(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    try {
+      const res = await fetchApi.delete(`students/${deleteId}`);
+      if (res.status === 200 || res.status === 201) {
+        setUsers((prev) => ({
+          ...prev,
+          data: prev?.data?.filter((row) => row.id !== deleteId),
+        }));
+        setDeleteModal(false);
+        setDeleteId(null);
+      }
+    } catch (error) {
+      alert("O'chirishda xatolik yuz berdi.");
+      console.log(error);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModal(false);
+    setDeleteId(null);
   };
 
   const toggleGuruh = (id) => {
@@ -62,28 +150,78 @@ export default function Talabalar() {
 
   const create = async () => {
     try {
+      const cleanedPhone = tel.replace(/[^0-9+]/g, "");
       const formData = new FormData();
 
       formData.append("full_name", fio);
       formData.append("email", email);
-      formData.append("password", parol);
-      formData.append("phone", tel);
+      formData.append("phone", cleanedPhone);
+      if (parol && !editingStudent) {
+        formData.append("password", parol);
+      }
       if (rasm) {
         formData.append("photo", rasm);
       }
       formData.append("address", manzil);
       formData.append("birth_date", sana);
 
-      // agar array bo'lsa
-      selectedGuruhlar.forEach((g) => {
+      // Faqat mavjud va aktiv guruh IDlarini jo'natamiz
+      const validGroupIds = selectedGuruhlar
+        .map(Number)
+        .filter((id) => !isNaN(id) && id > 0 && allGroups.some((ag) => ag.id === id));
+
+      validGroupIds.forEach((g) => {
         formData.append("groups[]", g);
       });
 
-      const res = await fetchApi.post("students", formData);
+      let res;
+      if (editingStudent) {
+        if (parol) {
+          formData.append("password", parol);
+        }
+        res = await fetchApi.patch(`students/${editingStudent.id}`, formData);
+      } else {
+        res = await fetchApi.post("students", formData);
+      }
 
       if (res.status === 200 || res.status === 201) {
-        setDrawer(false);
-        window.location.reload();
+        if (editingStudent) {
+          let updatedStudent = res.data?.data || res.data || {};
+
+          // Populate group details from allGroups to ensure beautiful local rendering
+          const finalGroups = (updatedStudent.groups || validGroupIds).map((g) => {
+            const gid = g && typeof g === "object" ? g.id : g;
+            const found = allGroups.find((ag) => ag.id === Number(gid));
+            return found || (g && typeof g === "object" ? g : { id: Number(gid), name: `Guruh #${gid}` });
+          });
+
+          updatedStudent = {
+            full_name: fio,
+            email: email,
+            phone: cleanedPhone,
+            address: manzil,
+            birth_date: sana,
+            ...updatedStudent,
+            groups: finalGroups
+          };
+
+          setUsers((prev) => {
+            if (Array.isArray(prev)) {
+              return prev.map((row) => (row.id === editingStudent.id ? { ...row, ...updatedStudent } : row));
+            } else if (prev && prev.data) {
+              return {
+                ...prev,
+                data: prev.data.map((row) => (row.id === editingStudent.id ? { ...row, ...updatedStudent } : row))
+              };
+            }
+            return prev;
+          });
+          setDrawer(false);
+          resetForm();
+        } else {
+          setDrawer(false);
+          window.location.reload();
+        }
       }
     } catch (error) {
       const xato = error.response?.data?.message || error.response?.data?.error || "Xatolik yuz berdi. Barcha maydonlarni tekshiring.";
@@ -164,6 +302,16 @@ export default function Talabalar() {
         .modal-overlay.open .t-modal { transform: scale(1); }
 
         .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+        .delete-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 700; display: flex; align-items: center; justify-content: center; }
+        .delete-modal { background: #fff; width: 360px; border-radius: 14px; box-shadow: 0 16px 40px rgba(0,0,0,0.18); padding: 24px; text-align: center; }
+        .delete-title { font-size: 18px; font-weight: 700; color: #222; margin-bottom: 12px; }
+        .delete-text { font-size: 14px; color: #555; margin-bottom: 24px; line-height: 1.6; }
+        .delete-actions { display: flex; gap: 12px; justify-content: center; }
+        .delete-btn { flex: 1; height: 42px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; }
+        .delete-btn.cancel { background: #f4f4f4; color: #444; }
+        .delete-btn.confirm { background: #e53935; color: #fff; }
+
+        .guruh-btn {
         .modal-title { font-size: 18px; font-weight: 700; color: #222; margin: 0 0 4px 0; }
         .modal-subtitle { font-size: 13px; color: #666; margin: 0; }
         .modal-close { background: none; border: none; font-size: 16px; color: #999; cursor: pointer; }
@@ -220,6 +368,19 @@ export default function Talabalar() {
         </div>
       </div>
 
+      {deleteModal && (
+        <div className="delete-overlay" onClick={cancelDelete}>
+          <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="delete-title">Talabani o'chirish</h2>
+            <p className="delete-text">Siz ushbu talabani o'chirishga ishonchingiz komilmi? Bu amal qaytarib bo'lmaydi.</p>
+            <div className="delete-actions">
+              <button className="delete-btn cancel" onClick={cancelDelete}>Bekor qilish</button>
+              <button className="delete-btn confirm" onClick={handleDelete}>O'chirish</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Drawer Overlay */}
       <div className={`oqit-overlay ${drawerOpen ? "open" : ""}`} onClick={() => setDrawer(false)}></div>
 
@@ -227,8 +388,8 @@ export default function Talabalar() {
       <div className={`oqit-drawer ${drawerOpen ? "open" : ""}`}>
         <div className="oq-header">
           <div>
-            <h2 className="oq-title">Talaba qo'shish</h2>
-            <p className="oq-subtitle">Bu yerda siz yangi Talaba qo'shishingiz mumkin.</p>
+            <h2 className="oq-title">{editingStudent ? "Talaba tahrirlash" : "Talaba qo'shish"}</h2>
+            <p className="oq-subtitle">{editingStudent ? "Talaba ma'lumotlarini o'zgartiring va saqlang." : "Bu yerda siz yangi Talaba qo'shishingiz mumkin."}</p>
           </div>
           <button className="oq-close" onClick={() => setDrawer(false)}><i className="fa-solid fa-xmark"></i></button>
         </div>
@@ -250,8 +411,16 @@ export default function Talabalar() {
           <label className="oq-label">Manzil</label>
           <input className="oq-input" placeholder="Manzilni kiriting" value={manzil} onChange={e => setManzil(e.target.value)} />
 
-          <label className="oq-label">Parol</label>
-          <input className="oq-input" type="password" placeholder="Parolni kiriting" value={parol} onChange={e => setParol(e.target.value)} />
+          <label className="oq-label">
+            {editingStudent ? "Parol (ixtiyoriy, faqat o'zgartirish uchun)" : "Parol"}
+          </label>
+          <input
+            className="oq-input"
+            type="password"
+            placeholder={editingStudent ? "Yangi parol kiriting (ixtiyoriy)" : "Parolni kiriting"}
+            value={parol}
+            onChange={e => setParol(e.target.value)}
+          />
 
           <label className="oq-label">Guruh</label>
           <button className="guruh-btn" onClick={openGuruhModal}>
@@ -282,7 +451,9 @@ export default function Talabalar() {
         </div>
         <div className="oq-footer">
           <button className="top-btn btn-outline" onClick={() => setDrawer(false)} style={{ flex: 1, justifyContent: "center" }}>Bekor qilish</button>
-          <button className="top-btn btn-primary" onClick={create} style={{ flex: 1, justifyContent: "center", background: "#765bcf", color: "#fff", border: "none" }}>Saqlash</button>
+          <button className="top-btn btn-primary" onClick={create} style={{ flex: 1, justifyContent: "center", background: "#765bcf", color: "#fff", border: "none" }}>
+            {editingStudent ? "Yangilash" : "Saqlash"}
+          </button>
         </div>
       </div>
 
@@ -290,7 +461,7 @@ export default function Talabalar() {
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "#222", margin: 0 }}>Talabalar</h1>
-          <button className="top-btn btn-primary" onClick={() => setDrawer(true)}>
+          <button className="top-btn btn-primary" onClick={openAddStudent}>
             <i className="fa-solid fa-plus"></i> Talaba qo'shish
           </button>
         </div>
@@ -363,9 +534,9 @@ export default function Talabalar() {
                   <td className="oq-td">{row.created_at ? new Date(row.created_at).toLocaleDateString("en-GB") : ""}</td>
                   <td className="oq-td">
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
+                      <button className="act-btn" onClick={() => openEditStudent(row)}><i className="fa-solid fa-pen"></i></button>
+                      <button className="act-btn" onClick={() => confirmDelete(row.id)}><i className="fa-regular fa-trash-can"></i></button>
                       <button className="act-btn"><i className="fa-regular fa-eye"></i></button>
-                      <button className="act-btn"><i className="fa-regular fa-trash-can"></i></button>
-                      <button className="act-btn"><i className="fa-solid fa-pen"></i></button>
                     </div>
                   </td>
                 </tr>

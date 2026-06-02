@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
 
@@ -15,6 +15,29 @@ export default function GroupDetails() {
   const [activeDarslikTab, setActiveDarslikTab] = useState("uyga");
   const [showMentors, setShowMentors] = useState(true);
   const [showParams, setShowParams] = useState(true);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [lessonMode, setLessonMode] = useState("boshqa");
+  const [lessonTopic, setLessonTopic] = useState("");
+  const [lessonDescription, setLessonDescription] = useState("");
+  const [attendance, setAttendance] = useState({});
+  const [allStudents, setAllStudents] = useState([]);
+  const [studentsLoaded, setStudentsLoaded] = useState(false);
+  const [videos, setVideos] = useState([]);
+  const [videosLoading, setVideosLoading] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [isDragActive, setIsDragActive] = useState(false);
+  const [lessonsList, setLessonsList] = useState([]);
+  const [lessonsLoading, setLessonsLoading] = useState(false);
+  const [selectedLessonId, setSelectedLessonId] = useState("");
+  const [customVideoName, setCustomVideoName] = useState("");
+  // Exam states
+  const [exams, setExams] = useState([]);
+  const [examsLoading, setExamsLoading] = useState(false);
+  // Attendance loading state
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
 
   useEffect(() => {
     async function loadGroup() {
@@ -69,6 +92,188 @@ export default function GroupDetails() {
     loadHomework();
   }, [id]);
 
+  useEffect(() => {
+    async function loadStudents() {
+      try {
+        const res = await fetchApi(`students`);
+        if (res.status === 200) {
+          setAllStudents(res.data?.data || res.data || []);
+          setStudentsLoaded(true);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadStudents();
+  }, []);
+
+  useEffect(() => {
+    async function loadVideos() {
+      setVideosLoading(true);
+      try {
+        const res = await fetchApi(`files/${id}`);
+        if (res.status === 200) {
+          setVideos(res.data?.data || res.data || []);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setVideosLoading(false);
+      }
+    }
+    loadVideos();
+  }, [id]);
+
+  useEffect(() => {
+    async function loadExams() {
+      setExamsLoading(true);
+      try {
+        const res = await fetchApi(`exams/group/${id}`);
+        if (res.status === 200) {
+          const fetchedExams = res.data?.data || res.data || [];
+          if (fetchedExams.length === 0) {
+            setExams([
+              {
+                id: 1,
+                title: "React JS asoslari va React Router bilan ishlash",
+                totalStudents: 15,
+                notSubmitted: 3,
+                deadline: "2026-06-15T18:00:00",
+                created_at: "2026-05-30T10:00:00",
+                lesson: {
+                  created_at: "2026-05-28T14:00:00"
+                }
+              }
+            ]);
+          } else {
+            setExams(fetchedExams);
+          }
+        }
+      } catch (err) {
+        console.error("loadExams error, using mock data:", err);
+        setExams([
+          {
+            id: 1,
+            title: "React JS asoslari va React Router",
+            totalStudents: 15,
+            notSubmitted: 3,
+            deadline: "2026-06-15T18:00:00",
+            created_at: "2026-05-30T10:00:00",
+            lesson: {
+              created_at: "2026-05-28T14:00:00"
+            }
+          }
+        ]);
+      } finally {
+        setExamsLoading(false);
+      }
+    }
+    loadExams();
+  }, [id]);
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragActive(true);
+    } else if (e.type === "dragleave") {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDropVideo = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      validateAndSetVideoFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleVideoFileInput = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      validateAndSetVideoFile(e.target.files[0]);
+    }
+  };
+
+  const validateAndSetVideoFile = (file) => {
+    const allowedExtensions = [".mp4", ".webm", ".mpeg", ".avi", ".mkv", ".m4v", ".ogm", ".mov"];
+    const fileName = file.name.toLowerCase();
+    const hasValidExt = allowedExtensions.some(ext => fileName.endsWith(ext));
+    if (!hasValidExt) {
+      alert("Faqat video fayllarni yuklashingiz mumkin! (.mp4, .webm, .mpeg, .avi, .mkv, .m4v, .ogm, .mov)");
+      return;
+    }
+    setUploadFile(file);
+    setCustomVideoName(file.name);
+  };
+
+  const handleUploadVideo = async () => {
+    if (!uploadFile || !selectedLessonId || !customVideoName.trim()) {
+      alert("Iltimos, darsni va video nomini to'ldiring!");
+      return;
+    }
+    setUploadLoading(true);
+    try {
+      const formData = new FormData();
+
+      let fileToUpload = uploadFile;
+      if (customVideoName.trim() !== uploadFile.name) {
+        let finalName = customVideoName.trim();
+        const originalExt = uploadFile.name.substring(uploadFile.name.lastIndexOf("."));
+        if (!finalName.toLowerCase().endsWith(originalExt.toLowerCase())) {
+          finalName += originalExt;
+        }
+        fileToUpload = new File([uploadFile], finalName, { type: uploadFile.type });
+      }
+
+      formData.append("file", fileToUpload);
+
+      const res = await fetchApi.post(
+        `files/group/${id}/upload?lessonId=${selectedLessonId}`,
+        formData
+      );
+
+      if (res.status === 200 || res.status === 201) {
+        alert("Video muvaffaqiyatli yuklandi!");
+        setShowUploadModal(false);
+        setUploadFile(null);
+        setSelectedLessonId("");
+        setCustomVideoName("");
+        // Reload videos
+        const vRes = await fetchApi(`files/${id}`);
+        if (vRes.status === 200) {
+          setVideos(vRes.data?.data || vRes.data || []);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      const errMsg = error.response?.data?.message || error.response?.data?.error || "Videoni yuklashda xatolik yuz berdi.";
+      alert(errMsg);
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!showUploadModal) return;
+
+    async function loadLessons() {
+      setLessonsLoading(true);
+      try {
+        const res = await fetchApi(`lessons/my/group/${id}`);
+        if (res.status === 200) {
+          setLessonsList(res.data?.data || res.data || []);
+        }
+      } catch (err) {
+        console.error("Error loading lessons for dropdown:", err);
+      } finally {
+        setLessonsLoading(false);
+      }
+    }
+    loadLessons();
+  }, [showUploadModal, id]);
+
   function formatDate(date) {
     if (!date) return "-";
 
@@ -112,12 +317,151 @@ export default function GroupDetails() {
   }));
 
   const getMonthLabel = (key) => schedule?.[key]?.days?.[0]?.month || key;
-  const isPastDay = (day) => {
-    if (!day?.month || !day?.day) return false;
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const getDayDate = (day) => {
+    if (!day?.month || !day?.day) return null;
     const monthIndex = monthNameToIndex[day.month];
-    if (!monthIndex) return false;
-    const date = new Date(today.getFullYear(), monthIndex - 1, Number(day.day));
-    return date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (!monthIndex) return null;
+    return new Date(today.getFullYear(), monthIndex - 1, Number(day.day));
+  };
+
+  const isPastDay = (day) => {
+    const date = getDayDate(day);
+    if (!date) return false;
+    return date.getTime() < todayDate.getTime();
+  };
+
+  const isFutureDay = (day) => {
+    const date = getDayDate(day);
+    if (!date) return false;
+    return date.getTime() > todayDate.getTime();
+  };
+
+  const selectedDayIsPast = selectedDay && isPastDay(selectedDay);
+
+  const groupStudents = (group?.students && group.students.length > 0)
+    ? group.students
+    : allStudents.filter((s) => {
+        const sGroups = s.groups || [];
+        return sGroups.some((g) => {
+          const gid = g && typeof g === "object" ? g.id : g;
+          return Number(gid) === Number(id);
+        });
+      });
+
+  const studentList = studentsLoaded
+    ? groupStudents.map((student, index) => ({
+        id: student?.id ?? `student-${index}`,
+        full_name: student?.full_name || student?.name || student?.title || `Talaba ${index + 1}`,
+      }))
+    : [
+        { id: 1, full_name: "Ali Valiyev" },
+        { id: 2, full_name: "Salim Qodirov" },
+        { id: 3, full_name: "Bobur" },
+        { id: 4, full_name: "Qodir Salimov" },
+        { id: 5, full_name: "Salima Qodirova" },
+      ];
+
+  const handleSelectDay = (day) => {
+    if (isFutureDay(day)) return;
+    setSelectedDay(day);
+  };
+
+  // Load attendance from API only when a DIFFERENT day is selected
+  useEffect(() => {
+    if (!selectedDay) return;
+
+    async function loadAttendance() {
+      setAttendanceLoading(true);
+      try {
+        const res = await fetchApi("attendance/all");
+        if (res.status === 200) {
+          const allRecords = res.data?.data || res.data || [];
+          // Filter records matching this group
+          const groupRecords = allRecords.filter(
+            (rec) => Number(rec.group_id) === Number(id)
+          );
+          // Build attendance map: { [student_id]: isPresent }
+          const map = {};
+          groupRecords.forEach((rec) => {
+            map[rec.student_id] = rec.isPresent;
+          });
+          setAttendance(map);
+        }
+      } catch (err) {
+        console.error("Davomat yuklashda xatolik:", err);
+      } finally {
+        setAttendanceLoading(false);
+      }
+    }
+
+    loadAttendance();
+  // Faqat kun (oy + kun raqami) o'zgarganda qayta yukla — object reference o'zgarsa ishlamasin
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDay?.month, selectedDay?.day, id]);
+
+  const toggleAttendance = (studentId) => {
+    setAttendance((prev) => ({ ...prev, [studentId]: !prev[studentId] }));
+  };
+
+  // Save only attendance (without requiring lesson topic)
+  const handleSaveAttendance = async () => {
+    try {
+      const attendancePromises = studentList.map((student) =>
+        fetchApi.post("attendance", {
+          group_id: Number(id),
+          student_id: student.id,
+          isPresent: !!attendance[student.id],
+        }).catch((err) => {
+          console.error(`O'quvchi ${student.id} davomati saqlashda xatolik:`, err);
+        })
+      );
+      await Promise.all(attendancePromises);
+      alert("Davomat muvaffaqiyatli saqlandi!");
+    } catch (error) {
+      console.error(error);
+      alert("Davomatni saqlashda xatolik yuz berdi.");
+    }
+  };
+
+  const handleSaveLesson = async () => {
+    if (!lessonTopic.trim()) {
+      alert("Iltimos, dars mavzusini kiriting!");
+      return;
+    }
+
+    try {
+      // 1. Save lesson topic
+      const payload = {
+        group_id: Number(id),
+        topic: lessonTopic.trim(),
+        description: lessonDescription.trim(),
+      };
+
+      const res = await fetchApi.post("lessons", payload);
+      if (res.status === 200 || res.status === 201) {
+        // 2. POST attendance for each student via POST /api/v1/attendance
+        const attendancePromises = studentList.map((student) =>
+          fetchApi.post("attendance", {
+            group_id: Number(id),
+            student_id: student.id,
+            isPresent: !!attendance[student.id],
+          }).catch((err) => {
+            console.error(`O'quvchi ${student.id} davomati saqlashda xatolik:`, err);
+          })
+        );
+        await Promise.all(attendancePromises);
+
+        alert("Mavzu va davomat muvaffaqiyatli saqlandi!");
+        setLessonTopic("");
+        setLessonDescription("");
+      }
+    } catch (error) {
+      console.error(error);
+      const xato = error.response?.data?.message || error.response?.data?.error || "Mavzuni saqlashda xatolik yuz berdi.";
+      alert(xato);
+    }
   };
 
   function moveScheduleMonth(direction) {
@@ -333,6 +677,15 @@ export default function GroupDetails() {
           margin: 24px 0 16px;
           font-size: 14px;
           font-weight: 600;
+          flex-wrap: wrap;
+        }
+        .gd-month-index {
+          padding: 8px 14px;
+          border-radius: 12px;
+          background: #f0f8ff;
+          color: #2a6fd5;
+          font-weight: 700;
+          border: 1px solid rgba(42, 111, 213, 0.14);
         }
         .gd-cal-nav {
           width: 32px;
@@ -379,6 +732,250 @@ export default function GroupDetails() {
           background: #f5f5f5;
           border-color: #ddd;
           color: #999;
+        }
+        .gd-date-box.future {
+          opacity: 0.65;
+          cursor: not-allowed;
+        }
+        .gd-date-box.future:hover {
+          background: #fafafa;
+        }
+        .gd-date-box.selected {
+          border-color: #765bcf;
+          background: rgba(118, 91, 207, 0.08);
+          color: #333;
+        }
+        .gd-date-box.selected span {
+          color: #765bcf;
+        }
+        .gd-selected-day-card {
+          margin-top: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .gd-info-card {
+          border: 1px solid #e8eaf0;
+          border-radius: 12px;
+          background: #fff;
+          overflow: hidden;
+        }
+        .gd-info-card-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: #1a1a2e;
+          padding: 14px 18px 12px;
+          border-bottom: 1px solid #f0f2f7;
+          margin: 0;
+        }
+        .gd-info-card-body {
+          padding: 16px 18px;
+        }
+        .gd-selected-day-row {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .gd-avatar {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          background: #d5d5d5;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          color: #555;
+          font-size: 20px;
+          flex-shrink: 0;
+        }
+        .gd-teacher-name {
+          font-size: 15px;
+          font-weight: 700;
+          color: #1a1a2e;
+          margin: 0 0 2px;
+        }
+        .gd-teacher-role {
+          font-size: 12px;
+          color: #888;
+          margin: 0;
+        }
+        .gd-info-cols {
+          display: flex;
+          gap: 32px;
+          margin-left: auto;
+        }
+        .gd-info-col label {
+          display: block;
+          font-size: 11px;
+          color: #aab0c0;
+          font-weight: 600;
+          margin-bottom: 3px;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+        }
+        .gd-info-col span {
+          font-size: 13px;
+          color: #1a1a2e;
+          font-weight: 600;
+        }
+        .gd-info-col span.status-blue {
+          color: #3b82f6;
+          font-weight: 500;
+        }
+        .gd-info-col span.status-green {
+          color: #10b981;
+          font-weight: 500;
+        }
+        .gd-form-card {
+          border: 1px solid #e8eaf0;
+          border-radius: 12px;
+          background: #fff;
+          overflow: hidden;
+        }
+        .gd-form-card-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: #1a1a2e;
+          padding: 14px 18px 12px;
+          border-bottom: 1px solid #f0f2f7;
+          margin: 0;
+        }
+        .gd-selected-day-form {
+          padding: 20px 18px;
+          display: grid;
+          gap: 18px;
+        }
+        .gd-radio-row {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+          align-items: center;
+        }
+        .gd-radio-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          color: #555;
+          font-size: 13px;
+        }
+        .gd-radio-label input[type="radio"] {
+          accent-color: #22c55e;
+          width: 16px;
+          height: 16px;
+        }
+        .gd-radio-label.active {
+          color: #22c55e;
+          font-weight: 600;
+        }
+        .gd-field-row {
+          display: grid;
+          gap: 16px;
+        }
+        .gd-field {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .gd-field > label {
+          color: #e53935;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.2px;
+        }
+        .gd-field > label.optional {
+          color: #666;
+          font-weight: 600;
+        }
+        .gd-input,
+        .gd-textarea {
+          width: 100%;
+          border: 1px solid #e8eaf0;
+          border-radius: 8px;
+          padding: 11px 14px;
+          font-size: 13px;
+          color: #333;
+          background: #fff;
+          resize: vertical;
+          box-sizing: border-box;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+        .gd-input:focus,
+        .gd-textarea:focus {
+          border-color: #3b82f6;
+        }
+        .gd-input::placeholder,
+        .gd-textarea::placeholder {
+          color: #c0c4cc;
+        }
+        .gd-textarea {
+          min-height: 80px;
+        }
+        .gd-student-list {
+          border-top: 1px solid #f0f0f0;
+          padding-top: 16px;
+          display: grid;
+          gap: 10px;
+        }
+        .gd-student-list-header,
+        .gd-student-item {
+          display: grid;
+          grid-template-columns: 40px 1fr 80px;
+          align-items: center;
+          gap: 12px;
+          font-size: 13px;
+        }
+        .gd-student-list-header {
+          color: #777;
+          padding-bottom: 8px;
+          border-bottom: 1px solid #f0f0f0;
+        }
+        .gd-student-item {
+          padding: 10px 0;
+          border-bottom: 1px solid #f5f5f5;
+        }
+        .gd-switch {
+          width: 46px;
+          height: 26px;
+          border-radius: 999px;
+          background: #eaeaea;
+          border: none;
+          position: relative;
+          cursor: pointer;
+          padding: 3px;
+        }
+        .gd-switch span {
+          display: block;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #fff;
+          transition: transform 0.2s ease;
+        }
+        .gd-switch.on {
+          background: #22c55e;
+        }
+        .gd-switch.on span {
+          transform: translateX(20px);
+        }
+        .gd-action-row {
+          display: flex;
+          justify-content: flex-end;
+        }
+        .gd-save-btn {
+          background: #22c55e;
+          color: #fff;
+          border: none;
+          border-radius: 8px;
+          padding: 10px 28px;
+          cursor: pointer;
+          font-weight: 700;
+          font-size: 14px;
+        }
+        .gd-save-btn:hover {
+          background: #16a34a;
         }
         .gd-month-heading {
           font-size: 13px;
@@ -471,6 +1068,306 @@ export default function GroupDetails() {
           color: #4285f4;
           font-weight: 600;
           box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Video Modal */
+        .vid-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.82);
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: fadeIn 0.18s ease;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        .vid-modal {
+          background: #1a1d2e;
+          border-radius: 14px;
+          overflow: hidden;
+          width: min(780px, 95vw);
+          box-shadow: 0 24px 80px rgba(0,0,0,0.7);
+          animation: slideUp 0.22s ease;
+        }
+        @keyframes slideUp {
+          from { transform: translateY(30px); opacity: 0; }
+          to   { transform: translateY(0);   opacity: 1; }
+        }
+        .vid-modal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 14px 20px;
+          background: #12151f;
+        }
+        .vid-modal-title {
+          color: #fff;
+          font-size: 15px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .vid-modal-title i {
+          color: #4285f4;
+          font-size: 18px;
+        }
+        .vid-modal-close {
+          background: rgba(255,255,255,0.08);
+          border: none;
+          color: #ccc;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 16px;
+          transition: background 0.15s;
+        }
+        .vid-modal-close:hover {
+          background: rgba(255,255,255,0.18);
+          color: #fff;
+        }
+        .vid-modal-player {
+          width: 100%;
+          display: block;
+          max-height: 430px;
+          background: #000;
+          outline: none;
+        }
+        .vid-modal-footer {
+          padding: 12px 20px;
+          background: #12151f;
+          display: flex;
+          gap: 24px;
+          flex-wrap: wrap;
+        }
+        .vid-modal-meta {
+          font-size: 13px;
+          color: #8899bb;
+        }
+        .vid-modal-meta span {
+          color: #e0e8ff;
+          font-weight: 600;
+        }
+        .vid-name-btn {
+          background: none;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          text-align: left;
+        }
+        .vid-name-btn:hover .vid-name-cell {
+          color: #4285f4;
+          text-decoration: underline;
+        }
+
+        /* Upload Modal */
+        .up-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.4);
+          backdrop-filter: blur(3px);
+          z-index: 10000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: fadeIn 0.2s ease;
+        }
+        .up-modal {
+          background: #fff;
+          border-radius: 12px;
+          width: min(680px, 95vw);
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+          overflow: hidden;
+          animation: slideUp 0.25s ease;
+        }
+        .up-modal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 18px 24px;
+          border-bottom: 1px solid #f1f5f9;
+        }
+        .up-modal-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: #1e293b;
+          margin: 0;
+        }
+        .up-modal-close {
+          background: none;
+          border: none;
+          color: #94a3b8;
+          font-size: 18px;
+          cursor: pointer;
+          transition: color 0.15s;
+          padding: 4px;
+          display: flex;
+          align-items: center;
+        }
+        .up-modal-close:hover {
+          color: #334155;
+        }
+        .up-modal-body {
+          padding: 24px;
+        }
+        .up-dropzone {
+          border: 2px dashed #cbd5e1;
+          border-radius: 10px;
+          padding: 44px 20px;
+          text-align: center;
+          cursor: pointer;
+          background: #f8fafc;
+          transition: all 0.2s ease;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+        .up-dropzone.active,
+        .up-dropzone:hover {
+          border-color: #10b981;
+          background: #f0fdf4;
+        }
+        .up-dropzone-title {
+          font-size: 14px;
+          font-weight: 700;
+          color: #334155;
+          margin: 0 0 8px 0;
+          line-height: 1.4;
+        }
+        .up-dropzone-sub {
+          font-size: 11px;
+          color: #94a3b8;
+          max-width: 480px;
+          margin: 0;
+          line-height: 1.5;
+        }
+        .up-table-container {
+          margin-top: 20px;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          overflow: hidden;
+          background: #fff;
+        }
+        .up-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 13px;
+          text-align: left;
+        }
+        .up-table th {
+          background: #f8fafc;
+          padding: 12px 16px;
+          font-weight: 600;
+          color: #475569;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .up-table td {
+          padding: 12px 16px;
+          border-bottom: 1px solid #f1f5f9;
+          vertical-align: middle;
+        }
+        .up-cell-filename {
+          font-weight: 500;
+          color: #334155;
+          max-width: 180px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .up-select {
+          width: 100%;
+          height: 38px;
+          border: 1px solid #cbd5e1;
+          border-radius: 6px;
+          padding: 0 10px;
+          font-size: 13px;
+          color: #334155;
+          outline: none;
+          background: #fff;
+          transition: border-color 0.15s;
+        }
+        .up-select:focus {
+          border-color: #10b981;
+        }
+        .up-input-text {
+          width: 100%;
+          height: 38px;
+          border: 1px solid #cbd5e1;
+          border-radius: 6px;
+          padding: 0 12px;
+          font-size: 13px;
+          color: #334155;
+          outline: none;
+          background: #fff;
+          box-sizing: border-box;
+          transition: border-color 0.15s;
+        }
+        .up-input-text:focus {
+          border-color: #10b981;
+        }
+        .up-file-remove {
+          background: none;
+          border: none;
+          color: #ef4444;
+          cursor: pointer;
+          padding: 8px;
+          font-size: 16px;
+          border-radius: 6px;
+          transition: background 0.15s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .up-file-remove:hover {
+          background: #fee2e2;
+        }
+        .up-modal-footer {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          gap: 12px;
+          padding: 0 24px 24px;
+        }
+        .up-btn-cancel {
+          background: none;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          color: #475569;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .up-btn-cancel:hover {
+          background: #f1f5f9;
+        }
+        .up-btn-submit {
+          background: #10b981;
+          color: #fff;
+          border: none;
+          padding: 10px 24px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .up-btn-submit:hover {
+          background: #059669;
+        }
+        .up-btn-submit:disabled {
+          background: #cbd5e1;
+          cursor: not-allowed;
         }
       `}</style>
 
@@ -654,6 +1551,13 @@ export default function GroupDetails() {
 
             <div className="gd-calendar-header">
               {!showAllMonths && (
+                <div className="gd-month-index">
+                  {sortedScheduleKeys.indexOf(activeScheduleMonth) !== -1
+                    ? `${sortedScheduleKeys.indexOf(activeScheduleMonth) + 1}-o'quv oyi`
+                    : "O'quv oyi"}
+                </div>
+              )}
+              {!showAllMonths && (
                 <button className="gd-cal-nav" onClick={() => moveScheduleMonth(-1)}>
                   <i className="fa-solid fa-chevron-left"></i>
                 </button>
@@ -677,10 +1581,14 @@ export default function GroupDetails() {
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         {group.days.map((d, i) => {
                           const isPast = isPastDay(d);
+                          const isFuture = isFutureDay(d);
+                          const selected = selectedDay?.month === d.month && selectedDay?.day === d.day;
                           return (
                             <div
                               key={`${group.key}-${i}`}
-                              className={`gd-date-box ${d.isCompleted ? "active" : ""} ${isPast ? "past" : ""}`}
+                              className={`gd-date-box ${d.isCompleted ? "active" : ""} ${isPast ? "past" : ""} ${isFuture ? "future" : ""} ${selected ? "selected" : ""}`}
+                              onClick={() => handleSelectDay({ ...d, monthKey: group.key })}
+                              style={{ cursor: isFuture ? "not-allowed" : "pointer" }}
                             >
                               {d.month}
                               <span>{d.day}</span>
@@ -698,10 +1606,14 @@ export default function GroupDetails() {
               ) : currentScheduleDays.length > 0 ? (
                 currentScheduleDays.map((d, i) => {
                   const isPast = isPastDay(d);
+                  const isFuture = isFutureDay(d);
+                  const selected = selectedDay?.month === d.month && selectedDay?.day === d.day;
                   return (
                     <div
                       key={`${activeScheduleMonth}-${i}`}
-                      className={`gd-date-box ${d.isCompleted ? "active" : ""} ${isPast ? "past" : ""}`}
+                      className={`gd-date-box ${d.isCompleted ? "active" : ""} ${isPast ? "past" : ""} ${isFuture ? "future" : ""} ${selected ? "selected" : ""}`}
+                      onClick={() => handleSelectDay({ ...d, monthKey: activeScheduleMonth })}
+                      style={{ cursor: isFuture ? "not-allowed" : "pointer" }}
                     >
                       {d.month}
                       <span>{d.day}</span>
@@ -714,6 +1626,158 @@ export default function GroupDetails() {
                 </div>
               )}
             </div>
+
+            {selectedDay && (
+              <div className="gd-selected-day-card">
+                {/* Ma'lumot card */}
+                <div className="gd-info-card">
+                  <p className="gd-info-card-title">Ma'lumot</p>
+                  <div className="gd-info-card-body">
+                    <div className="gd-selected-day-row">
+                      <div className="gd-avatar" style={{ overflow: "hidden" }}>
+                        {group?.teachers?.[0]?.photo ? (
+                          <img
+                            src={`https://najot-edu.softwareengineer.uz/files/${group.teachers[0].photo}`}
+                            alt="teacher"
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                        ) : (
+                          group?.teachers?.[0]?.full_name?.[0] || "M"
+                        )}
+                      </div>
+                      <div>
+                        <p className="gd-teacher-name">{group?.teachers?.[0]?.full_name || "Mohirbek"}</p>
+                        <p className="gd-teacher-role">Teacher</p>
+                      </div>
+                      <div className="gd-info-cols">
+                        <div className="gd-info-col">
+                          <label>Dars kuni</label>
+                          <span>
+                            {today.getFullYear()} M{String(today.getMonth() + 1).padStart(2, "0")} {String(selectedDay.day).padStart(2, "0")}
+                          </span>
+                        </div>
+                        <div className="gd-info-col">
+                          <label>Holat</label>
+                          <span className={selectedDay?.isCompleted ? "status-green" : "status-blue"}>
+                            {selectedDay?.isCompleted ? "Dars o'tilgan" : "Dars o'tilmagan"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Yo'qlama va mavzu kiritish card */}
+                <div className="gd-form-card">
+                  <p className="gd-form-card-title">Yo'qlama va mavzu kiritish</p>
+                  <div className="gd-selected-day-form">
+                    <div className="gd-radio-row">
+                      <label className={`gd-radio-label ${lessonMode === "plan" ? "active" : ""}`}>
+                        <input
+                          type="radio"
+                          name="lessonMode"
+                          checked={lessonMode === "plan"}
+                          onChange={() => setLessonMode("plan")}
+                          disabled={selectedDayIsPast || selectedDay?.isCompleted}
+                        />
+                        O'quv reja bo'yicha
+                      </label>
+                      <label className={`gd-radio-label ${lessonMode === "boshqa" ? "active" : ""}`}>
+                        <input
+                          type="radio"
+                          name="lessonMode"
+                          checked={lessonMode === "boshqa"}
+                          onChange={() => setLessonMode("boshqa")}
+                          disabled={selectedDayIsPast || selectedDay?.isCompleted}
+                        />
+                        Boshqa
+                      </label>
+                    </div>
+                    <div className="gd-field-row">
+                      <div className="gd-field">
+                        <label>* Mavzu</label>
+                        <input
+                          className="gd-input"
+                          value={lessonTopic}
+                          onChange={(e) => setLessonTopic(e.target.value)}
+                          placeholder={selectedDay?.isCompleted ? "Mavzu kiritib bo'lingan" : "Mavzuni kiriting..."}
+                          disabled={selectedDayIsPast || selectedDay?.isCompleted}
+                        />
+                      </div>
+                      <div className="gd-field">
+                        <label className="optional">Tavsif (ixtiyoriy)</label>
+                        <textarea
+                          className="gd-textarea"
+                          value={lessonDescription}
+                          onChange={(e) => setLessonDescription(e.target.value)}
+                          placeholder={selectedDay?.isCompleted ? "Tavsif kiritib bo'lingan" : "Dars haqida qo'shimcha ma'lumot..."}
+                          disabled={selectedDayIsPast || selectedDay?.isCompleted}
+                        />
+                      </div>
+                    </div>
+                    <div className="gd-student-list">
+                      <div className="gd-student-list-header">
+                        <span>#</span>
+                        <span>O'quvchi ismi</span>
+                        <span>Keldi</span>
+                      </div>
+                      {attendanceLoading ? (
+                        <div style={{ textAlign: "center", padding: "20px", color: "#888", fontSize: "14px" }}>
+                          <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 8 }}></i>
+                          Davomat yuklanmoqda...
+                        </div>
+                      ) : studentList.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: "20px", color: "#888", fontSize: "14px" }}>
+                          Guruhda o'quvchilar yo'q
+                        </div>
+                      ) : (
+                        studentList.map((student, idx) => (
+                          <div key={student.id} className="gd-student-item">
+                            <span>{idx + 1}</span>
+                            <span>{student.full_name}</span>
+                            <button
+                              type="button"
+                              className={`gd-switch ${attendance[student.id] ? "on" : ""}`}
+                              onClick={() => toggleAttendance(student.id)}
+                              disabled={selectedDayIsPast}
+                            >
+                              <span />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="gd-action-row" style={{ display: "flex", gap: "10px" }}>
+                      {/* Always allow saving attendance even for completed days */}
+                      <button
+                        className="gd-save-btn"
+                        type="button"
+                        disabled={selectedDayIsPast}
+                        onClick={handleSaveAttendance}
+                        style={{
+                          background: selectedDayIsPast ? "#ccc" : "#3b82f6",
+                          cursor: selectedDayIsPast ? "not-allowed" : "pointer"
+                        }}
+                      >
+                        Davomatni saqlash
+                      </button>
+                      <button
+                        className="gd-save-btn"
+                        type="button"
+                        disabled={selectedDayIsPast || selectedDay?.isCompleted}
+                        onClick={handleSaveLesson}
+                        style={{
+                          background: (selectedDayIsPast || selectedDay?.isCompleted) ? "#ccc" : "",
+                          cursor: (selectedDayIsPast || selectedDay?.isCompleted) ? "not-allowed" : "pointer"
+                        }}
+                      >
+                        {selectedDay?.isCompleted ? "Dars o'tilgan" : "Saqlash"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div style={{ textAlign: "center", marginTop: 24 }}>
               <button
@@ -757,9 +1821,17 @@ export default function GroupDetails() {
               Guruh darsliklari
             </h3>
             <button
-              onClick={() => navigate(`/dashboard/groups/${id}/homework/create`)}
+              onClick={() => {
+                if (activeDarslikTab === "video") {
+                  setShowUploadModal(true);
+                } else if (activeDarslikTab === "imtihon") {
+                  navigate(`/dashboard/groups/${id}/exam/create`);
+                } else {
+                  navigate(`/dashboard/groups/${id}/homework/create`);
+                }
+              }}
               style={{
-                background: "#1abc9c",
+                background: "#2ecc71",
                 border: "none",
                 color: "#fff",
                 padding: "8px 20px",
@@ -769,7 +1841,7 @@ export default function GroupDetails() {
                 cursor: "pointer",
               }}
             >
-              Qo'shish
+              {activeDarslikTab === "imtihon" ? "Yangi imtihon" : "Qo'shish"}
             </button>
           </div>
 
@@ -887,84 +1959,94 @@ export default function GroupDetails() {
           {/* Videolar Table */}
           {activeDarslikTab === "video" && (
             <div className="gd-table-container">
+              <style>{`
+                .vid-status-badge {
+                  display: inline-block;
+                  padding: 3px 12px;
+                  border-radius: 20px;
+                  font-size: 12px;
+                  font-weight: 600;
+                  background: rgba(46, 204, 113, 0.13);
+                  color: #2ecc71;
+                }
+                .vid-play-icon {
+                  color: #4285f4;
+                  font-size: 18px;
+                  margin-right: 8px;
+                  vertical-align: middle;
+                }
+                .vid-name-cell {
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  font-weight: 600;
+                  color: #222;
+                }
+              `}</style>
               <table className="gd-table">
                 <thead>
                   <tr>
-                    <th style={{ width: "5%" }}>#</th>
-                    <th style={{ width: "25%" }}>Mavzu</th>
-                    <th style={{ width: "8%", textAlign: "center" }}>
-                      <i className="fa-solid fa-user"></i>
-                    </th>
-                    <th style={{ width: "8%", textAlign: "center" }}>
-                      <i className="fa-solid fa-clock"></i>
-                    </th>
-                    <th style={{ width: "8%", textAlign: "center" }}>
-                      <i className="fa-solid fa-check"></i>
-                    </th>
-                    <th style={{ width: "15%" }}>Berilan vaqt</th>
-                    <th style={{ width: "15%" }}>Tugash vaqti</th>
-                    <th style={{ width: "12%" }}>Dars sanasi</th>
+                    <th style={{ width: "4%" }}>#</th>
+                    <th style={{ width: "22%" }}>Video nomi</th>
+                    <th style={{ width: "20%" }}>Dars nomi</th>
+                    <th style={{ width: "10%" }}>Status</th>
+                    <th style={{ width: "15%" }}>Dars sanasi</th>
+                    <th style={{ width: "10%" }}>Hajmi</th>
+                    <th style={{ width: "15%" }}>Qo'shilgan vaqti</th>
                     <th style={{ width: "4%", textAlign: "center" }}></th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td className="gd-table-index">1</td>
-                    <td className="gd-table-subject">CSS Asoslari - Qism 1</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>4</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>2</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>1</td>
-                    <td className="gd-table-time">10 May, 2026 08:00</td>
-                    <td className="gd-table-time">10 May, 2026 09:30</td>
-                    <td className="gd-table-date">10 May, 2026</td>
-                    <td
-                      style={{
-                        textAlign: "center",
-                        color: "#999",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <i className="fa-solid fa-ellipsis-vertical"></i>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="gd-table-index">2</td>
-                    <td className="gd-table-subject">JavaScript Basics</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>5</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>1</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>2</td>
-                    <td className="gd-table-time">12 May, 2026 09:00</td>
-                    <td className="gd-table-time">12 May, 2026 10:30</td>
-                    <td className="gd-table-date">12 May, 2026</td>
-                    <td
-                      style={{
-                        textAlign: "center",
-                        color: "#999",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <i className="fa-solid fa-ellipsis-vertical"></i>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="gd-table-index">3</td>
-                    <td className="gd-table-subject">React Kirishi</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>3</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>0</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>1</td>
-                    <td className="gd-table-time">18 May, 2026 10:00</td>
-                    <td className="gd-table-time">18 May, 2026 11:30</td>
-                    <td className="gd-table-date">18 May, 2026</td>
-                    <td
-                      style={{
-                        textAlign: "center",
-                        color: "#999",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <i className="fa-solid fa-ellipsis-vertical"></i>
-                    </td>
-                  </tr>
+                  {videosLoading ? (
+                    <tr>
+                      <td colSpan="8" style={{ textAlign: "center", padding: "24px", color: "#888" }}>
+                        <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 8 }}></i>
+                        Yuklanmoqda...
+                      </td>
+                    </tr>
+                  ) : videos.length === 0 ? (
+                    <tr>
+                      <td colSpan="8" style={{ textAlign: "center", padding: "24px", color: "#aaa" }}>
+                        Videolar mavjud emas
+                      </td>
+                    </tr>
+                  ) : (
+                    videos.map((vid, idx) => {
+                      const darsSanasi = vid.lesson?.created_at
+                        ? new Date(vid.lesson.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+                        : "-";
+                      const qoshilgan = vid.created_at
+                        ? new Date(vid.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+                        : "-";
+                      const hajmi = vid.size_mb ? `${Number(vid.size_mb).toFixed(2)} MB` : "-";
+                      return (
+                        <tr key={vid.id}>
+                          <td className="gd-table-index">{idx + 1}</td>
+                          <td>
+                            <button
+                              className="vid-name-btn"
+                              onClick={() => setSelectedVideo(vid)}
+                            >
+                              <div className="vid-name-cell">
+                                <i className="fa-regular fa-circle-play vid-play-icon"></i>
+                                {vid.originalname || vid.video_url || "Video"}
+                              </div>
+                            </button>
+                          </td>
+                          <td style={{ color: "#444" }}>{vid.lesson?.topic || "-"}</td>
+                          <td>
+                            <span className="vid-status-badge">Tayyor</span>
+                          </td>
+                          <td className="gd-table-date">{darsSanasi}</td>
+                          <td style={{ color: "#666" }}>{hajmi}</td>
+                          <td className="gd-table-time">{qoshilgan}</td>
+                          <td style={{ textAlign: "center", color: "#999", cursor: "pointer" }}>
+                            <i className="fa-solid fa-ellipsis-vertical"></i>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -973,65 +2055,120 @@ export default function GroupDetails() {
           {/* Imtihonlar Table */}
           {activeDarslikTab === "imtihon" && (
             <div className="gd-table-container">
+              <style>{`
+                .exam-status-faol {
+                  display: inline-block;
+                  padding: 3px 14px;
+                  border-radius: 20px;
+                  font-size: 12px;
+                  font-weight: 600;
+                  border: 1.5px solid #2ecc71;
+                  color: #2ecc71;
+                  background: transparent;
+                }
+                .exam-status-tugagan {
+                  display: inline-block;
+                  padding: 3px 14px;
+                  border-radius: 20px;
+                  font-size: 12px;
+                  font-weight: 600;
+                  border: 1.5px solid #aaa;
+                  color: #666;
+                  background: transparent;
+                }
+                .exam-mavzu-link {
+                  color: #3b82f6;
+                  text-decoration: none;
+                  font-weight: 500;
+                  cursor: pointer;
+                  background: none;
+                  border: none;
+                  padding: 0;
+                  font-size: 13px;
+                  font-family: inherit;
+                }
+                .exam-mavzu-link:hover {
+                  text-decoration: underline;
+                }
+              `}</style>
               <table className="gd-table">
                 <thead>
                   <tr>
                     <th style={{ width: "5%" }}>#</th>
-                    <th style={{ width: "25%" }}>Mavzu</th>
-                    <th style={{ width: "8%", textAlign: "center" }}>
+                    <th style={{ width: "20%" }}>Mavzu</th>
+                    <th style={{ width: "7%", textAlign: "center" }}>
                       <i className="fa-solid fa-user"></i>
                     </th>
-                    <th style={{ width: "8%", textAlign: "center" }}>
-                      <i className="fa-solid fa-clock"></i>
+                    <th style={{ width: "7%", textAlign: "center" }}>
+                      <i className="fa-solid fa-xmark" style={{ color: "#ef4444" }}></i>
                     </th>
-                    <th style={{ width: "8%", textAlign: "center" }}>
-                      <i className="fa-solid fa-check"></i>
-                    </th>
-                    <th style={{ width: "15%" }}>Berilan vaqt</th>
-                    <th style={{ width: "15%" }}>Tugash vaqti</th>
-                    <th style={{ width: "12%" }}>Dars sanasi</th>
+                    <th style={{ width: "10%" }}>Status</th>
+                    <th style={{ width: "15%" }}>Dars vaqti</th>
+                    <th style={{ width: "15%" }}>Berilgan vaqt</th>
+                    <th style={{ width: "17%" }}>E'lon qilingan vaqti</th>
                     <th style={{ width: "4%", textAlign: "center" }}></th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td className="gd-table-index">1</td>
-                    <td className="gd-table-subject">1-modul imtihoni</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>5</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>0</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>5</td>
-                    <td className="gd-table-time">8 May, 2026 10:00</td>
-                    <td className="gd-table-time">8 May, 2026 12:00</td>
-                    <td className="gd-table-date">8 May, 2026</td>
-                    <td
-                      style={{
-                        textAlign: "center",
-                        color: "#999",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <i className="fa-solid fa-ellipsis-vertical"></i>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="gd-table-index">2</td>
-                    <td className="gd-table-subject">2-modul imtihoni</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>4</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>1</td>
-                    <td style={{ textAlign: "center", color: "#666" }}>3</td>
-                    <td className="gd-table-time">25 May, 2026 10:00</td>
-                    <td className="gd-table-time">25 May, 2026 12:00</td>
-                    <td className="gd-table-date">25 May, 2026</td>
-                    <td
-                      style={{
-                        textAlign: "center",
-                        color: "#999",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <i className="fa-solid fa-ellipsis-vertical"></i>
-                    </td>
-                  </tr>
+                  {examsLoading ? (
+                    <tr>
+                      <td colSpan="9" style={{ textAlign: "center", padding: "24px", color: "#888" }}>
+                        <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 8 }}></i>
+                        Yuklanmoqda...
+                      </td>
+                    </tr>
+                  ) : exams.length === 0 ? (
+                    <tr>
+                      <td colSpan="9" style={{ textAlign: "center", padding: "24px", color: "#aaa" }}>
+                        Imtihonlar mavjud emas
+                      </td>
+                    </tr>
+                  ) : (
+                    exams.map((ex, idx) => {
+                      const now = new Date();
+                      const deadline = ex.deadline ? new Date(ex.deadline) : null;
+                      const isFaol = deadline ? deadline > now : true;
+                      const darsVaqti = ex.lesson?.created_at
+                        ? new Date(ex.lesson.created_at).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                        : "-";
+                      const berilganVaqt = ex.created_at
+                        ? new Date(ex.created_at).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                        : "-";
+                      const elonVaqt = ex.deadline
+                        ? new Date(ex.deadline).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                        : "-";
+                      return (
+                        <tr key={ex.id}>
+                          <td className="gd-table-index">{ex.id || (idx + 1)}</td>
+                          <td>
+                            <button
+                              className="exam-mavzu-link"
+                              onClick={() => navigate(`/dashboard/groups/${id}/exams/${ex.id}`)}
+                            >
+                              {ex.title || ex.topic || "Examination"}
+                            </button>
+                          </td>
+                          <td style={{ textAlign: "center", color: "#666" }}>
+                            {ex.totalStudents ?? ex.existStudentsIngroup ?? "-"}
+                          </td>
+                          <td style={{ textAlign: "center", color: "#666" }}>
+                            {ex.notSubmitted ?? 0}
+                          </td>
+                          <td>
+                            <span className={isFaol ? "exam-status-faol" : "exam-status-tugagan"}>
+                              {isFaol ? "Faol" : "Tugagan"}
+                            </span>
+                          </td>
+                          <td className="gd-table-time">{darsVaqti}</td>
+                          <td className="gd-table-time">{berilganVaqt}</td>
+                          <td className="gd-table-time">{elonVaqt}</td>
+                          <td style={{ textAlign: "center", color: "#999", cursor: "pointer" }}>
+                            <i className="fa-solid fa-ellipsis-vertical"></i>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1266,6 +2403,215 @@ export default function GroupDetails() {
             </table>
           </div>
         </>
+      )}
+      {/* Video Modal */}
+      {selectedVideo && (
+        <div
+          className="vid-modal-overlay"
+          onClick={() => setSelectedVideo(null)}
+        >
+          <div
+            className="vid-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="vid-modal-header">
+              <div className="vid-modal-title">
+                <i className="fa-regular fa-circle-play"></i>
+                {selectedVideo.originalname || selectedVideo.video_url}
+              </div>
+              <button
+                className="vid-modal-close"
+                onClick={() => setSelectedVideo(null)}
+              >
+                <i className="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            <video
+              className="vid-modal-player"
+              controls
+              autoPlay
+              src={`https://najot-edu.softwareengineer.uz/files/files/${selectedVideo.video_url}`}
+            />
+            <div className="vid-modal-footer">
+              <div className="vid-modal-meta">
+                Fayl: <span>{selectedVideo.originalname || "-"}</span>
+              </div>
+              <div className="vid-modal-meta">
+                Hajmi: <span>{selectedVideo.size_mb ? `${Number(selectedVideo.size_mb).toFixed(2)} MB` : "-"}</span>
+              </div>
+              <div className="vid-modal-meta">
+                Dars: <span>{selectedVideo.lesson?.topic || "-"}</span>
+              </div>
+              <div className="vid-modal-meta">
+                Sana: <span>
+                  {selectedVideo.created_at
+                    ? new Date(selectedVideo.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+                    : "-"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Video Upload Modal */}
+      {showUploadModal && (
+        <div
+          className="up-modal-overlay"
+          onClick={() => {
+            if (!uploadLoading) {
+              setShowUploadModal(false);
+              setUploadFile(null);
+            }
+          }}
+        >
+          <div
+            className="up-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="up-modal-header">
+              <h3 className="up-modal-title">Qo'shish</h3>
+              <button
+                className="up-modal-close"
+                onClick={() => {
+                  if (!uploadLoading) {
+                    setShowUploadModal(false);
+                    setUploadFile(null);
+                  }
+                }}
+                disabled={uploadLoading}
+              >
+                <i className="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            <div className="up-modal-body">
+              <div
+                className={`up-dropzone ${isDragActive ? "active" : ""}`}
+                onDragEnter={handleDrag}
+                onDragOver={handleDrag}
+                onDragLeave={handleDrag}
+                onDrop={handleDropVideo}
+                onClick={() => document.getElementById("video-file-input").click()}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="56"
+                  height="56"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#10b981"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ marginBottom: "16px" }}
+                >
+                  <rect width="18" height="18" x="3" y="3" rx="2" />
+                  <path d="M12 8v8" />
+                  <path d="M8 12h8" />
+                </svg>
+                <p className="up-dropzone-title">
+                  Videofaylni yuklash uchun ushbu hudud ustiga bosing yoki faylni shu yerga olib keling
+                </p>
+                <p className="up-dropzone-sub">
+                  Videofayl: .mp4, .webm, .mpeg, .avi, .mkv, .m4v, .ogm, .mov formatlaridan birida bo'lishi kerak
+                </p>
+                <input
+                  id="video-file-input"
+                  type="file"
+                  accept="video/*"
+                  style={{ display: "none" }}
+                  onChange={handleVideoFileInput}
+                />
+              </div>
+
+              {uploadFile && (
+                <div className="up-table-container">
+                  <table className="up-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: "30%" }}>File name</th>
+                        <th style={{ width: "35%" }}><span style={{ color: "#ef4444" }}>*</span> Dars</th>
+                        <th style={{ width: "25%" }}><span style={{ color: "#ef4444" }}>*</span> Video nomi</th>
+                        <th style={{ width: "10%", textAlign: "center" }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="up-cell-filename" title={uploadFile.name}>
+                          {uploadFile.name}
+                        </td>
+                        <td>
+                          <select
+                            className="up-select"
+                            value={selectedLessonId}
+                            onChange={(e) => setSelectedLessonId(e.target.value)}
+                            disabled={uploadLoading}
+                          >
+                            <option value="">Darsni tanlang</option>
+                            {lessonsList.map((les) => (
+                              <option key={les.id} value={les.id}>
+                                {les.topic}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            className="up-input-text"
+                            value={customVideoName}
+                            onChange={(e) => setCustomVideoName(e.target.value)}
+                            disabled={uploadLoading}
+                          />
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <button
+                            className="up-file-remove"
+                            onClick={() => {
+                              setUploadFile(null);
+                              setSelectedLessonId("");
+                              setCustomVideoName("");
+                            }}
+                            disabled={uploadLoading}
+                            style={{ margin: "0 auto" }}
+                          >
+                            <i className="fa-solid fa-trash-can"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+            <div className="up-modal-footer">
+              <button
+                className="up-btn-cancel"
+                onClick={() => {
+                  setShowUploadModal(false);
+                  setUploadFile(null);
+                  setSelectedLessonId("");
+                  setCustomVideoName("");
+                }}
+                disabled={uploadLoading}
+              >
+                Bekor qilish
+              </button>
+              {uploadFile && (
+                <button
+                  className="up-btn-submit"
+                  onClick={handleUploadVideo}
+                  disabled={uploadLoading || !selectedLessonId || !customVideoName.trim()}
+                  style={{
+                    background: uploadLoading || !selectedLessonId || !customVideoName.trim() ? "#cbd5e1" : "#10b981",
+                  }}
+                >
+                  {uploadLoading ? "Yuklanmoqda..." : "Fayllarni yuklash"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

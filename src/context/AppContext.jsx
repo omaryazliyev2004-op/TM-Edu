@@ -39,9 +39,7 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+
 
   return (
     <AppContext.Provider value={{ stats, fetchStats }}>

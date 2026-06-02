@@ -1,28 +1,13 @@
 import { useEffect, useState } from "react";
 import { fetchApi } from "../api/user.api";
 
-/* ── dastlabki xonalar ── */
-const initialRooms = [
-  { id: 1, nom: "genious room", sigim: 15 },
-  { id: 2, nom: "Impact room", sigim: 12 },
-  { id: 3, nom: "1A", sigim: 25 },
-  { id: 4, nom: "205-xona", sigim: 32 },
-  { id: 5, nom: "16-xona", sigim: 18 },
-  { id: 6, nom: "5 xona", sigim: 30 },
-  { id: 7, nom: "IELTS with islombek", sigim: 20 },
-  { id: 8, nom: "Beginner", sigim: 18 },
-];
-
 export function Xonalar() {
-
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
     async function datas() {
       try {
-        const data = await fetchApi(
-          `rooms`,
-        );
+        const data = await fetchApi(`rooms`);
         if (data.status === 200) {
           setUsers(data.data);
         }
@@ -31,28 +16,43 @@ export function Xonalar() {
       }
     }
     datas();
-
   }, []);
 
-
-
-  const [rooms, setRooms] = useState(initialRooms);
   const [drawerOpen, setDrawer] = useState(false);
-  const [editRoom, setEditRoom] = useState(null); // null = qo'shish, obj = tahrirlash
+  const [editRoom, setEditRoom] = useState(null); 
   const [nom, setNom] = useState("");
   const [sigim, setSigim] = useState(0);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
-
-    const handleRoom = async (e) => {
-    e.preventDefault();
+  const handleRoom = async (e) => {
+    e?.preventDefault?.();
     try {
-      const res = await fetchApi.post("rooms", {
-        name: nom,
-        capacity: Number(sigim),
-      });
-      if (res.status === 200 || res.status === 201) {
-        setDrawer(false);
-        window.location.reload();
+      if (editRoom) {
+        const res = await fetchApi.patch(`rooms/${editRoom.id}`, {
+          name: nom,
+          capacity: Number(sigim),
+        });
+        if (res.status === 200 || res.status === 201) {
+          setUsers((prev) => ({
+            ...prev,
+            data: prev?.data?.map((room) =>
+              room.id === editRoom.id
+                ? { ...room, name: nom, capacity: Number(sigim) }
+                : room,
+            ),
+          }));
+          closeDrawer();
+        }
+      } else {
+        const res = await fetchApi.post("rooms", {
+          name: nom,
+          capacity: Number(sigim),
+        });
+        if (res.status === 200 || res.status === 201) {
+          setDrawer(false);
+          window.location.reload();
+        }
       }
     } catch (error) {
       alert("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring.");
@@ -62,30 +62,50 @@ export function Xonalar() {
 
   function openAdd() {
     setEditRoom(null);
-    setNom(""); setSigim("");
+    setNom("");
+    setSigim("");
     setDrawer(true);
   }
   function openEdit(room) {
     setEditRoom(room);
-    setNom(room.nom); setSigim(room.sigim);
+    setNom(room.name || "");
+    setSigim(room.capacity || 0);
     setDrawer(true);
   }
+
   function closeDrawer() {
     setDrawer(false);
-    setNom(""); setSigim(""); setEditRoom(null);
+    setNom("");
+    setSigim("");
+    setEditRoom(null);
   }
-  function handleSave() {
-    if (!nom.trim() || !sigim) return;
-    if (editRoom) {
-      setRooms(r => r.map(x => x.id === editRoom.id ? { ...x, nom, sigim: +sigim } : x));
-    } else {
-      setRooms(r => [...r, { id: Date.now(), nom, sigim: +sigim }]);
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setDeleteModal(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    try {
+      const res = await fetchApi.delete(`rooms/${deleteId}`);
+      if (res.status === 200 || res.status === 201) {
+        setUsers((prev) => ({
+          ...prev,
+          data: prev?.data?.filter((room) => room.id !== deleteId),
+        }));
+        setDeleteModal(false);
+        setDeleteId(null);
+      }
+    } catch (error) {
+      alert("Xatolik yuz berdi.");
+      console.log(error);
     }
-    closeDrawer();
-  }
-  function handleDelete(id) {
-    setRooms(r => r.filter(x => x.id !== id));
-  }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModal(false);
+    setDeleteId(null);
+  };
 
   return (
     <>
@@ -161,13 +181,15 @@ export function Xonalar() {
           cursor: pointer; transition: background 0.15s;
         }
         .btn-cancel:hover { background: #f5f5f5; }
+        .btn-cancel:active { filter: brightness(1.05); }
         .btn-save {
           flex: 1; height: 40px; border-radius: 10px;
           border: none; background: #765bcf;
           font-size: 14px; font-weight: 600; color: #fff;
-          cursor: pointer; transition: background 0.15s;
+          cursor: pointer; transition: background 0.15s, filter 0.15s, transform 0.15s;
         }
         .btn-save:hover { background: #5e48a8; }
+        .btn-save:active { filter: brightness(1.08); transform: translateY(1px); }
 
         /* Room card */
         .room-card {
@@ -189,6 +211,11 @@ export function Xonalar() {
         }
         .room-btn.delete { color: #e53935; }
         .room-btn.delete:hover { color: #c62828; }
+        .room-btn.delete:active,
+        .room-btn.edit:active {
+          filter: brightness(1.15);
+          transform: translateY(1px);
+        }
         .room-btn.edit { color: #765bcf; }
         .room-btn.edit:hover { color: #5e48a8; }
 
@@ -198,10 +225,82 @@ export function Xonalar() {
           grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
           gap: 20px;
         }
+
+        /* Delete modal */
+        .del-overlay {
+          position: fixed; inset: 0;
+          background: rgba(0,0,0,0.35);
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .del-modal {
+          background: #fff;
+          border-radius: 16px;
+          padding: 32px 28px 24px;
+          width: 360px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+          text-align: center;
+        }
+        .del-modal-title {
+          font-size: 18px;
+          font-weight: 700;
+          color: #1a1a2e;
+          margin: 0 0 12px;
+        }
+        .del-modal-text {
+          font-size: 14px;
+          color: #666;
+          margin: 0 0 28px;
+          line-height: 1.5;
+        }
+        .del-modal-btns {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+        }
+        .del-btn-cancel {
+          flex: 1; height: 42px; border-radius: 10px;
+          border: 1.5px solid #e0e0e0; background: #fff;
+          font-size: 14px; font-weight: 600; color: #555;
+          cursor: pointer; transition: background 0.15s;
+        }
+        .del-btn-cancel:hover { background: #f5f5f5; }
+        .del-btn-confirm {
+          flex: 1; height: 42px; border-radius: 10px;
+          border: none; background: #e53935;
+          font-size: 14px; font-weight: 700; color: #fff;
+          cursor: pointer; transition: background 0.15s;
+        }
+        .del-btn-confirm:hover { background: #c62828; }
       `}</style>
 
+      {/* Delete Confirm Modal */}
+      {deleteModal && (
+        <div className="del-overlay" onClick={cancelDelete}>
+          <div className="del-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="del-modal-title">Xonani o'chirish</h3>
+            <p className="del-modal-text">
+              Rostdan ham o'chirishni hohlaysizmi?
+            </p>
+            <div className="del-modal-btns">
+              <button className="del-btn-cancel" onClick={cancelDelete}>
+                Bekor qilish
+              </button>
+              <button className="del-btn-confirm" onClick={handleDelete}>
+                Ha
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Overlay */}
-      <div className={`xona-overlay${drawerOpen ? " show" : ""}`} onClick={closeDrawer} />
+      <div
+        className={`xona-overlay${drawerOpen ? " show" : ""}`}
+        onClick={closeDrawer}
+      />
 
       {/* Right Drawer */}
       <div className={`xona-drawer${drawerOpen ? " open" : ""}`}>
@@ -215,53 +314,99 @@ export function Xonalar() {
         </div>
         <div className="xona-drawer-body">
           <div className="xona-field">
-            <label className="xona-label">Nomi <span>*</span></label>
+            <label className="xona-label">
+              Nomi <span>*</span>
+            </label>
             <input
               className="xona-input"
               placeholder="Xona nomi"
               value={nom}
-              onChange={e => setNom(e.target.value)}
+              onChange={(e) => setNom(e.target.value)}
             />
           </div>
           <div className="xona-field">
-            <label className="xona-label">Sig'imi <span>*</span></label>
+            <label className="xona-label">
+              Sig'imi <span>*</span>
+            </label>
             <input
               className="xona-input"
               type="number"
               placeholder="Masalan: 20"
               value={sigim}
-              onChange={e => setSigim(e.target.value)}
+              onChange={(e) => setSigim(e.target.value)}
             />
           </div>
         </div>
         <div className="xona-drawer-footer">
-          <button className="btn-cancel" onClick={closeDrawer}>Bekor qilish</button>
-          <button className="btn-save" onClick={handleRoom}>Saqlash</button>
+          <button className="btn-cancel" onClick={closeDrawer}>
+            Bekor qilish
+          </button>
+          <button className="btn-save" onClick={handleRoom}>
+            {editRoom ? "Yangilash" : "Saqlash"}
+          </button>
         </div>
       </div>
 
       {/* ── Page content ── */}
-      <div style={{ padding: "24px", background: "#fff", borderRadius: 16, marginTop: 10 }}>
+      <div
+        style={{
+          padding: "24px",
+          background: "#fff",
+          borderRadius: 16,
+          marginTop: 10,
+        }}
+      >
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 30 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 30,
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: "#222", margin: 0 }}>Xonalar</h2>
-            <button style={{
-              background: "none", border: "none",
-              color: "#aaa", cursor: "pointer", fontSize: 16,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              padding: 0
-            }}>
+            <h2
+              style={{
+                fontSize: 20,
+                fontWeight: 700,
+                color: "#222",
+                margin: 0,
+              }}
+            >
+              Xonalar
+            </h2>
+            <button
+              style={{
+                background: "none",
+                border: "none",
+                color: "#aaa",
+                cursor: "pointer",
+                fontSize: 16,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 0,
+              }}
+            >
               <i className="fa-solid fa-rotate-right"></i>
             </button>
           </div>
           <button
             onClick={openAdd}
             style={{
-              height: 40, padding: "0 20px", borderRadius: 8,
-              border: "none", background: "#765bcf",
-              color: "#fff", fontSize: 14, fontWeight: 600,
-              cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+              height: 40,
+              padding: "0 20px",
+              borderRadius: 8,
+              border: "none",
+              background: "#765bcf",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
               transition: "background 0.15s",
             }}
           >
@@ -271,24 +416,37 @@ export function Xonalar() {
         </div>
 
         {/* Rooms grid */}
-        {rooms.length === 0 ? (
-          <div style={{ textAlign: "center", color: "#bbb", padding: "40px 0" }}>
-            <i className="fa-solid fa-door-open" style={{ fontSize: 40, marginBottom: 10 }}></i>
+        {users?.data?.length === 0 ? (
+          <div
+            style={{ textAlign: "center", color: "#bbb", padding: "40px 0" }}
+          >
+            <i
+              className="fa-solid fa-door-open"
+              style={{ fontSize: 40, marginBottom: 10 }}
+            ></i>
             <p style={{ fontWeight: 500 }}>Hozircha xona yo'q</p>
           </div>
         ) : (
           <div className="rooms-grid">
-            {users?.data?.map(room => (
+            {users?.data?.map((room) => (
               <div key={room.id} className="room-card">
                 <div>
-                  <div className="room-name">{room.name === "genious room" ? "Autodesk" : room.name}</div>
+                  <div className="room-name">
+                    {room.name === "genious room" ? "Autodesk" : room.name}
+                  </div>
                   <div className="room-sigim">Sig'imi: {room.capacity}</div>
                 </div>
                 <div className="room-actions">
-                  <button className="room-btn delete" onClick={() => handleDelete(room.id)}>
+                  <button
+                    className="room-btn delete"
+                    onClick={() => confirmDelete(room.id)}
+                  >
                     <i className="fa-solid fa-trash"></i>
                   </button>
-                  <button className="room-btn edit" onClick={() => openEdit(room)}>
+                  <button
+                    className="room-btn edit"
+                    onClick={() => openEdit(room)}
+                  >
                     <i className="fa-solid fa-pen"></i>
                   </button>
                 </div>
@@ -310,46 +468,75 @@ function SubPage({ pageKey }) {
   const p = pages[pageKey];
   return (
     <div style={{ padding: "0 0 24px" }}>
-      <div style={{
-        background: "#fff", borderRadius: 14,
-        border: "1px solid #ececec", padding: "28px 24px",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-          <div style={{
-            width: 46, height: 46, borderRadius: 12,
-            background: p.color + "18",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <i className={`fa-solid ${p.icon}`} style={{ color: p.color, fontSize: 20 }}></i>
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: 14,
+          border: "1px solid #ececec",
+          padding: "28px 24px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 24,
+          }}
+        >
+          <div
+            style={{
+              width: 46,
+              height: 46,
+              borderRadius: 12,
+              background: p.color + "18",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <i
+              className={`fa-solid ${p.icon}`}
+              style={{ color: p.color, fontSize: 20 }}
+            ></i>
           </div>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: "#222", margin: 0 }}>{p.title}</h1>
+            <h1
+              style={{
+                fontSize: 20,
+                fontWeight: 700,
+                color: "#222",
+                margin: 0,
+              }}
+            >
+              {p.title}
+            </h1>
             <p style={{ fontSize: 13, color: "#888", marginTop: 2 }}>
               {p.title} bo'limi
             </p>
           </div>
         </div>
         <div style={{ textAlign: "center", color: "#ccc", padding: "32px 0" }}>
-          <i className={`fa-solid ${p.icon}`} style={{ fontSize: 44, color: p.color + "55" }}></i>
-          <p style={{ fontWeight: 500, fontSize: 14, marginTop: 10 }}>Hozircha ma'lumot yo'q</p>
+          <i
+            className={`fa-solid ${p.icon}`}
+            style={{ fontSize: 44, color: p.color + "55" }}
+          ></i>
+          <p style={{ fontWeight: 500, fontSize: 14, marginTop: 10 }}>
+            Hozircha ma'lumot yo'q
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-
-
 export function Kurslar() {
-
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
     async function datas() {
       try {
-        const data = await fetchApi(
-          `courses`,
-        );
+        const data = await fetchApi(`courses`);
         if (data.status === 200) {
           setUsers(data.data);
         }
@@ -358,11 +545,7 @@ export function Kurslar() {
       }
     }
     datas();
-
   }, []);
-
-
-
 
   const [drawerOpen, setDrawer] = useState(false);
   const [editKurs, setEditKurs] = useState(null);
@@ -373,20 +556,51 @@ export function Kurslar() {
   const [narx, setNarx] = useState(0);
   const [desc, setDesc] = useState("");
 
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetchApi.post("courses", {
-        name: nomi,
-        description: desc,
-        price: Number(narx),
-        duration_month: Number(oyDavomiyligi),
-        duration_hours: Number(darsDavomiyligi)
-      });
-      if (res.status === 200 || res.status === 201) {
-        setDrawer(false);
-        window.location.reload();
+      if (editKurs) {
+        const res = await fetchApi.patch(`courses/${editKurs.id}`, {
+          name: nomi,
+          description: desc,
+          price: Number(narx),
+          duration_month: Number(oyDavomiyligi),
+          duration_hours: Number(darsDavomiyligi),
+        });
+        if (res.status === 200 || res.status === 201) {
+          setUsers((prev) => ({
+            ...prev,
+            data: prev?.data?.map((row) =>
+              row.id === editKurs.id
+                ? {
+                    ...row,
+                    name: nomi,
+                    description: desc,
+                    price: Number(narx),
+                    duration_month: Number(oyDavomiyligi),
+                    duration_hours: Number(darsDavomiyligi),
+                  }
+                : row,
+            ),
+          }));
+          setDrawer(false);
+          setEditKurs(null);
+        }
+      } else {
+        const res = await fetchApi.post("courses", {
+          name: nomi,
+          description: desc,
+          price: Number(narx),
+          duration_month: Number(oyDavomiyligi),
+          duration_hours: Number(darsDavomiyligi),
+        });
+        if (res.status === 200 || res.status === 201) {
+          setDrawer(false);
+          window.location.reload();
+        }
       }
     } catch (error) {
       console.log(error);
@@ -395,16 +609,55 @@ export function Kurslar() {
 
   function openAdd() {
     setEditKurs(null);
-    setNomi(""); setDarsDavomiyligi(""); setOyDavomiyligi(""); setNarx(""); setDesc("");
+    setNomi("");
+    setDarsDavomiyligi("");
+    setOyDavomiyligi("");
+    setNarx("");
+    setDesc("");
     setDrawer(true);
   }
+
+  function openEdit(course) {
+    setEditKurs(course);
+    setNomi(course.name || "");
+    setDesc(course.description || "");
+    setNarx(course.price || 0);
+    setOyDavomiyligi(course.duration_month || 0);
+    setDarsDavomiyligi(course.duration_hours || 0);
+    setDrawer(true);
+  }
+
   function closeDrawer() {
     setDrawer(false);
+    setEditKurs(null);
   }
-  function handleDelete(id) {
-    if (!users?.data) return;
-    setUsers({ ...users, data: users.data.filter(x => x.id !== id) });
-  }
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setDeleteModal(true);
+  };
+  const cancelDelete = () => {
+    setDeleteModal(false);
+    setDeleteId(null);
+  };
+  const CourseDelete = async () => {
+    if (!deleteId) return;
+    try {
+      const res = await fetchApi.delete(`courses/${deleteId}`);
+      if (res.status === 200 || res.status === 201) {
+        setUsers((prev) => ({
+          ...prev,
+          data: prev?.data?.filter((room) => room.id !== deleteId),
+        }));
+        setDeleteModal(false);
+        setDeleteId(null);
+      }
+      if (!users?.data) return;
+      setUsers({ ...users, data: users.data.filter((x) => x.id !== deleteId) });
+    } catch (error) {
+      alert("Xatolik yuz berdi.");
+      console.log(error);
+    }
+  };
 
   return (
     <>
@@ -478,14 +731,18 @@ export function Kurslar() {
           height: 40px; padding: 0 20px; border-radius: 10px;
           border: 1.5px solid #e2e8f0; background: #fff;
           font-size: 14px; font-weight: 600; color: #555;
-          cursor: pointer; transition: background 0.15s;
+          cursor: pointer; transition: background 0.15s, filter 0.15s, transform 0.15s;
         }
+        .k-btn-cancel:hover { background: #f5f5f5; }
+        .k-btn-cancel:active { filter: brightness(1.05); transform: translateY(1px); }
         .k-btn-save {
           height: 40px; padding: 0 24px; border-radius: 10px;
           border: none; background: #765bcf;
           font-size: 14px; font-weight: 600; color: #fff;
-          cursor: pointer; transition: background 0.15s;
+          cursor: pointer; transition: background 0.15s, filter 0.15s, transform 0.15s;
         }
+        .k-btn-save:hover { background: #5e48a8; }
+        .k-btn-save:active { filter: brightness(1.08); transform: translateY(1px); }
 
         /* Cards */
         .kurslar-grid {
@@ -509,17 +766,95 @@ export function Kurslar() {
         .k-action-btn { background: none; border: none; color: #999; font-size: 15px; cursor: pointer; padding: 0; transition: color 0.15s; }
         .k-action-btn:hover { color: #444; }
         .k-action-btn.delete:hover { color: #e53935; }
+
+        /* Delete modal */
+        .del-overlay {
+          position: fixed; inset: 0;
+          background: rgba(0,0,0,0.35);
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .del-modal {
+          background: #fff;
+          border-radius: 16px;
+          padding: 32px 28px 24px;
+          width: 360px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+          text-align: center;
+        }
+        .del-modal-title {
+          font-size: 18px;
+          font-weight: 700;
+          color: #1a1a2e;
+          margin: 0 0 12px;
+        }
+        .del-modal-text {
+          font-size: 14px;
+          color: #666;
+          margin: 0 0 28px;
+          line-height: 1.5;
+        }
+        .del-modal-btns {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+        }
+        .del-btn-cancel {
+          flex: 1; height: 42px; border-radius: 10px;
+          border: 1.5px solid #e0e0e0; background: #fff;
+          font-size: 14px; font-weight: 600; color: #555;
+          cursor: pointer; transition: background 0.15s;
+        }
+        .del-btn-cancel:hover { background: #f5f5f5; }
+        .del-btn-confirm {
+          flex: 1; height: 42px; border-radius: 10px;
+          border: none; background: #e53935;
+          font-size: 14px; font-weight: 700; color: #fff;
+          cursor: pointer; transition: background 0.15s;
+        }
+        .del-btn-confirm:hover { background: #c62828; }
       `}</style>
 
+      {/* Delete Confirm Modal */}
+      {deleteModal && (
+        <div className="del-overlay" onClick={cancelDelete}>
+          <div className="del-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="del-modal-title">Kursni o'chirish</h3>
+            <p className="del-modal-text">
+              Rostdan ham o'chirishni hohlaysizmi?
+            </p>
+            <div className="del-modal-btns">
+              <button className="del-btn-cancel" onClick={cancelDelete}>
+                Bekor qilish
+              </button>
+              <button className="del-btn-confirm" onClick={CourseDelete}>
+                Ha
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Overlay */}
-      <div className={`kurs-overlay${drawerOpen ? " show" : ""}`} onClick={closeDrawer} />
+      <div
+        className={`kurs-overlay${drawerOpen ? " show" : ""}`}
+        onClick={closeDrawer}
+      />
 
       {/* Drawer */}
       <div className={`kurs-drawer${drawerOpen ? " open" : ""}`}>
         <div className="kurs-drawer-header">
           <div>
-            <h2 className="kurs-drawer-title">Kurs qoshish</h2>
-            <p className="kurs-drawer-subtitle">Bu yerda siz yangi Kurs qo'shishingiz mumkin.</p>
+            <h2 className="kurs-drawer-title">
+              {editKurs ? "Kursni tahrirlash" : "Kurs qoshish"}
+            </h2>
+            <p className="kurs-drawer-subtitle">
+              {editKurs
+                ? "Bu yerda mavjud kursni tahrirlashingiz mumkin."
+                : "Bu yerda siz yangi kurs qo'shishingiz mumkin."}
+            </p>
           </div>
           <button className="kurs-drawer-close" onClick={closeDrawer}>
             <i className="fa-solid fa-xmark"></i>
@@ -528,12 +863,21 @@ export function Kurslar() {
         <div className="kurs-drawer-body">
           <div className="kurs-field">
             <label className="kurs-label">Nomi</label>
-            <input className="kurs-input" placeholder="HR Manager..." value={nomi} onChange={e => setNomi(e.target.value)} />
+            <input
+              className="kurs-input"
+              placeholder="HR Manager..."
+              value={nomi}
+              onChange={(e) => setNomi(e.target.value)}
+            />
           </div>
 
           <div className="kurs-field">
             <label className="kurs-label">Dars davomiyligi</label>
-            <select className="kurs-select" value={darsDavomiyligi} onChange={e => setDarsDavomiyligi(e.target.value)}>
+            <select
+              className="kurs-select"
+              value={darsDavomiyligi}
+              onChange={(e) => setDarsDavomiyligi(e.target.value)}
+            >
               <option value="">Tanlang</option>
               <option value="60">60 min</option>
               <option value="90">90 min</option>
@@ -542,7 +886,11 @@ export function Kurslar() {
 
           <div className="kurs-field">
             <label className="kurs-label">Kurs davomiyligi (oylarda)</label>
-            <select className="kurs-select" value={oyDavomiyligi} onChange={e => setOyDavomiyligi(e.target.value)}>
+            <select
+              className="kurs-select"
+              value={oyDavomiyligi}
+              onChange={(e) => setOyDavomiyligi(e.target.value)}
+            >
               <option value="">Tanlang</option>
               <option value="1">1 oy</option>
               <option value="3">3 oy</option>
@@ -553,34 +901,86 @@ export function Kurslar() {
           <div className="kurs-field">
             <label className="kurs-label">Narx</label>
             <div style={{ position: "relative" }}>
-              <i className="fa-solid fa-money-bill-1-wave" style={{ position: "absolute", left: 14, top: 14, color: "#999", fontSize: 16 }}></i>
-              <input className="kurs-input" style={{ paddingLeft: 40 }} placeholder="Narxini kiriting" value={narx} onChange={e => setNarx(e.target.value)} />
+              <i
+                className="fa-solid fa-money-bill-1-wave"
+                style={{
+                  position: "absolute",
+                  left: 14,
+                  top: 14,
+                  color: "#999",
+                  fontSize: 16,
+                }}
+              ></i>
+              <input
+                className="kurs-input"
+                style={{ paddingLeft: 40 }}
+                placeholder="Narxini kiriting"
+                value={narx}
+                onChange={(e) => setNarx(e.target.value)}
+              />
             </div>
           </div>
 
           <div className="kurs-field">
             <label className="kurs-label">Description</label>
-            <textarea className="kurs-textarea" placeholder="A little about the company and the team that you'll be working with." value={desc} onChange={e => setDesc(e.target.value)}></textarea>
-            <p style={{ fontSize: 12, color: "#888", marginTop: 6 }}>This is a hint text to help user.</p>
+            <textarea
+              className="kurs-textarea"
+              placeholder="A little about the company and the team that you'll be working with."
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+            ></textarea>
+            <p style={{ fontSize: 12, color: "#888", marginTop: 6 }}>
+              This is a hint text to help user.
+            </p>
           </div>
         </div>
         <div className="kurs-drawer-footer">
-          <button className="k-btn-cancel" onClick={closeDrawer}>Bekor qilish</button>
-          <button className="k-btn-save" onClick={handleLogin}>Saqlash</button>
+          <button className="k-btn-cancel" onClick={closeDrawer}>
+            Bekor qilish
+          </button>
+          <button className="k-btn-save" onClick={handleLogin}>
+            {editKurs ? "Yangilash" : "Saqlash"}
+          </button>
         </div>
       </div>
 
       {/* Page content */}
-      <div style={{ padding: "24px", background: "#fff", borderRadius: 16, marginTop: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 30 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#222", margin: 0 }}>Kurslar</h2>
+      <div
+        style={{
+          padding: "24px",
+          background: "#fff",
+          borderRadius: 16,
+          marginTop: 10,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 30,
+          }}
+        >
+          <h2
+            style={{ fontSize: 20, fontWeight: 700, color: "#222", margin: 0 }}
+          >
+            Kurslar
+          </h2>
           <button
             onClick={openAdd}
             style={{
-              height: 40, padding: "0 20px", borderRadius: 8,
-              border: "none", background: "#765bcf",
-              color: "#fff", fontSize: 14, fontWeight: 600,
-              cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+              height: 40,
+              padding: "0 20px",
+              borderRadius: 8,
+              border: "none",
+              background: "#765bcf",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
             }}
           >
             <i className="fa-solid fa-plus"></i>
@@ -590,16 +990,26 @@ export function Kurslar() {
 
         {/* Grid */}
         <div className="kurslar-grid">
-          {users?.data?.map(row => (
+          {users?.data?.map((row) => (
             <div key={row.id} className="k-card">
               <h3 className="k-card-title">{row.name}</h3>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 18,
+                }}
+              >
                 <span className="k-card-status">{row.description}</span>
                 <div style={{ display: "flex", gap: 12 }}>
-                  <button className="k-action-btn delete" onClick={() => handleDelete(row.id)}>
+                  <button
+                    className="k-action-btn delete"
+                    onClick={() => confirmDelete(row.id)}
+                  >
                     <i className="fa-solid fa-trash"></i>
                   </button>
-                  <button className="k-action-btn">
+                  <button className="k-action-btn" onClick={() => openEdit(row)}>
                     <i className="fa-solid fa-pen"></i>
                   </button>
                 </div>
@@ -616,4 +1026,6 @@ export function Kurslar() {
     </>
   );
 }
-export function Hodimlar() { return <SubPage pageKey="hodimlar" />; }
+export function Hodimlar() {
+  return <SubPage pageKey="hodimlar" />;
+}

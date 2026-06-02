@@ -6,6 +6,9 @@ import Oqituvchilar from "./layouts/oqituvchilar";
 import Sinflar from "./layouts/Sinflar";
 import GroupDetails from "./layouts/GroupDetails";
 import HomeworkCreate from "./layouts/HomeworkCreate";
+import ExamCreate from "./layouts/ExamCreate";
+import ExamDetails from "./layouts/ExamDetails";
+import ExamReview from "./layouts/ExamReview";
 import Sovgalar from "./layouts/Sovg'alar";
 import Boshqarish from "./layouts/Boshqarish";
 import Talabalar from "./layouts/Talabalar";
@@ -48,6 +51,18 @@ export const route = createBrowserRouter([
       {
         path: "/dashboard/groups/:id/homework/create",
         element: <HomeworkCreate />,
+      },
+      {
+        path: "/dashboard/groups/:id/exam/create",
+        element: <ExamCreate />,
+      },
+      {
+        path: "/dashboard/groups/:groupId/exams/:examId",
+        element: <ExamDetails />,
+      },
+      {
+        path: "/dashboard/groups/:groupId/exams/:examId/student/:studentId/review",
+        element: <ExamReview />,
       },
       {
         path: "/dashboard/talabalar",

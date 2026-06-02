@@ -31,6 +31,9 @@ export default function Oqituvchilar() {
 
   const [drawerOpen, setDrawer] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [editingTeacher, setEditingTeacher] = useState(null);
 
   // Drawer fields
   const [tel, setTel] = useState("+998");
@@ -40,34 +43,128 @@ export default function Oqituvchilar() {
   const [parol, setParol] = useState("");
   const [rasm, setRasm] = useState(null);
 
+  const resetForm = () => {
+    setTel("+998");
+    setEmail("");
+    setFio("");
+    setManzil("");
+    setParol("");
+    setRasm(null);
+    setSelectedGuruhlar([]);
+    setTempSelected([]);
+    setEditingTeacher(null);
+  };
+
+  const openAddTeacher = () => {
+    resetForm();
+    setDrawer(true);
+  };
+
+  const openEditTeacher = (teacher) => {
+    setEditingTeacher(teacher);
+    setTel(teacher.phone || "+998");
+    setEmail(teacher.email || "");
+    setFio(teacher.full_name || "");
+    setManzil(teacher.address || "");
+    setParol("");
+    setRasm(null);
+    
+    // Extract and filter valid active group IDs that exist in allGroups
+    const activeGroupIds = (teacher.groups || [])
+      .map((g) => (g && typeof g === "object" ? g.id : g))
+      .map(Number)
+      .filter((id) => !isNaN(id) && id > 0 && allGroups.some((ag) => ag.id === id));
+      
+    setSelectedGuruhlar(activeGroupIds);
+    setTempSelected(activeGroupIds);
+    setDrawer(true);
+  };
+
 
 
   const create = async () => {
     try {
+      const cleanedPhone = tel.replace(/[^0-9+]/g, "");
       const formData = new FormData();
 
       formData.append("full_name", fio);
       formData.append("email", email);
-      formData.append("password", parol);
-      formData.append("phone", tel);
+      if (parol && !editingTeacher) {
+        formData.append("password", parol);
+      }
+      formData.append("phone", cleanedPhone);
       if (rasm) {
         formData.append("photo", rasm);
       }
       formData.append("address", manzil);
 
-      // agar array bo'lsa
-      selectedGuruhlar.forEach((g) => {
+      // Filter selectedGuruhlar to only send valid active group IDs
+      const validGroupIds = selectedGuruhlar
+        .map(Number)
+        .filter((id) => !isNaN(id) && id > 0 && allGroups.some((ag) => ag.id === id));
+
+      validGroupIds.forEach((g) => {
         formData.append("groups[]", g);
       });
 
-      const res = await fetchApi.post("teachers", formData);
+      let res;
+      if (editingTeacher) {
+        const payload = {
+          full_name: fio,
+          email: email,
+          phone: cleanedPhone,
+          address: manzil,
+          groups: validGroupIds
+        };
+        if (parol) {
+          payload.password = parol;
+        }
+        res = await fetchApi.patch(`teachers/${editingTeacher.id}`, payload);
+      } else {
+        res = await fetchApi.post("teachers", formData);
+      }
 
       if (res.status === 200 || res.status === 201) {
-        setDrawer(false);
-        window.location.reload();
+        if (editingTeacher) {
+          let updatedTeacher = res.data?.data || res.data || {};
+          
+          // Populate group details from allGroups to ensure beautiful local rendering
+          const finalGroups = (updatedTeacher.groups || validGroupIds).map((g) => {
+            const gid = g && typeof g === "object" ? g.id : g;
+            const found = allGroups.find((ag) => ag.id === Number(gid));
+            return found || (g && typeof g === "object" ? g : { id: Number(gid), name: `Guruh #${gid}` });
+          });
+          
+          updatedTeacher = {
+            full_name: fio,
+            email: email,
+            phone: cleanedPhone,
+            address: manzil,
+            ...updatedTeacher,
+            groups: finalGroups
+          };
+
+          setUsers((prev) => {
+            if (Array.isArray(prev)) {
+              return prev.map((row) => (row.id === editingTeacher.id ? { ...row, ...updatedTeacher } : row));
+            } else if (prev && prev.data) {
+              return {
+                ...prev,
+                data: prev.data.map((row) => (row.id === editingTeacher.id ? { ...row, ...updatedTeacher } : row))
+              };
+            }
+            return prev;
+          });
+          setDrawer(false);
+          resetForm();
+        } else {
+          setDrawer(false);
+          window.location.reload();
+        }
       }
     } catch (error) {
-      alert("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring.");
+      const xato = error.response?.data?.message || error.response?.data?.error || "Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring.";
+      alert(xato);
       console.log(error);
     }
   };
@@ -88,9 +185,33 @@ export default function Oqituvchilar() {
     setUsers({ ...users, data: users.data.map(d => d.id === id ? { ...d, selected: !d.selected } : d) });
   };
 
-  const handleDelete = (id) => {
-    if (!users?.data) return;
-    setUsers({ ...users, data: users.data.filter(d => d.id !== id) });
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setDeleteModalOpen(true);
+  };
+
+  const cancelDelete = () => {
+    setDeleteModalOpen(false);
+    setDeleteId(null);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    try {
+      const res = await fetchApi.delete(`teachers/${deleteId}`);
+      if (res.status === 200 || res.status === 201) {
+        if (users?.data) {
+          setUsers({ ...users, data: users.data.filter(d => d.id !== deleteId) });
+        } else if (Array.isArray(users)) {
+          setUsers(users.filter(d => d.id !== deleteId));
+        }
+        setDeleteModalOpen(false);
+        setDeleteId(null);
+      }
+    } catch (error) {
+      alert("Xatolik yuz berdi. O'qituvchini o'chirib bo'lmadi.");
+      console.log(error);
+    }
   };
 
   const openGuruhModal = () => {
@@ -142,7 +263,12 @@ export default function Oqituvchilar() {
         .custom-cb { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; flex-shrink: 0; }
         .custom-cb.checked { background: #765bcf; border-color: #765bcf; color: #fff; font-size: 10px; }
 
-        .badge { display: inline-flex; padding: 3px 8px; border-radius: 6px; border: 1px solid #eee; font-size: 12px; margin-right: 4px; color: #555; background: #f5f5f5; font-weight: 500; }
+        .badge { display: inline-flex; padding: 3px 8px; border-radius: 6px; border: 1px solid #eee; font-size: 12px; margin-right: 4px; color: #555; background: #f5f5f5; font-weight: 500; white-space: nowrap; }
+        .badge-row { display: flex; align-items: center; gap: 6px; overflow-x: auto; max-width: 260px; min-width: 0; padding-bottom: 2px; }
+        .badge-row::-webkit-scrollbar { height: 6px; }
+        .badge-row::-webkit-scrollbar-track { background: transparent; }
+        .badge-row::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+        .oq-td.group-cell { max-width: 260px; min-width: 0; }
 
         .act-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid transparent; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #888; transition: 0.15s; font-size: 13px; }
         .act-btn:hover { background: #f0f0f0; color: #333; }
@@ -169,6 +295,84 @@ export default function Oqituvchilar() {
         .oq-modal-footer { padding: 14px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 10px; }
         .oq-modal-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
         .oq-modal-row:last-child { border-bottom: none; }
+
+        /* ── O'qituvchi o'chirish modali ── */
+        .teacher-del-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.4);
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.2s ease-out;
+        }
+        .teacher-del-overlay.open {
+          opacity: 1;
+          pointer-events: all;
+        }
+        .teacher-del-modal {
+          background: #fff;
+          border-radius: 24px;
+          padding: 40px 36px 36px;
+          width: 440px;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+          text-align: center;
+          transform: scale(0.95);
+          transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .teacher-del-overlay.open .teacher-del-modal {
+          transform: scale(1);
+        }
+        .teacher-del-title {
+          font-size: 22px;
+          font-weight: 700;
+          color: #1f2937;
+          margin: 0 0 16px;
+        }
+        .teacher-del-text {
+          font-size: 15px;
+          color: #4b5563;
+          margin: 0 0 32px;
+          line-height: 1.6;
+        }
+        .teacher-del-btns {
+          display: flex;
+          gap: 16px;
+          justify-content: center;
+        }
+        .teacher-del-btn-cancel {
+          flex: 1;
+          height: 48px;
+          border-radius: 12px;
+          border: none;
+          background: #f3f4f6;
+          font-size: 16px;
+          font-weight: 700;
+          color: #374151;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .teacher-del-btn-cancel:hover {
+          background: #e5e7eb;
+        }
+        .teacher-del-btn-confirm {
+          flex: 1;
+          height: 48px;
+          border-radius: 12px;
+          border: none;
+          background: #ef4444;
+          font-size: 16px;
+          font-weight: 700;
+          color: #fff;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .teacher-del-btn-confirm:hover {
+          background: #dc2626;
+        }
       `}</style>
 
       {/* ── Guruh tanlash modali ── */}
@@ -205,6 +409,24 @@ export default function Oqituvchilar() {
         </div>
       </div>
 
+      {/* ── O'qituvchini o'chirish tasdiqlash modali ── */}
+      <div className={`teacher-del-overlay ${deleteModalOpen ? "open" : ""}`} onClick={cancelDelete}>
+        <div className="teacher-del-modal" onClick={(e) => e.stopPropagation()}>
+          <h3 className="teacher-del-title">O'qituvchini o'chirish</h3>
+          <p className="teacher-del-text">
+            Siz ushbu o'qituvchini o'chirishga ishonchingiz komilmi? Bu amal qaytarib bo'lmaydi.
+          </p>
+          <div className="teacher-del-btns">
+            <button className="teacher-del-btn-cancel" onClick={cancelDelete}>
+              Bekor qilish
+            </button>
+            <button className="teacher-del-btn-confirm" onClick={handleDelete}>
+              O'chirish
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Drawer Overlay */}
       <div className={`oqit-overlay ${drawerOpen ? "open" : ""}`} onClick={() => setDrawer(false)} />
 
@@ -212,8 +434,8 @@ export default function Oqituvchilar() {
       <div className={`oqit-drawer ${drawerOpen ? "open" : ""}`}>
         <div className="oq-header">
           <div>
-            <h2 className="oq-title">O'qituvchi qo'shish</h2>
-            <p className="oq-subtitle">Bu yerda siz yangi o'qituvchi qo'shishingiz mumkin.</p>
+            <h2 className="oq-title">{editingTeacher ? "O'qituvchi tahrirlash" : "O'qituvchi qo'shish"}</h2>
+            <p className="oq-subtitle">{editingTeacher ? "O'qituvchi ma'lumotlarini o'zgartiring va saqlang." : "Bu yerda siz yangi o'qituvchi qo'shishingiz mumkin."}</p>
           </div>
           <button className="oq-close" onClick={() => setDrawer(false)}><i className="fa-solid fa-xmark"></i></button>
         </div>
@@ -230,8 +452,16 @@ export default function Oqituvchilar() {
           <label className="oq-label">Manzil</label>
           <input className="oq-input" placeholder="Manzilni kiriting" value={manzil} onChange={e => setManzil(e.target.value)} />
 
-          <label className="oq-label">Parol</label>
-          <input className="oq-input" placeholder="Parolni kiriting" type="password" value={parol} onChange={e => setParol(e.target.value)} />
+          <label className="oq-label">
+            {editingTeacher ? "Parol (ixtiyoriy, faqat o'zgartirish uchun)" : "Parol"}
+          </label>
+          <input
+            className="oq-input"
+            placeholder={editingTeacher ? "Yangi parol kiriting (ixtiyoriy)" : "Parolni kiriting"}
+            type="password"
+            value={parol}
+            onChange={(e) => setParol(e.target.value)}
+          />
 
           <label className="oq-label">Guruh</label>
           {selectedGuruhlar.length > 0 && (
@@ -303,7 +533,7 @@ export default function Oqituvchilar() {
               color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer"
             }}
           >
-            Saqlash
+            {editingTeacher ? "Yangilash" : "Saqlash"}
           </button>
         </div>
       </div>
@@ -313,7 +543,7 @@ export default function Oqituvchilar() {
         <h1 style={{ fontSize: 22, fontWeight: 700, color: "#222", margin: 0 }}>O'qituvchilar</h1>
         <button
           className="top-btn btn-primary"
-          onClick={() => setDrawer(true)}
+          onClick={openAddTeacher}
           style={{ height: 36, fontSize: 13 }}
         >
           <i className="fa-solid fa-plus" style={{ fontSize: 12 }}></i> O'qituvchi qo'shish
@@ -378,8 +608,10 @@ export default function Oqituvchilar() {
                       <span style={{ fontWeight: 600, color: "#222" }}>{row.full_name || "Ism yo'q"}</span>
                     </div>
                   </td>
-                  <td className="oq-td">
-                    {(row.groups || []).map((g, i) => <span key={i} className="badge">{g.name || g.nomi || g}</span>)}
+                  <td className="oq-td group-cell">
+                    <div className="badge-row">
+                      {(row.groups || []).map((g, i) => <span key={i} className="badge">{g.name || g.nomi || g}</span>)}
+                    </div>
                   </td>
                   <td className="oq-td">{row.phone || "Yo'q"}</td>
                   <td className="oq-td">{row.email || "Yo'q"}</td>
@@ -388,8 +620,8 @@ export default function Oqituvchilar() {
                   <td className="oq-td">
                     <div style={{ display: "flex", justifyContent: "flex-end", gap: 4 }}>
                       <button className="act-btn"><i className="fa-regular fa-eye"></i></button>
-                      <button className="act-btn red" onClick={() => handleDelete(row.id)}><i className="fa-regular fa-trash-can"></i></button>
-                      <button className="act-btn"><i className="fa-solid fa-pen"></i></button>
+                      <button className="act-btn red" onClick={() => confirmDelete(row.id)}><i className="fa-regular fa-trash-can"></i></button>
+                      <button className="act-btn" onClick={() => openEditTeacher(row)}><i className="fa-solid fa-pen"></i></button>
                     </div>
                   </td>
                 </tr>

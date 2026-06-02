@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
-import { useAppContext } from "../context/AppContext";
 
 const kunlarMap = {
   Dushanba: "MONDAY",
@@ -15,7 +14,6 @@ const kunlarMap = {
 const kunlarList = Object.keys(kunlarMap);
 
 export default function Sinflar() {
-  const { stats } = useAppContext();
   const navigate = useNavigate();
 
 
@@ -23,27 +21,53 @@ export default function Sinflar() {
   const [allTeachers, setAllTeachers] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
   const [allRooms, setAllRooms] = useState([]);
+  const [studentsCount, setStudentsCount] = useState(0);
+
+  const [drawerDataLoaded, setDrawerDataLoaded] = useState(false);
+
+  const fetchDrawerData = async () => {
+    if (drawerDataLoaded) return;
+    try {
+      const [cData, rData] = await Promise.all([
+        fetchApi(`courses`).catch(() => null),
+        fetchApi(`rooms`).catch(() => null),
+      ]);
+
+      if (cData?.status === 200) {
+        setAllCourses(cData.data?.data || cData.data || []);
+      }
+
+      if (rData?.status === 200) {
+        setAllRooms(rData.data?.data || rData.data || []);
+      }
+
+      setDrawerDataLoaded(true);
+    } catch (error) {
+      console.log("Xatolik drawer ma'lumotlarini yuklashda:", error);
+    }
+  };
 
   useEffect(() => {
     async function datas() {
       try {
-        const data = await fetchApi(`groups/all`);
-        if (data.status === 200) setUsers(data.data);
+        const [gData, tData, sData] = await Promise.all([
+          fetchApi(`groups/all`).catch(() => null),
+          fetchApi(`teachers`).catch(() => null),
+          fetchApi(`students`).catch(() => null),
+        ]);
 
-        const tData = await fetchApi(`teachers`);
-        if (tData.status === 200) {
+        if (gData && gData.status === 200) {
+          setUsers(gData.data);
+        }
+
+        if (tData && tData.status === 200) {
           const list = tData.data?.data || tData.data || [];
           setAllTeachers(Array.isArray(list) ? list : []);
         }
 
-        const cData = await fetchApi(`courses`);
-        if (cData.status === 200) {
-          setAllCourses(cData.data?.data || cData.data || []);
-        }
-
-        const rData = await fetchApi(`rooms`);
-        if (rData.status === 200) {
-          setAllRooms(rData.data?.data || rData.data || []);
+        if (sData && sData.status === 200) {
+          const list = sData.data?.data || sData.data || [];
+          setStudentsCount(Array.isArray(list) ? list.length : 0);
         }
       } catch (error) {
         console.log(error);
@@ -55,18 +79,54 @@ export default function Sinflar() {
   const [activeTab, setActiveTab] = useState("guruhlar");
   const [drawerOpen, setDrawer] = useState(false);
 
+  // Delete modal
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setDeleteModalOpen(true);
+  };
+  const cancelDelete = () => {
+    setDeleteModalOpen(false);
+    setDeleteId(null);
+  };
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    try {
+      const res = await fetchApi.delete(`groups/${deleteId}`);
+      if (res.status === 200 || res.status === 201 || res.status === 204) {
+        setUsers(prev => {
+          if (prev?.data) return { ...prev, data: prev.data.filter(g => g.id !== deleteId) };
+          if (Array.isArray(prev)) return prev.filter(g => g.id !== deleteId);
+          return prev;
+        });
+        setDeleteModalOpen(false);
+        setDeleteId(null);
+      }
+    } catch (error) {
+      alert("Xatolik yuz berdi. Guruhni o'chirib bo'lmadi.");
+      console.log(error);
+    }
+  };
+
+  // Edit state
+  const [editingGroup, setEditingGroup] = useState(null);
+
   // Drawer fields
   const [guruhNomi, setGuruhNomi] = useState("");
   const [kurs, setKurs] = useState("");
   const [xona, setXona] = useState("");
   const [maxStudent, setMaxStudent] = useState("");
   const [tanKunlar, setTanKunlar] = useState([]);
-  console.log( tanKunlar);
   const [darsVaqti, setDarsVaqti] = useState("");
   const [boshlanish, setBoshlanish] = useState("");
   const [tavsif, setTavsif] = useState("");
   const [selectedTalabalar, setSelectedTalabalar] = useState([]);
   const [selectedTeachers, setSelectedTeachers] = useState([]);
+
+  // kunlarMap teskari (MONDAY -> Dushanba)
+  const kunlarMapReverse = Object.fromEntries(Object.entries(kunlarMap).map(([k, v]) => [v, k]));
 
   const togleKun = (kun) => {
     setTanKunlar(prev =>
@@ -76,26 +136,112 @@ export default function Sinflar() {
     );
   };
 
+  const openDrawer = () => {
+    setEditingGroup(null);
+    setGuruhNomi(""); setKurs(""); setXona("");
+    setTanKunlar([]); setDarsVaqti("09:00"); setBoshlanish("");
+    setTavsif(""); setSelectedTalabalar([]); setSelectedTeachers([]);
+    fetchDrawerData();
+    setDrawer(true);
+  };
+
+  const openEditGroup = (group) => {
+    setEditingGroup(group);
+    setGuruhNomi(group.name || "");
+    setKurs(group.course?.id ? String(group.course.id) : "");
+    setXona(group.room?.id ? String(group.room.id) : "");
+    setMaxStudent(String(group.max_student || ""));
+    setTavsif(group.description || "");
+    setBoshlanish(group.start_date ? group.start_date.slice(0, 10) : "");
+    setDarsVaqti(group.start_time || "09:00");
+
+    // week_day ['MONDAY','TUESDAY'] -> ['Dushanba','Seshanba']
+    const kunlar = Array.isArray(group.week_day)
+      ? group.week_day.map(d => kunlarMapReverse[d] || d).filter(Boolean)
+      : [];
+    setTanKunlar(kunlar);
+
+    // teachers -> ID massiv
+    const teacherIds = Array.isArray(group.teachers)
+      ? group.teachers.map(t => (typeof t === "object" ? t.id : t)).filter(Boolean)
+      : [];
+    setSelectedTeachers(teacherIds);
+    setSelectedTalabalar([]);
+
+    fetchDrawerData();
+    setDrawer(true);
+  };
+
   const create = async () => {
     try {
-      const formattedKunlar = tanKunlar.map(kun => kunlarMap[kun]);
+      // undefined bo'lmasin deb filter qilamiz
+      const formattedKunlar = tanKunlar
+        .map(kun => kunlarMap[kun])
+        .filter(Boolean);
 
-      const res = await fetchApi.post("groups", {
-        name: guruhNomi,
-        description: tavsif,
-        course_id: Number(kurs),
-        teachers: selectedTeachers,
-        students: selectedTalabalar,
-        room_id: Number(xona),
-        start_date: boshlanish,
-        week_day: formattedKunlar,
-        start_time: darsVaqti,
-        max_student: Number(maxStudent) || 20,
-      });
+      let res;
+      if (editingGroup) {
+        // PATCH uchun faqat o'zgargan maydonlarni yuboramiz
+        // students ni editingGroup dan olamiz (UI da o'zgartirish yo'q)
+        const existingStudentIds = Array.isArray(editingGroup.students)
+          ? editingGroup.students.map(s => typeof s === "object" ? s.id : s).filter(Boolean)
+          : [];
+
+        const patchPayload = {
+          name: guruhNomi,
+          description: tavsif || "",
+          teachers: selectedTeachers,
+          students: existingStudentIds,
+          start_date: boshlanish,
+          week_day: formattedKunlar,
+          start_time: darsVaqti,
+          max_student: Number(maxStudent) || 20,
+        };
+        // Faqat valid raqam bo'lsagina qo'shamiz
+        if (kurs && Number(kurs) > 0) patchPayload.course_id = Number(kurs);
+        if (xona && Number(xona) > 0) patchPayload.room_id = Number(xona);
+
+        res = await fetchApi.patch(`groups/${editingGroup.id}`, patchPayload);
+      } else {
+        const postPayload = {
+          name: guruhNomi,
+          description: tavsif,
+          course_id: Number(kurs),
+          teachers: selectedTeachers,
+          students: selectedTalabalar,
+          room_id: Number(xona),
+          start_date: boshlanish,
+          week_day: formattedKunlar,
+          start_time: darsVaqti,
+          max_student: Number(maxStudent) || 20,
+        };
+        res = await fetchApi.post("groups", postPayload);
+      }
 
       if (res.status === 200 || res.status === 201) {
-        setDrawer(false);
-        window.location.reload();
+        if (editingGroup) {
+          const updatedGroup = res.data?.data || res.data || {};
+          const finalGroup = {
+            ...editingGroup,
+            name: guruhNomi,
+            description: tavsif,
+            start_date: boshlanish,
+            start_time: darsVaqti,
+            week_day: formattedKunlar,
+            max_student: Number(maxStudent) || 20,
+            ...updatedGroup,
+          };
+          setUsers(prev => {
+            if (prev?.data) return { ...prev, data: prev.data.map(g => g.id === editingGroup.id ? finalGroup : g) };
+            if (Array.isArray(prev)) return prev.map(g => g.id === editingGroup.id ? finalGroup : g);
+            return prev;
+          });
+          setDrawer(false);
+          setEditingGroup(null);
+        } else {
+          setDrawer(false);
+          window.location.reload();
+        }
       }
     } catch (error) {
       const xato = error.response?.data?.message || error.response?.data?.error || "Xatolik yuz berdi. Barcha maydonlarni tekshiring.";
@@ -104,19 +250,10 @@ export default function Sinflar() {
     }
   };
 
-
-
-  // O'qituvchi modal
+  // O'qituvchi modal state
   const [teacherModalOpen, setTeacherModal] = useState(false);
   const [teacherTanlangan, setTeacherTanlangan] = useState([]);
   const [teacherQidiruv, setTeacherQidiruv] = useState("");
-
-  const openDrawer = () => {
-    setGuruhNomi(""); setKurs(""); setXona("");
-    setTanKunlar([]); setDarsVaqti("09:00"); setBoshlanish("");
-    setTavsif(""); setSelectedTalabalar([]); setSelectedTeachers([]);
-    setDrawer(true);
-  };
 
   // O'qituvchi modal functions
   const openTeacherModal = () => {
@@ -222,7 +359,44 @@ export default function Sinflar() {
         .g-modal-footer { padding: 14px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 10px; }
         .g-modal-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f9f9f9; cursor: pointer; }
         .g-modal-row:last-child { border-bottom: none; }
+
+        /* ── Action buttons ── */
+        .g-act-btn { width: 30px; height: 30px; border-radius: 7px; border: 1px solid transparent; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #888; transition: 0.15s; font-size: 13px; }
+        .g-act-btn:hover { background: #f0f0f0; color: #333; }
+        .g-act-btn.red:hover { background: #ffebee; color: #e53935; }
+        .g-act-btn.blue:hover { background: #e8f0fe; color: #1a73e8; }
+
+        /* ── Guruh o'chirish modali ── */
+        .g-del-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease-out; }
+        .g-del-overlay.open { opacity: 1; pointer-events: all; }
+        .g-del-modal { background: #fff; border-radius: 24px; padding: 40px 36px 36px; width: 440px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); text-align: center; transform: scale(0.95); transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+        .g-del-overlay.open .g-del-modal { transform: scale(1); }
+        .g-del-icon { width: 64px; height: 64px; border-radius: 50%; background: #fff0f0; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+        .g-del-title { font-size: 22px; font-weight: 700; color: #1f2937; margin: 0 0 12px; }
+        .g-del-text { font-size: 15px; color: #4b5563; margin: 0 0 32px; line-height: 1.6; }
+        .g-del-btns { display: flex; gap: 16px; justify-content: center; }
+        .g-del-btn-cancel { flex: 1; height: 48px; border-radius: 12px; border: none; background: #f3f4f6; font-size: 16px; font-weight: 700; color: #374151; cursor: pointer; transition: background 0.15s; }
+        .g-del-btn-cancel:hover { background: #e5e7eb; }
+        .g-del-btn-confirm { flex: 1; height: 48px; border-radius: 12px; border: none; background: #ef4444; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer; transition: background 0.15s; }
+        .g-del-btn-confirm:hover { background: #dc2626; }
       `}</style>
+
+      {/* ── Guruhni o'chirish tasdiqlash modali ── */}
+      <div className={`g-del-overlay ${deleteModalOpen ? "open" : ""}`} onClick={cancelDelete}>
+        <div className="g-del-modal" onClick={e => e.stopPropagation()}>
+          <div className="g-del-icon">
+            <i className="fa-solid fa-trash-can" style={{ fontSize: 26, color: "#ef4444" }}></i>
+          </div>
+          <h3 className="g-del-title">Guruhni o'chirish</h3>
+          <p className="g-del-text">
+            Siz ushbu guruhni o'chirishga ishonchingiz komilmi?<br />Bu amal qaytarib bo'lmaydi.
+          </p>
+          <div className="g-del-btns">
+            <button className="g-del-btn-cancel" onClick={cancelDelete}>Bekor qilish</button>
+            <button className="g-del-btn-confirm" onClick={handleDelete}>O'chirish</button>
+          </div>
+        </div>
+      </div>
 
       {/* ── O'qituvchilar Modal ── */}
       <div className={`g-modal-wrap ${teacherModalOpen ? "open" : ""}`}>
@@ -268,8 +442,8 @@ export default function Sinflar() {
       <div className={`g-drawer ${drawerOpen ? "open" : ""}`}>
         <div className="g-dh">
           <div>
-            <p className="g-dt">Guruh qo'shish</p>
-            <p className="g-ds">Yangi guruh yaratish uchun quyidagi ma'lumotlarni kiriting.</p>
+            <p className="g-dt">{editingGroup ? "Guruhni tahrirlash" : "Guruh qo'shish"}</p>
+            <p className="g-ds">{editingGroup ? "Guruh ma'lumotlarini o'zgartiring va saqlang." : "Yangi guruh yaratish uchun quyidagi ma'lumotlarni kiriting."}</p>
           </div>
           <button className="g-dc" onClick={() => setDrawer(false)}><i className="fa-solid fa-xmark"></i></button>
         </div>
@@ -343,7 +517,7 @@ export default function Sinflar() {
         </div>
         <div className="g-footer">
           <button className="g-btn g-btn-outline" onClick={() => setDrawer(false)}>Bekor qilish</button>
-          <button className="g-btn g-btn-primary" onClick={create}>Saqlash</button>
+          <button className="g-btn g-btn-primary" onClick={create}>{editingGroup ? "Yangilash" : "Saqlash"}</button>
         </div>
       </div>
 
@@ -385,7 +559,7 @@ export default function Sinflar() {
             <i className="fa-solid fa-users" style={{ color: "#765bcf", fontSize: 18 }}></i>
             <span style={{ fontSize: 13, color: "#888" }}>Jami guruhlar</span>
           </div>
-          <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{stats?.guruhlar || 0}</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{users?.data?.length || users?.length || 0}</div>
         </div>
 
         <div className="g-stat-card bg-white">
@@ -394,7 +568,7 @@ export default function Sinflar() {
             <i className="fa-solid fa-user-tie" style={{ color: "#765bcf", fontSize: 18 }}></i>
             <span style={{ fontSize: 13, color: "#888" }}>O'qituvchilar</span>
           </div>
-          <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{stats?.oqituvchilar || 0}</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{allTeachers?.length || 0}</div>
         </div>
 
         <div className="g-stat-card bg-white">
@@ -403,7 +577,7 @@ export default function Sinflar() {
             <i className="fa-solid fa-user-graduate" style={{ color: "#765bcf", fontSize: 18 }}></i>
             <span style={{ fontSize: 13, color: "#888" }}>O'quvchilar</span>
           </div>
-          <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{stats?.talabalar || 0}</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{studentsCount}</div>
          
         </div>
       </div>
@@ -422,11 +596,7 @@ export default function Sinflar() {
                 <th className="g-th">Xona</th>
                 <th className="g-th">O'qituvchi</th>
                 <th className="g-th">Talabalar</th>
-                <th className="g-th" style={{ textAlign: "right" }}>
-                  <button style={{ background: "none", border: "none", color: "#aaa", cursor: "pointer", fontSize: 15, padding: 0 }}>
-                    <i className="fa-solid fa-rotate-right"></i>
-                  </button>
-                </th>
+                <th className="g-th" style={{ textAlign: "right" }}>Amallar</th>
               </tr>
             </thead>
             <tbody>
@@ -475,9 +645,14 @@ export default function Sinflar() {
                   </td>
                   <td className="g-td" style={{ fontWeight: 600, color: "#222" }}>{g.student_count || 0}</td>
                   <td className="g-td">
-                    <button style={{ background: "none", border: "none", color: "#bbb", cursor: "pointer", fontSize: 16 }}>
-                      <i className="fa-solid fa-ellipsis-vertical"></i>
-                    </button>
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 4 }}>
+                      <button className="g-act-btn blue" title="Tahrirlash" onClick={() => openEditGroup(g)}>
+                        <i className="fa-solid fa-pen"></i>
+                      </button>
+                      <button className="g-act-btn red" title="O'chirish" onClick={() => confirmDelete(g.id)}>
+                        <i className="fa-regular fa-trash-can"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
