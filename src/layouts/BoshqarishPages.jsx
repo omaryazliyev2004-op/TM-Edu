@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
 import { fetchApi } from "../api/user.api";
+import { useLang } from "../i18n/LanguageContext";
 
 export function Xonalar() {
+  const { t } = useLang();
   const [users, setUsers] = useState([]);
+  const [view, setView] = useState("active"); // "active" | "archive"
+  const [archived, setArchived] = useState([]);
+  const [archiveLoading, setArchiveLoading] = useState(false);
 
   useEffect(() => {
     async function datas() {
@@ -17,6 +22,25 @@ export function Xonalar() {
     }
     datas();
   }, []);
+
+  // Arxivlangan xonalar — GET /api/v1/rooms/arxive
+  useEffect(() => {
+    if (view !== "archive") return;
+    async function loadArchive() {
+      setArchiveLoading(true);
+      try {
+        const res = await fetchApi(`rooms/arxive`);
+        if (res.status === 200) {
+          setArchived(res.data?.data ?? res.data ?? []);
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setArchiveLoading(false);
+      }
+    }
+    loadArchive();
+  }, [view]);
 
   const [drawerOpen, setDrawer] = useState(false);
   const [editRoom, setEditRoom] = useState(null); 
@@ -51,11 +75,15 @@ export function Xonalar() {
         });
         if (res.status === 200 || res.status === 201) {
           setDrawer(false);
-          window.location.reload();
+          setNom("");
+          setSigim(0);
+          // Butun sahifani qayta yuklamasdan faqat xonalar ro'yxatini yangilaymiz
+          const r = await fetchApi(`rooms`);
+          if (r.status === 200) setUsers(r.data);
         }
       }
     } catch (error) {
-      alert("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring.");
+      alert(t("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring."));
       console.log(error);
     }
   };
@@ -97,7 +125,7 @@ export function Xonalar() {
         setDeleteId(null);
       }
     } catch (error) {
-      alert("Xatolik yuz berdi.");
+      alert(t("Xatolik yuz berdi."));
       console.log(error);
     }
   };
@@ -280,16 +308,16 @@ export function Xonalar() {
       {deleteModal && (
         <div className="del-overlay" onClick={cancelDelete}>
           <div className="del-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="del-modal-title">Xonani o'chirish</h3>
+            <h3 className="del-modal-title">{t("Xonani o'chirish")}</h3>
             <p className="del-modal-text">
-              Rostdan ham o'chirishni hohlaysizmi?
+              {t("Rostdan ham o'chirishni hohlaysizmi?")}
             </p>
             <div className="del-modal-btns">
               <button className="del-btn-cancel" onClick={cancelDelete}>
-                Bekor qilish
+                {t("Bekor qilish")}
               </button>
               <button className="del-btn-confirm" onClick={handleDelete}>
-                Ha
+                {t("Ha")}
               </button>
             </div>
           </div>
@@ -306,7 +334,7 @@ export function Xonalar() {
       <div className={`xona-drawer${drawerOpen ? " open" : ""}`}>
         <div className="xona-drawer-header">
           <span className="xona-drawer-title">
-            {editRoom ? "Xonani tahrirlash" : "Xonani qo'shish"}
+            {editRoom ? t("Xonani tahrirlash") : t("Xonani qo'shish")}
           </span>
           <button className="xona-drawer-close" onClick={closeDrawer}>
             <i className="fa-solid fa-xmark"></i>
@@ -315,23 +343,23 @@ export function Xonalar() {
         <div className="xona-drawer-body">
           <div className="xona-field">
             <label className="xona-label">
-              Nomi <span>*</span>
+              {t("Nomi")} <span>*</span>
             </label>
             <input
               className="xona-input"
-              placeholder="Xona nomi"
+              placeholder={t("Xona nomi")}
               value={nom}
               onChange={(e) => setNom(e.target.value)}
             />
           </div>
           <div className="xona-field">
             <label className="xona-label">
-              Sig'imi <span>*</span>
+              {t("Sig'imi")} <span>*</span>
             </label>
             <input
               className="xona-input"
               type="number"
-              placeholder="Masalan: 20"
+              placeholder={t("Masalan: 20")}
               value={sigim}
               onChange={(e) => setSigim(e.target.value)}
             />
@@ -339,10 +367,10 @@ export function Xonalar() {
         </div>
         <div className="xona-drawer-footer">
           <button className="btn-cancel" onClick={closeDrawer}>
-            Bekor qilish
+            {t("Bekor qilish")}
           </button>
           <button className="btn-save" onClick={handleRoom}>
-            {editRoom ? "Yangilash" : "Saqlash"}
+            {editRoom ? t("Yangilash") : t("Saqlash")}
           </button>
         </div>
       </div>
@@ -374,84 +402,143 @@ export function Xonalar() {
                 margin: 0,
               }}
             >
-              Xonalar
+              {t("Xonalar")}
             </h2>
-            <button
+            <div
               style={{
-                background: "none",
-                border: "none",
-                color: "#aaa",
-                cursor: "pointer",
-                fontSize: 16,
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: 0,
+                gap: 6,
+                background: "#f1f0f7",
+                padding: 4,
+                borderRadius: 8,
               }}
             >
-              <i className="fa-solid fa-rotate-right"></i>
-            </button>
+              {[
+                { key: "active", label: t("Xonalar") },
+                { key: "archive", label: t("Arxiv") },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setView(tab.key)}
+                  style={{
+                    height: 32,
+                    padding: "0 16px",
+                    borderRadius: 6,
+                    border: "none",
+                    background: view === tab.key ? "#765bcf" : "transparent",
+                    color: view === tab.key ? "#fff" : "#666",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <button
-            onClick={openAdd}
-            style={{
-              height: 40,
-              padding: "0 20px",
-              borderRadius: 8,
-              border: "none",
-              background: "#765bcf",
-              color: "#fff",
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              transition: "background 0.15s",
-            }}
-          >
-            <i className="fa-solid fa-plus"></i>
-            Xonani qo'shish
-          </button>
+          {view === "active" && (
+            <button
+              onClick={openAdd}
+              style={{
+                height: 40,
+                padding: "0 20px",
+                borderRadius: 8,
+                border: "none",
+                background: "#765bcf",
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                transition: "background 0.15s",
+              }}
+            >
+              <i className="fa-solid fa-plus"></i>
+              {t("Xonani qo'shish")}
+            </button>
+          )}
         </div>
 
         {/* Rooms grid */}
-        {users?.data?.length === 0 ? (
+        {view === "active" ? (
+          users?.data?.length === 0 ? (
+            <div
+              style={{ textAlign: "center", color: "#bbb", padding: "40px 0" }}
+            >
+              <i
+                className="fa-solid fa-door-open"
+                style={{ fontSize: 40, marginBottom: 10 }}
+              ></i>
+              <p style={{ fontWeight: 500 }}>{t("Hozircha xona yo'q")}</p>
+            </div>
+          ) : (
+            <div className="rooms-grid">
+              {users?.data?.map((room) => (
+                <div key={room.id} className="room-card">
+                  <div>
+                    <div className="room-name">
+                      {room.name === "genious room" ? "Autodesk" : room.name}
+                    </div>
+                    <div className="room-sigim">{t("Sig'imi:")} {room.capacity}</div>
+                  </div>
+                  <div className="room-actions">
+                    <button
+                      className="room-btn delete"
+                      onClick={() => confirmDelete(room.id)}
+                    >
+                      <i className="fa-solid fa-trash"></i>
+                    </button>
+                    <button
+                      className="room-btn edit"
+                      onClick={() => openEdit(room)}
+                    >
+                      <i className="fa-solid fa-pen"></i>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : archiveLoading ? (
+          <p style={{ color: "#888" }}>{t("Arxiv yuklanmoqda...")}</p>
+        ) : archived.length > 0 ? (
+          <div className="rooms-grid">
+            {archived.map((room) => (
+              <div key={room.id} className="room-card" style={{ opacity: 0.85 }}>
+                <div>
+                  <div className="room-name">
+                    {room.name === "genious room" ? "Autodesk" : room.name}
+                    <span
+                      style={{
+                        marginLeft: 8,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: "#999",
+                        background: "#eee",
+                        padding: "2px 8px",
+                        borderRadius: 4,
+                      }}
+                    >
+                      {t("Arxiv")}
+                    </span>
+                  </div>
+                  <div className="room-sigim">{t("Sig'imi:")} {room.capacity}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
           <div
             style={{ textAlign: "center", color: "#bbb", padding: "40px 0" }}
           >
             <i
-              className="fa-solid fa-door-open"
+              className="fa-solid fa-box-archive"
               style={{ fontSize: 40, marginBottom: 10 }}
             ></i>
-            <p style={{ fontWeight: 500 }}>Hozircha xona yo'q</p>
-          </div>
-        ) : (
-          <div className="rooms-grid">
-            {users?.data?.map((room) => (
-              <div key={room.id} className="room-card">
-                <div>
-                  <div className="room-name">
-                    {room.name === "genious room" ? "Autodesk" : room.name}
-                  </div>
-                  <div className="room-sigim">Sig'imi: {room.capacity}</div>
-                </div>
-                <div className="room-actions">
-                  <button
-                    className="room-btn delete"
-                    onClick={() => confirmDelete(room.id)}
-                  >
-                    <i className="fa-solid fa-trash"></i>
-                  </button>
-                  <button
-                    className="room-btn edit"
-                    onClick={() => openEdit(room)}
-                  >
-                    <i className="fa-solid fa-pen"></i>
-                  </button>
-                </div>
-              </div>
-            ))}
+            <p style={{ fontWeight: 500 }}>{t("Arxivda xona yo'q")}</p>
           </div>
         )}
       </div>
@@ -465,6 +552,7 @@ const pages = {
 };
 
 function SubPage({ pageKey }) {
+  const { t } = useLang();
   const p = pages[pageKey];
   return (
     <div style={{ padding: "0 0 24px" }}>
@@ -509,10 +597,10 @@ function SubPage({ pageKey }) {
                 margin: 0,
               }}
             >
-              {p.title}
+              {t(p.title)}
             </h1>
             <p style={{ fontSize: 13, color: "#888", marginTop: 2 }}>
-              {p.title} bo'limi
+              {t(p.title)} {t("bo'limi")}
             </p>
           </div>
         </div>
@@ -522,7 +610,7 @@ function SubPage({ pageKey }) {
             style={{ fontSize: 44, color: p.color + "55" }}
           ></i>
           <p style={{ fontWeight: 500, fontSize: 14, marginTop: 10 }}>
-            Hozircha ma'lumot yo'q
+            {t("Hozircha ma'lumot yo'q")}
           </p>
         </div>
       </div>
@@ -531,7 +619,11 @@ function SubPage({ pageKey }) {
 }
 
 export function Kurslar() {
+  const { t } = useLang();
   const [users, setUsers] = useState([]);
+  const [view, setView] = useState("active"); // "active" | "archive"
+  const [archived, setArchived] = useState([]);
+  const [archiveLoading, setArchiveLoading] = useState(false);
 
   useEffect(() => {
     async function datas() {
@@ -546,6 +638,25 @@ export function Kurslar() {
     }
     datas();
   }, []);
+
+  // Arxivlangan kurslar — GET /api/v1/courses/archive
+  useEffect(() => {
+    if (view !== "archive") return;
+    async function loadArchive() {
+      setArchiveLoading(true);
+      try {
+        const res = await fetchApi(`courses/archive`);
+        if (res.status === 200) {
+          setArchived(res.data?.data ?? res.data ?? []);
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setArchiveLoading(false);
+      }
+    }
+    loadArchive();
+  }, [view]);
 
   const [drawerOpen, setDrawer] = useState(false);
   const [editKurs, setEditKurs] = useState(null);
@@ -599,7 +710,9 @@ export function Kurslar() {
         });
         if (res.status === 200 || res.status === 201) {
           setDrawer(false);
-          window.location.reload();
+          // Butun sahifani qayta yuklamasdan faqat kurslar ro'yxatini yangilaymiz
+          const c = await fetchApi(`courses`);
+          if (c.status === 200) setUsers(c.data);
         }
       }
     } catch (error) {
@@ -654,7 +767,7 @@ export function Kurslar() {
       if (!users?.data) return;
       setUsers({ ...users, data: users.data.filter((x) => x.id !== deleteId) });
     } catch (error) {
-      alert("Xatolik yuz berdi.");
+      alert(t("Xatolik yuz berdi."));
       console.log(error);
     }
   };
@@ -821,16 +934,16 @@ export function Kurslar() {
       {deleteModal && (
         <div className="del-overlay" onClick={cancelDelete}>
           <div className="del-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="del-modal-title">Kursni o'chirish</h3>
+            <h3 className="del-modal-title">{t("Kursni o'chirish")}</h3>
             <p className="del-modal-text">
-              Rostdan ham o'chirishni hohlaysizmi?
+              {t("Rostdan ham o'chirishni hohlaysizmi?")}
             </p>
             <div className="del-modal-btns">
               <button className="del-btn-cancel" onClick={cancelDelete}>
-                Bekor qilish
+                {t("Bekor qilish")}
               </button>
               <button className="del-btn-confirm" onClick={CourseDelete}>
-                Ha
+                {t("Ha")}
               </button>
             </div>
           </div>
@@ -848,12 +961,12 @@ export function Kurslar() {
         <div className="kurs-drawer-header">
           <div>
             <h2 className="kurs-drawer-title">
-              {editKurs ? "Kursni tahrirlash" : "Kurs qoshish"}
+              {editKurs ? t("Kursni tahrirlash") : t("Kurs qoshish")}
             </h2>
             <p className="kurs-drawer-subtitle">
               {editKurs
-                ? "Bu yerda mavjud kursni tahrirlashingiz mumkin."
-                : "Bu yerda siz yangi kurs qo'shishingiz mumkin."}
+                ? t("Bu yerda mavjud kursni tahrirlashingiz mumkin.")
+                : t("Bu yerda siz yangi kurs qo'shishingiz mumkin.")}
             </p>
           </div>
           <button className="kurs-drawer-close" onClick={closeDrawer}>
@@ -862,7 +975,7 @@ export function Kurslar() {
         </div>
         <div className="kurs-drawer-body">
           <div className="kurs-field">
-            <label className="kurs-label">Nomi</label>
+            <label className="kurs-label">{t("Nomi")}</label>
             <input
               className="kurs-input"
               placeholder="HR Manager..."
@@ -872,34 +985,34 @@ export function Kurslar() {
           </div>
 
           <div className="kurs-field">
-            <label className="kurs-label">Dars davomiyligi</label>
+            <label className="kurs-label">{t("Dars davomiyligi")}</label>
             <select
               className="kurs-select"
               value={darsDavomiyligi}
               onChange={(e) => setDarsDavomiyligi(e.target.value)}
             >
-              <option value="">Tanlang</option>
+              <option value="">{t("Tanlang")}</option>
               <option value="60">60 min</option>
               <option value="90">90 min</option>
             </select>
           </div>
 
           <div className="kurs-field">
-            <label className="kurs-label">Kurs davomiyligi (oylarda)</label>
+            <label className="kurs-label">{t("Kurs davomiyligi (oylarda)")}</label>
             <select
               className="kurs-select"
               value={oyDavomiyligi}
               onChange={(e) => setOyDavomiyligi(e.target.value)}
             >
-              <option value="">Tanlang</option>
-              <option value="1">1 oy</option>
-              <option value="3">3 oy</option>
-              <option value="6">6 oy</option>
+              <option value="">{t("Tanlang")}</option>
+              <option value="1">{t("1 oy")}</option>
+              <option value="3">{t("3 oy")}</option>
+              <option value="6">{t("6 oy")}</option>
             </select>
           </div>
 
           <div className="kurs-field">
-            <label className="kurs-label">Narx</label>
+            <label className="kurs-label">{t("Narx")}</label>
             <div style={{ position: "relative" }}>
               <i
                 className="fa-solid fa-money-bill-1-wave"
@@ -914,7 +1027,7 @@ export function Kurslar() {
               <input
                 className="kurs-input"
                 style={{ paddingLeft: 40 }}
-                placeholder="Narxini kiriting"
+                placeholder={t("Narxini kiriting")}
                 value={narx}
                 onChange={(e) => setNarx(e.target.value)}
               />
@@ -936,10 +1049,10 @@ export function Kurslar() {
         </div>
         <div className="kurs-drawer-footer">
           <button className="k-btn-cancel" onClick={closeDrawer}>
-            Bekor qilish
+            {t("Bekor qilish")}
           </button>
           <button className="k-btn-save" onClick={handleLogin}>
-            {editKurs ? "Yangilash" : "Saqlash"}
+            {editKurs ? t("Yangilash") : t("Saqlash")}
           </button>
         </div>
       </div>
@@ -961,67 +1074,140 @@ export function Kurslar() {
             marginBottom: 30,
           }}
         >
-          <h2
-            style={{ fontSize: 20, fontWeight: 700, color: "#222", margin: 0 }}
-          >
-            Kurslar
-          </h2>
-          <button
-            onClick={openAdd}
-            style={{
-              height: 40,
-              padding: "0 20px",
-              borderRadius: 8,
-              border: "none",
-              background: "#765bcf",
-              color: "#fff",
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <i className="fa-solid fa-plus"></i>
-            Kurslar qo'shish
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <h2
+              style={{ fontSize: 20, fontWeight: 700, color: "#222", margin: 0 }}
+            >
+              {t("Kurslar")}
+            </h2>
+            <div
+              style={{
+                display: "flex",
+                gap: 6,
+                background: "#f1f0f7",
+                padding: 4,
+                borderRadius: 8,
+              }}
+            >
+              {[
+                { key: "active", label: t("Kurslar") },
+                { key: "archive", label: t("Arxiv") },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setView(tab.key)}
+                  style={{
+                    height: 32,
+                    padding: "0 16px",
+                    borderRadius: 6,
+                    border: "none",
+                    background: view === tab.key ? "#765bcf" : "transparent",
+                    color: view === tab.key ? "#fff" : "#666",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {view === "active" && (
+            <button
+              onClick={openAdd}
+              style={{
+                height: 40,
+                padding: "0 20px",
+                borderRadius: 8,
+                border: "none",
+                background: "#765bcf",
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <i className="fa-solid fa-plus"></i>
+              {t("Kurslar qo'shish")}
+            </button>
+          )}
         </div>
 
         {/* Grid */}
-        <div className="kurslar-grid">
-          {users?.data?.map((row) => (
-            <div key={row.id} className="k-card">
-              <h3 className="k-card-title">{row.name}</h3>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 18,
-                }}
-              >
-                <span className="k-card-status">{row.description}</span>
-                <div style={{ display: "flex", gap: 12 }}>
-                  <button
-                    className="k-action-btn delete"
-                    onClick={() => confirmDelete(row.id)}
-                  >
-                    <i className="fa-solid fa-trash"></i>
-                  </button>
-                  <button className="k-action-btn" onClick={() => openEdit(row)}>
-                    <i className="fa-solid fa-pen"></i>
-                  </button>
+        {view === "active" ? (
+          <div className="kurslar-grid">
+            {users?.data?.map((row) => (
+              <div key={row.id} className="k-card">
+                <h3 className="k-card-title">{row.name}</h3>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 18,
+                  }}
+                >
+                  <span className="k-card-status">{row.description}</span>
+                  <div style={{ display: "flex", gap: 12 }}>
+                    <button
+                      className="k-action-btn delete"
+                      onClick={() => confirmDelete(row.id)}
+                    >
+                      <i className="fa-solid fa-trash"></i>
+                    </button>
+                    <button className="k-action-btn" onClick={() => openEdit(row)}>
+                      <i className="fa-solid fa-pen"></i>
+                    </button>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <span className="k-badge">{row.duration_hours} {t("min")}</span>
+                  <span className="k-badge">{row.duration_month} {t("oy")}</span>
+                  <span className="k-badge">{row.price} {t("so'm")}</span>
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <span className="k-badge">{row.duration_hours} min</span>
-                <span className="k-badge">{row.duration_month} oy</span>
-                <span className="k-badge">{row.price} so'm</span>
+            ))}
+          </div>
+        ) : archiveLoading ? (
+          <p style={{ color: "#888" }}>{t("Arxiv yuklanmoqda...")}</p>
+        ) : archived.length > 0 ? (
+          <div className="kurslar-grid">
+            {archived.map((row) => (
+              <div key={row.id} className="k-card" style={{ opacity: 0.85 }}>
+                <h3 className="k-card-title">
+                  {row.name}
+                  <span
+                    style={{
+                      marginLeft: 8,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: "#999",
+                      background: "#eee",
+                      padding: "2px 8px",
+                      borderRadius: 4,
+                    }}
+                  >
+                    {t("Arxiv")}
+                  </span>
+                </h3>
+                <div style={{ marginBottom: 18 }}>
+                  <span className="k-card-status">{row.description}</span>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <span className="k-badge">{row.duration_hours} {t("min")}</span>
+                  <span className="k-badge">{row.duration_month} {t("oy")}</span>
+                  <span className="k-badge">{row.price} {t("so'm")}</span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ color: "#888" }}>{t("Arxivda kurslar yo'q")}</p>
+        )}
       </div>
     </>
   );

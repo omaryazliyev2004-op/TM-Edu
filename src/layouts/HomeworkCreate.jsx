@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
+import { useLang } from "../i18n/LanguageContext";
 
 export default function HomeworkCreate() {
+  const { t } = useLang();
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -15,7 +17,7 @@ export default function HomeworkCreate() {
 
   const create = async () => {
      if (!topic.trim() || !description.trim()) {
-        alert("Mavzu va izoh majburiy maydonlar");
+        alert(t("Mavzu va izoh majburiy maydonlar"));
         return;
       }
 
@@ -32,11 +34,11 @@ export default function HomeworkCreate() {
       const res = await fetchApi.post("homework", formData);
 
       if (res.status === 200 || res.status === 201) {
-        window.location.reload();
-        console.log(res);
+        // Sahifani qayta yuklamasdan guruh sahifasiga qaytamiz
+        navigate(`/dashboard/sinflar/${id}`);
       }
     } catch (error) {
-      alert("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring.");
+      alert(t("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring."));
       console.log(error);
     }
   };
@@ -81,7 +83,7 @@ export default function HomeworkCreate() {
   return (
     <div style={{ padding: "20px 0" }}>
       <style>{`
-        .hw-container { max-width: 800px; margin: 0 auto; }
+        .hw-container { max-width: 800px; margin: 0; }
         .hw-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
         .hw-back { background: none; border: none; font-size: 20px; color: #222; cursor: pointer; padding: 0; }
         .hw-title { font-size: 22px; font-weight: 700; color: #222; margin: 0; }
@@ -99,11 +101,11 @@ export default function HomeworkCreate() {
         .hw-upload-text { font-size: 14px; color: #666; }
         .hw-file-input { display: none; }
         .hw-file-name { font-size: 13px; color: #765bcf; font-weight: 600; margin-top: 12px; }
-        .hw-footer { display: flex; gap: 12px; margin-top: 24px; }
-        .hw-btn { height: 42px; padding: 0 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
-        .hw-btn-cancel { border: 1px solid #e0e0e0; background: #fff; color: #444; flex: 1; }
+        .hw-footer { display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end; }
+        .hw-btn { height: 38px; padding: 0 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+        .hw-btn-cancel { border: 1px solid #e0e0e0; background: #fff; color: #444; }
         .hw-btn-cancel:hover { background: #f5f5f5; }
-        .hw-btn-submit { background: #16a34a; color: #fff; flex: 1; }
+        .hw-btn-submit { background: #16a34a; color: #fff; }
         .hw-btn-submit:hover { background: #15803d; }
         .hw-btn-submit:disabled { background: #ccc; cursor: not-allowed; }
       `}</style>
@@ -117,13 +119,13 @@ export default function HomeworkCreate() {
           >
             <i className="fa-solid fa-chevron-left"></i>
           </button>
-          <h1 className="hw-title">Yangi uyga vazifa yaratish</h1>
+          <h1 className="hw-title">{t("Yangi uyga vazifa yaratish")}</h1>
         </div>
 
         {/* Form */}
         <div className="hw-field">
           <label className="hw-label">
-            Mavzu <span>*</span>
+            {t("Mavzu")} <span>*</span>
           </label>
           <select
             className="hw-input"
@@ -138,10 +140,10 @@ export default function HomeworkCreate() {
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
           >
-            <option value="">Mavzulardan birini tanlang</option>
-            {topics.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.topic}
+            <option value="">{t("Mavzulardan birini tanlang")}</option>
+            {topics.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.topic}
               </option>
             ))}
           </select>
@@ -149,11 +151,11 @@ export default function HomeworkCreate() {
 
         <div className="hw-field">
           <label className="hw-label">
-            Izoh <span>*</span>
+            {t("Izoh")} <span>*</span>
           </label>
           <textarea
             className="hw-textarea"
-            placeholder="Vazifa haqida qo'shimcha ma'lumot kiriting..."
+            placeholder={t("Vazifa haqida qo'shimcha ma'lumot kiriting...")}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -171,7 +173,7 @@ export default function HomeworkCreate() {
               <i className="fa-solid fa-cloud-arrow-up"></i>
             </div>
             <div className="hw-upload-text">
-              Faylni tanlash yoki shu yerga tashlang
+              {t("Faylni tanlash yoki shu yerga tashlang")}
             </div>
             {file && <div className="hw-file-name">{file.name}</div>}
             <input
@@ -189,14 +191,14 @@ export default function HomeworkCreate() {
             className="hw-btn hw-btn-cancel"
             onClick={() => navigate(`/dashboard/sinflar/${id}`)}
           >
-            Bekor qilish
+            {t("Bekor qilish")}
           </button>
           <button
             className="hw-btn hw-btn-submit"
             onClick={create}
             disabled={loading}
           >
-            {loading ? "Saqlashyapti..." : "E'lon qilish"}
+            {loading ? t("Saqlashyapti...") : t("E'lon qilish")}
           </button>
         </div>
       </div>

@@ -5,9 +5,11 @@ import Alert from "@mui/material/Alert";
 import ErrorIcon from "@mui/icons-material/Error"
 import { useState, useEffect } from "react";
 import { fetchApi } from "../api/user.api";
+import { useLang } from "../i18n/LanguageContext";
 
 export default function Login() {
 
+  const { t } = useLang();
   const navigate = useNavigate();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
@@ -44,43 +46,43 @@ export default function Login() {
   };
   return (
 
-    <div className="bg-[#F5F3FF] relative">
-      <div className="absolute top-4 right-10">
+    <div className="bg-[#F5F3FF] relative min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-10 overflow-y-auto">
+      <div className="absolute top-4 right-10 z-10">
         {showAlert && (
           <Alert
             icon={<ErrorIcon fontSize="inherit" />}
             severity="error"
             sx={{ mt: 2 }}
           >
-            Login yoki Parol hato
+            {t("Login yoki Parol hato")}
           </Alert>
         )}
       </div>
-      <section className="w-[90%] h-screen m-auto py-10 flex">
-        <div className="w-[50%]">
+      <section className="w-full max-w-[1100px] lg:h-[88vh] flex flex-col lg:flex-row rounded-[20px] overflow-hidden bg-white shadow-sm">
+        <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-[#EEE8FF]">
           <img
             src="/study.svg"
-            className=" h-full bg-[#EEE8FF] rounded-l-[20px]"
+            className="max-h-full max-w-full object-contain"
             alt=""
           />
         </div>
-        <div className="w-[50%] bg-white rounded-r-[20px] h-full flex flex-col items-center pt-20 gap-2">
-          <h2 className="text-center w-90 text-[#4338CA] text-[16px] font-semibold">
+        <div className="w-full lg:w-1/2 bg-white flex flex-col items-center justify-center py-10 lg:py-12 gap-4 px-4 sm:px-8 overflow-y-auto">
+          <h2 className="text-center max-w-md text-[#4338CA] text-[13px] sm:text-[15px] font-semibold leading-snug">
             MUHAMMAD AL-XORAZMIY NOMIDAGI TOSHKENT AXBOROT TEXNOLOGIYALARI
             UNIVERSITETI
           </h2>
-          <img src="/logo.png" className="w-48 h-40" alt="" />
-          <h2 className="font-medium text-[28px] tracking-[0.5px]">
+          <img src="/logo.png" className="w-24 h-20 sm:w-32 sm:h-28" alt="" />
+          <h2 className="font-medium text-[18px] sm:text-[24px] tracking-[0.5px] text-center leading-tight">
             LEARNING <span className="text-[#7C4DFF]">MANAGEMENT SYSTEM</span>
           </h2>
-          <form onSubmit={handleLogin} className="flex flex-col gap-2 mt-3">
-            <h2>Login</h2>
+          <form onSubmit={handleLogin} className="flex flex-col gap-2 mt-3 w-full max-w-[460px]">
+            <h2>{t("Login")}</h2>
             <div className="relative mb-5">
               <input
                 onChange={(e) => setLogin(e.target.value)}
                 type="text"
-                placeholder="Loginni kiriting"
-                className="loginput outline-0 w-140 h-14 border-2 border-[#E9E5FF] rounded-xl pl-12 text-[14px] font-medium  "
+                placeholder={t("Loginni kiriting")}
+                className="loginput outline-0 w-full h-14 border-2 border-[#E9E5FF] rounded-xl pl-12 text-[14px] font-medium"
               />
               <PersonIcon
                 sx={{
@@ -96,13 +98,13 @@ export default function Login() {
                 }}
               />
             </div>
-            <h2>Parol</h2>
+            <h2>{t("Parol")}</h2>
             <div className="relative mb-5">
               <input
                 onChange={(e) => setPassword(e.target.value)}
                 type="password"
-                placeholder="Parolni kiriting"
-                className="loginput outline-0 w-140 h-14 border-2 border-[#E9E5FF] rounded-xl pl-12 text-[14px] font-medium"
+                placeholder={t("Parolni kiriting")}
+                className="loginput outline-0 w-full h-14 border-2 border-[#E9E5FF] rounded-xl pl-12 text-[14px] font-medium"
               />
               <LockIcon
                 sx={{
@@ -120,13 +122,13 @@ export default function Login() {
             </div>
             <button
               type="submit"
-              className="outline-0 w-140 h-14 text-white bg-[#7C4DFF] rounded-xl text-[14px] font-medium cursor-pointer"
+              className="outline-0 w-full h-14 text-white bg-[#7C4DFF] rounded-xl text-[14px] font-medium cursor-pointer"
             >
-              Kirish
+              {t("Kirish")}
             </button>
           </form>
-          <hr className="w-140 h-0.5 text-[#00000011] bg-[#00000011] mt-14" />
-          <h2 className="text-[#555555b2]">
+          <hr className="w-full max-w-[460px] h-0.5 text-[#00000011] bg-[#00000011] mt-6" />
+          <h2 className="text-[#555555b2] text-center text-[13px] sm:text-[14px] px-2">
             Copyright © 2021 of Tashkent University of Information Technologies
           </h2>
         </div>

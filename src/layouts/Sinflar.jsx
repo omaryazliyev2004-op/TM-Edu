@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
+import { useLang } from "../i18n/LanguageContext";
 
 const kunlarMap = {
   Dushanba: "MONDAY",
@@ -15,6 +16,7 @@ const kunlarList = Object.keys(kunlarMap);
 
 export default function Sinflar() {
   const navigate = useNavigate();
+  const { t } = useLang();
 
 
   const [users, setUsers] = useState([]);
@@ -22,6 +24,8 @@ export default function Sinflar() {
   const [allCourses, setAllCourses] = useState([]);
   const [allRooms, setAllRooms] = useState([]);
   const [studentsCount, setStudentsCount] = useState(0);
+  const [archived, setArchived] = useState([]);
+  const [archiveLoading, setArchiveLoading] = useState(false);
 
   const [drawerDataLoaded, setDrawerDataLoaded] = useState(false);
 
@@ -77,6 +81,25 @@ export default function Sinflar() {
   }, []);
 
   const [activeTab, setActiveTab] = useState("guruhlar");
+
+  // Arxivlangan guruhlar — GET /api/v1/groups/archive
+  useEffect(() => {
+    if (activeTab !== "arxiv") return;
+    async function loadArchive() {
+      setArchiveLoading(true);
+      try {
+        const res = await fetchApi(`groups/archive`);
+        if (res.status === 200) {
+          setArchived(res.data?.data ?? res.data ?? []);
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setArchiveLoading(false);
+      }
+    }
+    loadArchive();
+  }, [activeTab]);
   const [drawerOpen, setDrawer] = useState(false);
 
   // Delete modal
@@ -105,7 +128,7 @@ export default function Sinflar() {
         setDeleteId(null);
       }
     } catch (error) {
-      alert("Xatolik yuz berdi. Guruhni o'chirib bo'lmadi.");
+      alert(t("Xatolik yuz berdi. Guruhni o'chirib bo'lmadi."));
       console.log(error);
     }
   };
@@ -240,11 +263,14 @@ export default function Sinflar() {
           setEditingGroup(null);
         } else {
           setDrawer(false);
-          window.location.reload();
+          setEditingGroup(null);
+          // Butun sahifani qayta yuklamasdan faqat guruhlar ro'yxatini yangilaymiz
+          const g = await fetchApi(`groups/all`);
+          if (g.status === 200) setUsers(g.data);
         }
       }
     } catch (error) {
-      const xato = error.response?.data?.message || error.response?.data?.error || "Xatolik yuz berdi. Barcha maydonlarni tekshiring.";
+      const xato = error.response?.data?.message || error.response?.data?.error || t("Xatolik yuz berdi. Barcha maydonlarni tekshiring.");
       alert(xato);
       console.log(error.response?.data || error);
     }
@@ -387,13 +413,13 @@ export default function Sinflar() {
           <div className="g-del-icon">
             <i className="fa-solid fa-trash-can" style={{ fontSize: 26, color: "#ef4444" }}></i>
           </div>
-          <h3 className="g-del-title">Guruhni o'chirish</h3>
+          <h3 className="g-del-title">{t("Guruhni o'chirish")}</h3>
           <p className="g-del-text">
-            Siz ushbu guruhni o'chirishga ishonchingiz komilmi?<br />Bu amal qaytarib bo'lmaydi.
+            {t("Siz ushbu guruhni o'chirishga ishonchingiz komilmi?")}<br />{t("Bu amal qaytarib bo'lmaydi.")}
           </p>
           <div className="g-del-btns">
-            <button className="g-del-btn-cancel" onClick={cancelDelete}>Bekor qilish</button>
-            <button className="g-del-btn-confirm" onClick={handleDelete}>O'chirish</button>
+            <button className="g-del-btn-cancel" onClick={cancelDelete}>{t("Bekor qilish")}</button>
+            <button className="g-del-btn-confirm" onClick={handleDelete}>{t("O'chirish")}</button>
           </div>
         </div>
       </div>
@@ -403,21 +429,21 @@ export default function Sinflar() {
         <div className="g-modal bg-white">
           <div className="g-modal-header">
             <div>
-              <p className="g-modal-title">O'qituvchi qo'shish</p>
-              <p className="g-modal-sub">Bitta yoki bir nechta o'qituvchini tanlang</p>
+              <p className="g-modal-title">{t("O'qituvchi qo'shish")}</p>
+              <p className="g-modal-sub">{t("Bitta yoki bir nechta o'qituvchini tanlang")}</p>
             </div>
             <button className="g-dc" onClick={closeTeacherModal}><i className="fa-solid fa-xmark"></i></button>
           </div>
           <div className="g-modal-body">
             <input
               className="g-input"
-              placeholder="O'qituvchi qidirish..."
+              placeholder={t("O'qituvchi qidirish...")}
               value={teacherQidiruv}
               onChange={e => setTeacherQidiruv(e.target.value)}
               style={{ marginBottom: 8 }}
             />
             {filteredTeachers.length === 0 && (
-              <p style={{ color: "#aaa", fontSize: 13, textAlign: "center", padding: "16px 0" }}>O'qituvchi topilmadi</p>
+              <p style={{ color: "#aaa", fontSize: 13, textAlign: "center", padding: "16px 0" }}>{t("O'qituvchi topilmadi")}</p>
             )}
             {filteredTeachers.map(t => (
               <div key={t.id} className="g-modal-row" onClick={() => toggleTeacher(t.id)}>
@@ -429,8 +455,8 @@ export default function Sinflar() {
             ))}
           </div>
           <div className="g-modal-footer">
-            <button className="g-btn g-btn-outline" style={{ flex: "unset", padding: "0 20px" }} onClick={closeTeacherModal}>Bekor qilish</button>
-            <button className="g-btn g-btn-primary" style={{ flex: "unset", padding: "0 20px" }} onClick={saveTeachers}>Saqlash</button>
+            <button className="g-btn g-btn-outline" style={{ flex: "unset", padding: "0 20px" }} onClick={closeTeacherModal}>{t("Bekor qilish")}</button>
+            <button className="g-btn g-btn-primary" style={{ flex: "unset", padding: "0 20px" }} onClick={saveTeachers}>{t("Saqlash")}</button>
           </div>
         </div>
       </div>
@@ -442,31 +468,31 @@ export default function Sinflar() {
       <div className={`g-drawer ${drawerOpen ? "open" : ""}`}>
         <div className="g-dh">
           <div>
-            <p className="g-dt">{editingGroup ? "Guruhni tahrirlash" : "Guruh qo'shish"}</p>
-            <p className="g-ds">{editingGroup ? "Guruh ma'lumotlarini o'zgartiring va saqlang." : "Yangi guruh yaratish uchun quyidagi ma'lumotlarni kiriting."}</p>
+            <p className="g-dt">{editingGroup ? t("Guruhni tahrirlash") : t("Guruh qo'shish")}</p>
+            <p className="g-ds">{editingGroup ? t("Guruh ma'lumotlarini o'zgartiring va saqlang.") : t("Yangi guruh yaratish uchun quyidagi ma'lumotlarni kiriting.")}</p>
           </div>
           <button className="g-dc" onClick={() => setDrawer(false)}><i className="fa-solid fa-xmark"></i></button>
         </div>
         <div className="g-body">
-          <label className="g-label">Guruh nomi <span>*</span></label>
+          <label className="g-label">{t("Guruh nomi")} <span>*</span></label>
           <input className="g-input" placeholder="Frontend 2024" value={guruhNomi} onChange={e => setGuruhNomi(e.target.value)} />
 
-          <label className="g-label">Kurs <span>*</span></label>
+          <label className="g-label">{t("Kurs")} <span>*</span></label>
           <select className="g-select" value={kurs} onChange={e => setKurs(e.target.value)}>
-            <option value="">Tanlang</option>
+            <option value="">{t("Tanlang")}</option>
             {allCourses.map(k => <option key={k.id} value={k.id}>{k.name}</option>)}
           </select>
 
-          <label className="g-label">Xona <span>*</span></label>
+          <label className="g-label">{t("Xona")} <span>*</span></label>
           <select className="g-select" value={xona} onChange={e => setXona(e.target.value)}>
-            <option value="">Tanlang</option>
+            <option value="">{t("Tanlang")}</option>
             {allRooms.map(x => <option key={x.id} value={x.id}>{x.name || x.nom}</option>)}
           </select>
 
-          <label className="g-label">Maksimal talabalar soni <span>*</span></label>
-          <input className="g-input" type="number" placeholder="Masalan: 15" value={maxStudent} onChange={e => setMaxStudent(e.target.value)} />
+          <label className="g-label">{t("Maksimal talabalar soni")} <span>*</span></label>
+          <input className="g-input" type="number" placeholder={t("Masalan: 15")} value={maxStudent} onChange={e => setMaxStudent(e.target.value)} />
 
-          <label className="g-label">Dars kunlari <span>*</span></label>
+          <label className="g-label">{t("Dars kunlari")} <span>*</span></label>
           <div className="grid grid-cols-2 gap-3 mb-4">
             {kunlarList.map(kun => {
               const isSelected = tanKunlar.includes(kun);
@@ -486,16 +512,16 @@ export default function Sinflar() {
             })}
           </div>
 
-          <label className="g-label">Dars vaqti <span>*</span></label>
+          <label className="g-label">{t("Dars vaqti")} <span>*</span></label>
           <input className="g-input" type="time" value={darsVaqti} onChange={e => setDarsVaqti(e.target.value)} />
 
-          <label className="g-label">Boshlanish sanasi <span>*</span></label>
+          <label className="g-label">{t("Boshlanish sanasi")} <span>*</span></label>
           <input className="g-input" type="date" value={boshlanish} onChange={e => setBoshlanish(e.target.value)} />
 
-          <label className="g-label">Tavsif</label>
-          <textarea className="g-textarea" placeholder="Guruh haqida qo'shimcha ma'lumot (ixtiyoriy)" value={tavsif} onChange={e => setTavsif(e.target.value)} />
+          <label className="g-label">{t("Tavsif")}</label>
+          <textarea className="g-textarea" placeholder={t("Guruh haqida qo'shimcha ma'lumot (ixtiyoriy)")} value={tavsif} onChange={e => setTavsif(e.target.value)} />
 
-          <label className="g-label">O'qituvchilar</label>
+          <label className="g-label">{t("O'qituvchilar")}</label>
           {selectedTeachers.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
               {selectedTeachers.map(id => {
@@ -509,45 +535,47 @@ export default function Sinflar() {
             </div>
           )}
           <button className="g-add-btn" onClick={openTeacherModal}>
-            <i className="fa-solid fa-plus"></i> Qo'shish
+            <i className="fa-solid fa-plus"></i> {t("Qo'shish")}
             {selectedTeachers.length > 0 && (
               <span style={{ marginLeft: 6, background: "#765bcf", color: "#fff", borderRadius: 10, padding: "1px 8px", fontSize: 12 }}>{selectedTeachers.length}</span>
             )}
           </button>
         </div>
         <div className="g-footer">
-          <button className="g-btn g-btn-outline" onClick={() => setDrawer(false)}>Bekor qilish</button>
-          <button className="g-btn g-btn-primary" onClick={create}>{editingGroup ? "Yangilash" : "Saqlash"}</button>
+          <button className="g-btn g-btn-outline" onClick={() => setDrawer(false)}>{t("Bekor qilish")}</button>
+          <button className="g-btn g-btn-primary" onClick={create}>{editingGroup ? t("Yangilash") : t("Saqlash")}</button>
         </div>
       </div>
 
       {/* ── Page Header ── */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#222", margin: 0 }}>Guruhlar</h1>
-        <button
-          onClick={openDrawer}
-          style={{
-            height: 36, padding: "0 14px", borderRadius: 8,
-            border: "none", background: "#765bcf", color: "#fff",
-            fontSize: 13, fontWeight: 600, cursor: "pointer",
-            display: "flex", alignItems: "center", gap: 6
-          }}
-        >
-          <i className="fa-solid fa-plus" style={{ fontSize: 12 }}></i> Guruh qo'shish
-        </button>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#222", margin: 0 }}>{t("Guruhlar")}</h1>
+        {activeTab !== "arxiv" && (
+          <button
+            onClick={openDrawer}
+            style={{
+              height: 36, padding: "0 14px", borderRadius: 8,
+              border: "none", background: "#765bcf", color: "#fff",
+              fontSize: 13, fontWeight: 600, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 6
+            }}
+          >
+            <i className="fa-solid fa-plus" style={{ fontSize: 12 }}></i> {t("Guruh qo'shish")}
+          </button>
+        )}
       </div>
 
       {/* ── Tabs ── */}
       <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #eee", marginBottom: 20 }}>
         <button className={`g-tab ${activeTab === "guruhlar" ? "active" : ""}`} onClick={() => setActiveTab("guruhlar")}>
-          Guruhlar
+          {t("Guruhlar")}
         </button>
         <button
           className={`g-tab ${activeTab === "arxiv" ? "active" : ""}`}
           style={{ display: "flex", alignItems: "center", gap: 6 }}
           onClick={() => setActiveTab("arxiv")}
         >
-          <i className="fa-solid fa-calendar-days" style={{ fontSize: 12 }}></i> Arxiv
+          <i className="fa-solid fa-calendar-days" style={{ fontSize: 12 }}></i> {t("Arxiv")}
         </button>
       </div>
 
@@ -557,7 +585,7 @@ export default function Sinflar() {
           <button className="g-stat-card-menu"><i className="fa-solid fa-ellipsis-vertical"></i></button>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <i className="fa-solid fa-users" style={{ color: "#765bcf", fontSize: 18 }}></i>
-            <span style={{ fontSize: 13, color: "#888" }}>Jami guruhlar</span>
+            <span style={{ fontSize: 13, color: "#888" }}>{t("Jami guruhlar")}</span>
           </div>
           <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{users?.data?.length || users?.length || 0}</div>
         </div>
@@ -566,7 +594,7 @@ export default function Sinflar() {
           <button className="g-stat-card-menu"><i className="fa-solid fa-ellipsis-vertical"></i></button>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <i className="fa-solid fa-user-tie" style={{ color: "#765bcf", fontSize: 18 }}></i>
-            <span style={{ fontSize: 13, color: "#888" }}>O'qituvchilar</span>
+            <span style={{ fontSize: 13, color: "#888" }}>{t("O'qituvchilar")}</span>
           </div>
           <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{allTeachers?.length || 0}</div>
         </div>
@@ -575,7 +603,7 @@ export default function Sinflar() {
           <button className="g-stat-card-menu"><i className="fa-solid fa-ellipsis-vertical"></i></button>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <i className="fa-solid fa-user-graduate" style={{ color: "#765bcf", fontSize: 18 }}></i>
-            <span style={{ fontSize: 13, color: "#888" }}>O'quvchilar</span>
+            <span style={{ fontSize: 13, color: "#888" }}>{t("O'quvchilar")}</span>
           </div>
           <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{studentsCount}</div>
          
@@ -588,35 +616,60 @@ export default function Sinflar() {
           <table className="g-table">
             <thead>
               <tr>
-                <th className="g-th">Status</th>
-                <th className="g-th">Guruh nomi</th>
-                <th className="g-th">Kurs</th>
-                <th className="g-th">Davomiyligi</th>
-                <th className="g-th">Dars vaqti</th>
-                <th className="g-th">Xona</th>
-                <th className="g-th">O'qituvchi</th>
-                <th className="g-th">Talabalar</th>
-                <th className="g-th" style={{ textAlign: "right" }}>Amallar</th>
+                <th className="g-th">{t("Status")}</th>
+                <th className="g-th">{t("Guruh nomi")}</th>
+                <th className="g-th">{t("Kurs")}</th>
+                <th className="g-th">{t("Davomiyligi")}</th>
+                <th className="g-th">{t("Dars vaqti")}</th>
+                <th className="g-th">{t("Xona")}</th>
+                <th className="g-th">{t("O'qituvchi")}</th>
+                <th className="g-th">{t("Talabalar")}</th>
+                <th className="g-th" style={{ textAlign: "right" }}>{t("Amallar")}</th>
               </tr>
             </thead>
             <tbody>
-              {users?.data?.map(g => (
+              {activeTab === "arxiv" && archiveLoading && (
+                <tr>
+                  <td className="g-td" colSpan={9} style={{ textAlign: "center", color: "#888" }}>
+                    {t("Arxiv yuklanmoqda...")}
+                  </td>
+                </tr>
+              )}
+              {activeTab === "arxiv" && !archiveLoading && archived.length === 0 && (
+                <tr>
+                  <td className="g-td" colSpan={9} style={{ textAlign: "center", color: "#888" }}>
+                    {t("Arxivda guruhlar yo'q")}
+                  </td>
+                </tr>
+              )}
+              {(activeTab === "arxiv" ? archived : users?.data || []).map(g => (
                 <tr key={g.id} className="g-row">
                   <td className="g-td">
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <button className={`g-toggle ${g.id ? "on" : ""}`} disabled />
-                      <span style={{
-                        fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
-                        background: g.id ? "rgba(76,175,80,0.1)" : "rgba(200,200,200,0.2)",
-                        color: g.id ? "#4caf50" : "#999"
-                      }}>
-                        {g.id ? "FAOL" : "NOFAOL"}
-                      </span>
+                      {activeTab === "arxiv" ? (
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
+                          background: "rgba(150,150,150,0.15)", color: "#888"
+                        }}>
+                          {t("ARXIV")}
+                        </span>
+                      ) : (
+                        <>
+                          <button className={`g-toggle ${g.id ? "on" : ""}`} disabled />
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
+                            background: g.id ? "rgba(76,175,80,0.1)" : "rgba(200,200,200,0.2)",
+                            color: g.id ? "#4caf50" : "#999"
+                          }}>
+                            {g.id ? t("FAOL") : t("NOFAOL")}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </td>
-                  <td 
-                    className="g-td" 
-                    style={{ fontWeight: 600, color: "#222", cursor: "pointer" }} 
+                  <td
+                    className="g-td"
+                    style={{ fontWeight: 600, color: "#222", cursor: "pointer" }}
                     onClick={() => navigate(`/dashboard/sinflar/${g.id}`)}
                   >
                     <span style={{ borderBottom: "1px dashed #aaa", paddingBottom: "2px" }}>
@@ -626,7 +679,7 @@ export default function Sinflar() {
                   <td className="g-td">
                     <span style={{ color: "#765bcf", fontWeight: 600 }}>{g.course?.name || ""}</span>
                   </td>
-                  <td className="g-td">{g.course?.duration_month || 0} oy</td>
+                  <td className="g-td">{g.course?.duration_month || 0} {t("oy")}</td>
                   <td className="g-td">
                     <div style={{ fontWeight: 600, color: "#222" }}>{g.start_time}</div>
                     <div style={{ fontSize: 11, color: "#999", marginTop: 2 }}>{Array.isArray(g.week_day) ? g.week_day.join("/") : g.week_day}</div>
@@ -645,14 +698,18 @@ export default function Sinflar() {
                   </td>
                   <td className="g-td" style={{ fontWeight: 600, color: "#222" }}>{g.student_count || 0}</td>
                   <td className="g-td">
-                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 4 }}>
-                      <button className="g-act-btn blue" title="Tahrirlash" onClick={() => openEditGroup(g)}>
-                        <i className="fa-solid fa-pen"></i>
-                      </button>
-                      <button className="g-act-btn red" title="O'chirish" onClick={() => confirmDelete(g.id)}>
-                        <i className="fa-regular fa-trash-can"></i>
-                      </button>
-                    </div>
+                    {activeTab === "arxiv" ? (
+                      <div style={{ textAlign: "right", color: "#bbb" }}>—</div>
+                    ) : (
+                      <div style={{ display: "flex", justifyContent: "flex-end", gap: 4 }}>
+                        <button className="g-act-btn blue" title={t("Tahrirlash")} onClick={() => openEditGroup(g)}>
+                          <i className="fa-solid fa-pen"></i>
+                        </button>
+                        <button className="g-act-btn red" title={t("O'chirish")} onClick={() => confirmDelete(g.id)}>
+                          <i className="fa-regular fa-trash-can"></i>
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

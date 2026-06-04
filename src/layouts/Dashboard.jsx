@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
+import { useLang } from "../i18n/LanguageContext";
 
 export default function Asosiy() {
+  const { t } = useLang();
   const { stats, fetchStats } = useAppContext();
 
   useEffect(() => {
@@ -15,18 +17,18 @@ export default function Asosiy() {
   };
 
   const statsData = [
-    { icon: "fa-solid fa-graduation-cap", label: "Faol talabalar", count: stats?.talabalar || 0 },
-    { icon: "fa-solid fa-users", label: "Guruhlar", count: stats?.guruhlar || 0 },
-    { icon: "fa-solid fa-credit-card", label: "Joriy oy to'lovlar", count: 0 },
-    { icon: "fa-solid fa-triangle-exclamation", label: "Qarzdorlar", count: 104 },
-    { icon: "fa-solid fa-snowflake", label: "Muzlatilganlar", count: 0 },
-    { icon: "fa-solid fa-box-archive", label: "Arxivdagilar", count: 23 },
+    { icon: "fa-solid fa-graduation-cap", label: t("Faol talabalar"), count: stats?.talabalar || 0 },
+    { icon: "fa-solid fa-users", label: t("Guruhlar"), count: stats?.guruhlar || 0 },
+    { icon: "fa-solid fa-credit-card", label: t("Joriy oy to'lovlar"), count: 0 },
+    { icon: "fa-solid fa-triangle-exclamation", label: t("Qarzdorlar"), count: 104 },
+    { icon: "fa-solid fa-snowflake", label: t("Muzlatilganlar"), count: 0 },
+    { icon: "fa-solid fa-box-archive", label: t("Arxivdagilar"), count: 23 },
   ];
 
   const accordions = [
-    { id: 1, title: "Joriy oy uchun to'lovlar" },
-    { id: 2, title: "Yillik Foyda" },
-    { id: 3, title: "Dars jadvali" },
+    { id: 1, title: t("Joriy oy uchun to'lovlar") },
+    { id: 2, title: t("Yillik Foyda") },
+    { id: 3, title: t("Dars jadvali") },
   ];
 
   return (
@@ -104,7 +106,7 @@ export default function Asosiy() {
               </button>
               <div className={`acc-body ${openAcc === acc.id ? "open" : ""}`}>
                 <div style={{ padding: "24px", color: "#888", fontSize: 14, textAlign: "center" }}>
-                  Ma'lumot mavjud emas
+                  {t("Ma'lumot mavjud emas")}
                 </div>
               </div>
             </div>

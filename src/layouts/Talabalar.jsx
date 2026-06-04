@@ -1,13 +1,100 @@
 import { useEffect, useState } from "react";
 import { fetchApi } from "../api/user.api";
+import { useLang } from "../i18n/LanguageContext";
 
+const PER_PAGE = 10;
+
+// Javob obyektidan jami son maydonini (total/count) ichma-ich qidiradi
+function findTotal(obj, depth = 0) {
+  if (!obj || typeof obj !== "object" || depth > 4) return undefined;
+  for (const [k, v] of Object.entries(obj)) {
+    if (typeof v === "number" && /total|count|jami/i.test(k)) return v;
+  }
+  for (const v of Object.values(obj)) {
+    if (v && typeof v === "object") {
+      const r = findTotal(v, depth + 1);
+      if (typeof r === "number") return r;
+    }
+  }
+  return undefined;
+}
+
+// Pagination raqamlarini hosil qiladi: [1, ..., 4, 5, 6, ..., 10]
+function getPageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages = [1];
+  if (current > 3) pages.push("...");
+  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i);
+  if (current < total - 2) pages.push("...");
+  pages.push(total);
+  return pages;
+}
 
 export default function Talabalar() {
 
+  const { t } = useLang();
 
   const [users, setUsers] = useState([]);
   const [allGroups, setAllGroups] = useState([]);
   const [groupsLoaded, setGroupsLoaded] = useState(false);
+  const [view, setView] = useState("active"); // "active" | "archive"
+  const [archived, setArchived] = useState([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0); // server bergan jami talabalar soni (active)
+  const [archiveLoading, setArchiveLoading] = useState(false);
+
+  // Joriy sahifadagi talabalarni server-side pagination bilan yuklaymiz
+  const loadStudents = async (pageNum) => {
+    try {
+      const res = await fetchApi(`students?page=${pageNum}&limit=${PER_PAGE}`);
+      if (res.status === 200) {
+        setUsers(res.data);
+        const tot = findTotal(res.data);
+        setTotal(typeof tot === "number" ? tot : 0);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // Active ko'rinishda sahifa o'zgarganda serverdan yuklaymiz
+  useEffect(() => {
+    if (view !== "active") return;
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetchApi(`students?page=${page}&limit=${PER_PAGE}`);
+        if (res.status === 200 && alive) {
+          console.log("students response:", res.data);
+          setUsers(res.data);
+          const tot = findTotal(res.data);
+          setTotal(typeof tot === "number" ? tot : 0);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    })();
+    return () => { alive = false; };
+  }, [page, view]);
+
+  // Arxivlangan talabalar — GET /api/v1/students/archive
+  useEffect(() => {
+    if (view !== "archive") return;
+    async function loadArchive() {
+      setArchiveLoading(true);
+      try {
+        const res = await fetchApi(`students/archive`);
+        if (res.status === 200) {
+          setArchived(res.data?.data ?? res.data ?? []);
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setArchiveLoading(false);
+      }
+    }
+    loadArchive();
+  }, [view]);
 
   const fetchGroups = async () => {
     if (groupsLoaded) return;
@@ -22,14 +109,10 @@ export default function Talabalar() {
     }
   };
 
+  // Guruhlarni bir marta yuklab qo'yamiz (modal/chiplar uchun)
   useEffect(() => {
-    async function datas() {
+    async function loadGroupsOnce() {
       try {
-        const data = await fetchApi(`students`);
-        if (data.status === 200) {
-          setUsers(data.data);
-        }
-        // Guruhlarni ham yuklab olamiz
         const gData = await fetchApi(`groups/all`);
         if (gData.status === 200) {
           setAllGroups(gData.data?.data || gData.data || []);
@@ -39,7 +122,7 @@ export default function Talabalar() {
         console.log(error);
       }
     }
-    datas();
+    loadGroupsOnce();
   }, []);
 
   const [drawerOpen, setDrawer] = useState(false);
@@ -122,15 +205,13 @@ export default function Talabalar() {
     try {
       const res = await fetchApi.delete(`students/${deleteId}`);
       if (res.status === 200 || res.status === 201) {
-        setUsers((prev) => ({
-          ...prev,
-          data: prev?.data?.filter((row) => row.id !== deleteId),
-        }));
         setDeleteModal(false);
         setDeleteId(null);
+        // Joriy sahifani serverdan qayta yuklaymiz (jami son ham yangilanadi)
+        loadStudents(page);
       }
     } catch (error) {
-      alert("O'chirishda xatolik yuz berdi.");
+      alert(t("O'chirishda xatolik yuz berdi."));
       console.log(error);
     }
   };
@@ -147,6 +228,25 @@ export default function Talabalar() {
   const filteredGuruhlar = allGroups?.filter(g =>
     (g.name || g.nomi || "").toLowerCase().includes(guruhQidiruv.toLowerCase())
   ) || [];
+
+  // Pagination
+  // Active: server-side (?page=&limit=) — qatorlar allaqachon kerakli sahifa.
+  // Archive: client-side (hammasi yuklangan).
+  const activeRows = users?.data || [];
+  // total topilsa undan; topilmasa heuristika: sahifa to'la (10 ta) bo'lsa keyingisi bor deb hisoblaymiz
+  const totalPages =
+    view === "archive"
+      ? Math.max(1, Math.ceil(archived.length / PER_PAGE))
+      : total > 0
+      ? Math.max(1, Math.ceil(total / PER_PAGE))
+      : activeRows.length >= PER_PAGE
+      ? page + 1
+      : page;
+  const safePage = Math.min(page, totalPages);
+  const pagedRows =
+    view === "archive"
+      ? archived.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE)
+      : activeRows;
 
   const create = async () => {
     try {
@@ -220,11 +320,14 @@ export default function Talabalar() {
           resetForm();
         } else {
           setDrawer(false);
-          window.location.reload();
+          resetForm();
+          // Yangi talaba qo'shilgach birinchi sahifaga o'tib, serverdan yangilaymiz
+          if (page !== 1) setPage(1);
+          else loadStudents(1);
         }
       }
     } catch (error) {
-      const xato = error.response?.data?.message || error.response?.data?.error || "Xatolik yuz berdi. Barcha maydonlarni tekshiring.";
+      const xato = error.response?.data?.message || error.response?.data?.error || t("Xatolik yuz berdi. Barcha maydonlarni tekshiring.");
       alert(xato);
       console.log(error.response?.data || error);
     }
@@ -265,9 +368,9 @@ export default function Talabalar() {
         .oq-input:focus { border-color: #765bcf; }
         
         /* Table styles */
-        .oq-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #eee; }
-        .oq-th { padding: 14px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #888; border-bottom: 1px solid #eee; white-space: nowrap; }
-        .oq-td { padding: 12px 16px; font-size: 13px; color: #444; border-bottom: 1px solid #f5f5f5; vertical-align: middle; white-space: nowrap; }
+        .oq-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #eee; table-layout: fixed; }
+        .oq-th { padding: 12px 10px; text-align: left; font-size: 13px; font-weight: 600; color: #888; border-bottom: 1px solid #eee; white-space: nowrap; }
+        .oq-td { padding: 10px; font-size: 13px; color: #444; border-bottom: 1px solid #f5f5f5; vertical-align: middle; white-space: normal; word-break: break-word; overflow-wrap: anywhere; }
         .table-row { transition: background 0.15s; }
         .table-row:hover { background: #fafafa; }
         
@@ -276,7 +379,7 @@ export default function Talabalar() {
         .custom-cb.checked { background: #765bcf; border-color: #765bcf; color: #fff; font-size: 10px; }
         
         .badge { display: inline-flex; padding: 4px 8px; border-radius: 6px; border: 1px solid #eee; font-size: 12px; margin-right: 4px; color: #555; background: #f5f5f5; font-weight: 500; white-space: nowrap; }
-        .badge-row { display: flex; align-items: center; gap: 6px; overflow-x: auto; max-width: 260px; padding-bottom: 2px; }
+        .badge-row { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; max-width: 100%; overflow-x: auto; padding-bottom: 4px; }
         .badge-row::-webkit-scrollbar { height: 6px; }
         .badge-row::-webkit-scrollbar-track { background: transparent; }
         .badge-row::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
@@ -311,16 +414,26 @@ export default function Talabalar() {
         .delete-btn.cancel { background: #f4f4f4; color: #444; }
         .delete-btn.confirm { background: #e53935; color: #fff; }
 
-        .guruh-btn {
         .modal-title { font-size: 18px; font-weight: 700; color: #222; margin: 0 0 4px 0; }
         .modal-subtitle { font-size: 13px; color: #666; margin: 0; }
         .modal-close { background: none; border: none; font-size: 16px; color: #999; cursor: pointer; }
 
         .guruh-btn {
-          width: 100%; height: 44px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff;
-          display: flex; align-items: center; justify-content: center; gap: 8px;
-          color: #765bcf; font-weight: 600; font-size: 14px; cursor: pointer; margin-bottom: 16px;
+          width: 100%; min-height: 46px; border-radius: 10px; border: 1.5px dashed #cbd5e1;
+          background: #f8f9fc; display: flex; align-items: center; justify-content: center; gap: 8px;
+          color: #765bcf; font-weight: 600; font-size: 14px; cursor: pointer; margin-bottom: 8px;
+          transition: all 0.15s ease;
         }
+        .guruh-btn:hover { border-color: #765bcf; background: rgba(118,91,207,0.06); }
+        .guruh-btn.has-selection { border-style: solid; border-color: #765bcf; background: rgba(118,91,207,0.06); }
+
+        .guruh-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+        .guruh-chip {
+          display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
+          background: rgba(118,91,207,0.1); color: #765bcf; font-size: 13px; font-weight: 600;
+        }
+        .guruh-chip i { cursor: pointer; font-size: 11px; opacity: 0.7; }
+        .guruh-chip i:hover { opacity: 1; }
       `}</style>
 
       {/* MODAL Overlay (Guruh qoshish) */}
@@ -328,14 +441,14 @@ export default function Talabalar() {
         <div className="t-modal bg-white">
           <div className="modal-header">
             <div>
-              <h2 className="modal-title">Guruhga biriktirish</h2>
-              <p className="modal-subtitle">Bir yoki bir nechta guruhni tanlang</p>
+              <h2 className="modal-title">{t("Guruhga biriktirish")}</h2>
+              <p className="modal-subtitle">{t("Bir yoki bir nechta guruhni tanlang")}</p>
             </div>
             <button className="modal-close" onClick={() => setModalOpen(false)}><i className="fa-solid fa-xmark"></i></button>
           </div>
           <input
             className="oq-input"
-            placeholder="Guruh qidirish..."
+            placeholder={t("Guruh qidirish...")}
             value={guruhQidiruv}
             onChange={e => setGuruhQidiruv(e.target.value)}
             style={{ marginBottom: 12, height: 40 }}
@@ -357,13 +470,13 @@ export default function Talabalar() {
               </div>
             ))}
             {filteredGuruhlar.length === 0 && (
-              <div style={{ padding: 8, fontSize: 13, color: "#999", textAlign: "center" }}>Guruh topilmadi</div>
+              <div style={{ padding: 8, fontSize: 13, color: "#999", textAlign: "center" }}>{t("Guruh topilmadi")}</div>
             )}
           </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
-            <button className="top-btn btn-outline" onClick={() => setModalOpen(false)}>Bekor qilish</button>
-            <button className="top-btn btn-primary" onClick={saveGuruhlar}>Qo'shish</button>
+            <button className="top-btn btn-outline" onClick={() => setModalOpen(false)}>{t("Bekor qilish")}</button>
+            <button className="top-btn btn-primary" onClick={saveGuruhlar}>{t("Qo'shish")}</button>
           </div>
         </div>
       </div>
@@ -371,11 +484,11 @@ export default function Talabalar() {
       {deleteModal && (
         <div className="delete-overlay" onClick={cancelDelete}>
           <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
-            <h2 className="delete-title">Talabani o'chirish</h2>
-            <p className="delete-text">Siz ushbu talabani o'chirishga ishonchingiz komilmi? Bu amal qaytarib bo'lmaydi.</p>
+            <h2 className="delete-title">{t("Talabani o'chirish")}</h2>
+            <p className="delete-text">{t("Siz ushbu talabani o'chirishga ishonchingiz komilmi? Bu amal qaytarib bo'lmaydi.")}</p>
             <div className="delete-actions">
-              <button className="delete-btn cancel" onClick={cancelDelete}>Bekor qilish</button>
-              <button className="delete-btn confirm" onClick={handleDelete}>O'chirish</button>
+              <button className="delete-btn cancel" onClick={cancelDelete}>{t("Bekor qilish")}</button>
+              <button className="delete-btn confirm" onClick={handleDelete}>{t("O'chirish")}</button>
             </div>
           </div>
         </div>
@@ -388,46 +501,68 @@ export default function Talabalar() {
       <div className={`oqit-drawer ${drawerOpen ? "open" : ""}`}>
         <div className="oq-header">
           <div>
-            <h2 className="oq-title">{editingStudent ? "Talaba tahrirlash" : "Talaba qo'shish"}</h2>
-            <p className="oq-subtitle">{editingStudent ? "Talaba ma'lumotlarini o'zgartiring va saqlang." : "Bu yerda siz yangi Talaba qo'shishingiz mumkin."}</p>
+            <h2 className="oq-title">{editingStudent ? t("Talaba tahrirlash") : t("Talaba qo'shish")}</h2>
+            <p className="oq-subtitle">{editingStudent ? t("Talaba ma'lumotlarini o'zgartiring va saqlang.") : t("Bu yerda siz yangi Talaba qo'shishingiz mumkin.")}</p>
           </div>
           <button className="oq-close" onClick={() => setDrawer(false)}><i className="fa-solid fa-xmark"></i></button>
         </div>
         <div className="oq-body">
-          <label className="oq-label">Telefon raqam</label>
+          <label className="oq-label">{t("Telefon raqam")}</label>
           <input className="oq-input" value={tel} onChange={e => setTel(e.target.value)} />
 
-          <label className="oq-label">Mail</label>
-          <input className="oq-input" type="email" placeholder="Elektron pochtani kiriting" value={email} onChange={e => setEmail(e.target.value)} />
+          <label className="oq-label">{t("Mail")}</label>
+          <input className="oq-input" type="email" placeholder={t("Elektron pochtani kiriting")} value={email} onChange={e => setEmail(e.target.value)} />
 
-          <label className="oq-label">Talaba FIO</label>
-          <input className="oq-input" placeholder="Ma'lumotni kiriting" value={fio} onChange={e => setFio(e.target.value)} />
+          <label className="oq-label">{t("Talaba FIO")}</label>
+          <input className="oq-input" placeholder={t("Ma'lumotni kiriting")} value={fio} onChange={e => setFio(e.target.value)} />
 
-          <label className="oq-label">Tug'ilgan sanasi</label>
+          <label className="oq-label">{t("Tug'ilgan sanasi")}</label>
           <div style={{ position: "relative" }}>
             <input type="date" className="oq-input" value={sana} onChange={e => setSana(e.target.value)} />
           </div>
 
-          <label className="oq-label">Manzil</label>
-          <input className="oq-input" placeholder="Manzilni kiriting" value={manzil} onChange={e => setManzil(e.target.value)} />
+          <label className="oq-label">{t("Manzil")}</label>
+          <input className="oq-input" placeholder={t("Manzilni kiriting")} value={manzil} onChange={e => setManzil(e.target.value)} />
 
           <label className="oq-label">
-            {editingStudent ? "Parol (ixtiyoriy, faqat o'zgartirish uchun)" : "Parol"}
+            {editingStudent ? t("Parol (ixtiyoriy, faqat o'zgartirish uchun)") : t("Parol")}
           </label>
           <input
             className="oq-input"
             type="password"
-            placeholder={editingStudent ? "Yangi parol kiriting (ixtiyoriy)" : "Parolni kiriting"}
+            placeholder={editingStudent ? t("Yangi parol kiriting (ixtiyoriy)") : t("Parolni kiriting")}
             value={parol}
             onChange={e => setParol(e.target.value)}
           />
 
-          <label className="oq-label">Guruh</label>
-          <button className="guruh-btn" onClick={openGuruhModal}>
-            <i className="fa-solid fa-plus"></i> {selectedGuruhlar.length > 0 ? `${selectedGuruhlar.length} ta guruh tanlandi` : "Guruh qo'shish"}
+          <label className="oq-label">{t("Guruh")}</label>
+          <button
+            className={`guruh-btn ${selectedGuruhlar.length > 0 ? "has-selection" : ""}`}
+            onClick={openGuruhModal}
+          >
+            <i className="fa-solid fa-plus"></i>
+            {selectedGuruhlar.length > 0 ? `${selectedGuruhlar.length} ${t("ta guruh tanlandi")}` : t("Guruh qo'shish")}
           </button>
+          {selectedGuruhlar.length > 0 && (
+            <div className="guruh-chips">
+              {selectedGuruhlar.map((id) => {
+                const g = allGroups.find((gr) => gr.id === id);
+                return (
+                  <span key={id} className="guruh-chip">
+                    {g?.name || g?.nomi || `#${id}`}
+                    <i
+                      className="fa-solid fa-xmark"
+                      onClick={() =>
+                        setSelectedGuruhlar((prev) => prev.filter((x) => x !== id))
+                      }
+                    ></i>
+                  </span>
+                );
+              })}
+            </div>
+          )}
 
-          <label className="oq-label">Surati</label>
+          <label className="oq-label">{t("Surati")}</label>
           <label className="drag-drop" style={{ display: "block" }}>
             <input
               type="file"
@@ -443,16 +578,16 @@ export default function Talabalar() {
             ) : (
               <>
                 <i className="fa-solid fa-arrow-up-from-bracket" style={{ fontSize: 24, color: "#999", marginBottom: 10 }}></i>
-                <div style={{ fontSize: 13, color: "#765bcf", fontWeight: 600 }}>Click to upload <span style={{ color: "#888", fontWeight: 400 }}>or drag and drop</span></div>
-                <div style={{ fontSize: 12, color: "#999", marginTop: 4 }}>JPG or PNG (max. 2 MB)</div>
+                <div style={{ fontSize: 13, color: "#765bcf", fontWeight: 600 }}>{t("Click to upload")} <span style={{ color: "#888", fontWeight: 400 }}>{t("or drag and drop")}</span></div>
+                <div style={{ fontSize: 12, color: "#999", marginTop: 4 }}>{t("JPG or PNG (max. 2 MB)")}</div>
               </>
             )}
           </label>
         </div>
         <div className="oq-footer">
-          <button className="top-btn btn-outline" onClick={() => setDrawer(false)} style={{ flex: 1, justifyContent: "center" }}>Bekor qilish</button>
+          <button className="top-btn btn-outline" onClick={() => setDrawer(false)} style={{ flex: 1, justifyContent: "center" }}>{t("Bekor qilish")}</button>
           <button className="top-btn btn-primary" onClick={create} style={{ flex: 1, justifyContent: "center", background: "#765bcf", color: "#fff", border: "none" }}>
-            {editingStudent ? "Yangilash" : "Saqlash"}
+            {editingStudent ? t("Yangilash") : t("Saqlash")}
           </button>
         </div>
       </div>
@@ -460,13 +595,13 @@ export default function Talabalar() {
       {/* Page Header */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#222", margin: 0 }}>Talabalar</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#222", margin: 0 }}>{t("Talabalar")}</h1>
           <button className="top-btn btn-primary" onClick={openAddStudent}>
-            <i className="fa-solid fa-plus"></i> Talaba qo'shish
+            <i className="fa-solid fa-plus"></i> {t("Talaba qo'shish")}
           </button>
         </div>
         <p style={{ fontSize: 14, color: "#666", margin: 0 }}>
-          Ushbu sahifada siz Talabalar ro'yxatini va ularning ma'lumotlarini topasiz. Har bir Talaba ismi, fanlari va aloqa ma'lumotlari keltirilgan.
+          {t("Ushbu sahifada siz Talabalar ro'yxatini va ularning ma'lumotlarini topasiz. Har bir Talaba ismi, fanlari va aloqa ma'lumotlari keltirilgan.")}
         </p>
       </div>
 
@@ -475,14 +610,18 @@ export default function Talabalar() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ position: "relative" }}>
             <i className="fa-solid fa-magnifying-glass" style={{ position: "absolute", left: 12, top: 12, color: "#999" }}></i>
-            <input placeholder="Search" style={{ height: 40, width: 280, borderRadius: 8, border: "1px solid #eee", paddingLeft: 36, outline: "none", fontSize: 14 }} />
+            <input placeholder={t("Search")} style={{ height: 40, width: 280, borderRadius: 8, border: "1px solid #eee", paddingLeft: 36, outline: "none", fontSize: 14 }} />
           </div>
           <div style={{ display: "flex", gap: 12 }}>
             <button className="top-btn btn-outline">
-              <i className="fa-solid fa-filter"></i> Filters
+              <i className="fa-solid fa-filter"></i> {t("Filters")}
             </button>
-            <button className="top-btn btn-outline" style={{ color: "#666" }}>
-              Arxiv
+            <button
+              className="top-btn btn-outline"
+              onClick={() => { setView(view === "archive" ? "active" : "archive"); setPage(1); }}
+              style={view === "archive" ? { background: "#765bcf", color: "#fff", borderColor: "#765bcf" } : { color: "#666" }}
+            >
+              <i className="fa-solid fa-box-archive"></i> {t("Arxiv")}
             </button>
           </div>
         </div>
@@ -492,33 +631,62 @@ export default function Talabalar() {
           <table className="oq-table" style={{ border: "none" }}>
             <thead>
               <tr>
-                <th className="oq-th" style={{ width: 40, borderTop: "none" }}>
+                <th className="oq-th" style={{ width: "4%", borderTop: "none" }}>
                   <div className={`custom-cb ${users?.data?.length > 0 && users.data.every(d => d.selected) ? "checked" : ""}`} onClick={toggleSelectAll}>
                     {users?.data?.length > 0 && users.data.every(d => d.selected) && <i className="fa-solid fa-check"></i>}
                   </div>
                 </th>
-                <th className="oq-th" style={{ borderTop: "none" }}>Nomi <i className="fa-solid fa-arrow-down" style={{ fontSize: 10, marginLeft: 4 }}></i></th>
-                <th className="oq-th" style={{ borderTop: "none" }}>Guruh</th>
-                <th className="oq-th" style={{ borderTop: "none" }}>Telefon raqamlari</th>
-                <th className="oq-th" style={{ borderTop: "none" }}>Email</th>
-                <th className="oq-th" style={{ borderTop: "none" }}>Tug'ilgan sanasi</th>
-                <th className="oq-th" style={{ borderTop: "none" }}>Manzil</th>
-                <th className="oq-th" style={{ borderTop: "none" }}>Yaratilgan sana</th>
-                <th className="oq-th" style={{ borderTop: "none", textAlign: "right" }}>Amallar</th>
+                <th className="oq-th" style={{ width: "16%", borderTop: "none" }}>{t("Nomi")} <i className="fa-solid fa-arrow-down" style={{ fontSize: 10, marginLeft: 4 }}></i></th>
+                <th className="oq-th" style={{ width: "12%", borderTop: "none" }}>{t("Guruh")}</th>
+                <th className="oq-th" style={{ width: "12%", borderTop: "none" }}>{t("Telefon raqamlari")}</th>
+                <th className="oq-th" style={{ width: "16%", borderTop: "none" }}>{t("Email")}</th>
+                <th className="oq-th" style={{ width: "10%", borderTop: "none" }}>{t("Tug'ilgan sanasi")}</th>
+                <th className="oq-th" style={{ width: "14%", borderTop: "none" }}>{t("Manzil")}</th>
+                <th className="oq-th" style={{ width: "10%", borderTop: "none" }}>{t("Yaratilgan sana")}</th>
+                <th className="oq-th" style={{ width: "6%", borderTop: "none", textAlign: "right" }}>{t("Amallar")}</th>
               </tr>
             </thead>
             <tbody>
-              {users?.data?.map((row, index) => (
+              {view === "archive" && archiveLoading && (
+                <tr>
+                  <td className="oq-td" colSpan={9} style={{ textAlign: "center", color: "#888" }}>
+                    {t("Arxiv yuklanmoqda...")}
+                  </td>
+                </tr>
+              )}
+              {view === "archive" && !archiveLoading && archived.length === 0 && (
+                <tr>
+                  <td className="oq-td" colSpan={9} style={{ textAlign: "center", color: "#888" }}>
+                    {t("Arxivda talaba yo'q")}
+                  </td>
+                </tr>
+              )}
+              {pagedRows.map((row, index) => (
                 <tr key={row.id || index} className="table-row">
                   <td className="oq-td">
-                    <div className={`custom-cb ${row.selected ? "checked" : ""}`} onClick={() => toggleSelect(row.id)}>
-                      {row.selected && <i className="fa-solid fa-check"></i>}
-                    </div>
+                    {view === "archive" ? (
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: "rgba(150,150,150,0.15)", color: "#888" }}>
+                        {t("ARXIV")}
+                      </span>
+                    ) : (
+                      <div className={`custom-cb ${row.selected ? "checked" : ""}`} onClick={() => toggleSelect(row.id)}>
+                        {row.selected && <i className="fa-solid fa-check"></i>}
+                      </div>
+                    )}
                   </td>
                   <td className="oq-td">
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <img src={`https://najot-edu.softwareengineer.uz/files/${row.photo}`} alt="" style={{ width: 32, height: 32, borderRadius: "50%", background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", color: "#765bcf", fontSize: 12 }}>
-                      </img>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(118,91,207,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#765bcf", fontSize: 13, overflow: "hidden", flexShrink: 0, position: "relative" }}>
+                        {(row.full_name || "?").trim().charAt(0).toUpperCase()}
+                        {row.photo && (
+                          <img
+                            src={`https://najot-edu.softwareengineer.uz/files/${row.photo}`}
+                            alt=""
+                            onError={(e) => { e.currentTarget.style.display = "none"; }}
+                            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                        )}
+                      </div>
                       <span style={{ fontWeight: 600 }}>{row.full_name}</span>
                     </div>
                   </td>
@@ -529,15 +697,18 @@ export default function Talabalar() {
                   </td>
                   <td className="oq-td">{row.phone}</td>
                   <td className="oq-td">{row.email}</td>
-                  <td className="oq-td">{new Date(row.birth_date).toLocaleDateString("en-GB")}</td>
+                  <td className="oq-td">{row.birth_date ? new Date(row.birth_date).toLocaleDateString("en-GB") : ""}</td>
                   <td className="oq-td">{row.address}</td>
                   <td className="oq-td">{row.created_at ? new Date(row.created_at).toLocaleDateString("en-GB") : ""}</td>
                   <td className="oq-td">
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
-                      <button className="act-btn" onClick={() => openEditStudent(row)}><i className="fa-solid fa-pen"></i></button>
-                      <button className="act-btn" onClick={() => confirmDelete(row.id)}><i className="fa-regular fa-trash-can"></i></button>
-                      <button className="act-btn"><i className="fa-regular fa-eye"></i></button>
-                    </div>
+                    {view === "archive" ? (
+                      <div style={{ textAlign: "right", color: "#bbb" }}>—</div>
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
+                        <button className="act-btn" onClick={() => openEditStudent(row)}><i className="fa-solid fa-pen"></i></button>
+                        <button className="act-btn" onClick={() => confirmDelete(row.id)}><i className="fa-regular fa-trash-can"></i></button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -547,15 +718,29 @@ export default function Talabalar() {
 
         {/* Pagination */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 20, paddingTop: 16, borderTop: "1px solid #eee" }}>
-          <button className="top-btn btn-outline" style={{ color: "#666", border: "none" }}><i className="fa-solid fa-arrow-left"></i> Previous</button>
+          <button
+            className="top-btn btn-outline"
+            style={{ color: "#666", border: "none", cursor: safePage > 1 ? "pointer" : "not-allowed", opacity: safePage > 1 ? 1 : 0.5 }}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={safePage <= 1}
+          ><i className="fa-solid fa-arrow-left"></i> {t("Previous")}</button>
           <div style={{ display: "flex", gap: 8 }}>
-            {[1, 2, 3, "...", 8, 9, 10].map((page, i) => (
-              <button key={i} style={{ width: 32, height: 32, borderRadius: 8, border: "none", background: page === 1 ? "rgba(118,91,207,0.1)" : "transparent", color: page === 1 ? "#765bcf" : "#666", fontWeight: page === 1 ? 700 : 500, cursor: page !== "..." ? "pointer" : "default" }}>
-                {page}
+            {getPageNumbers(safePage, totalPages).map((p, i) => (
+              <button
+                key={i}
+                onClick={() => typeof p === "number" && setPage(p)}
+                style={{ width: 32, height: 32, borderRadius: 8, border: "none", background: p === safePage ? "rgba(118,91,207,0.1)" : "transparent", color: p === safePage ? "#765bcf" : "#666", fontWeight: p === safePage ? 700 : 500, cursor: p !== "..." ? "pointer" : "default" }}
+              >
+                {p}
               </button>
             ))}
           </div>
-          <button className="top-btn btn-outline" style={{ color: "#666", border: "none" }}>Next <i className="fa-solid fa-arrow-right"></i></button>
+          <button
+            className="top-btn btn-outline"
+            style={{ color: "#666", border: "none", cursor: safePage < totalPages ? "pointer" : "not-allowed", opacity: safePage < totalPages ? 1 : 0.5 }}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={safePage >= totalPages}
+          >{t("Next")} <i className="fa-solid fa-arrow-right"></i></button>
         </div>
       </div>
     </div>

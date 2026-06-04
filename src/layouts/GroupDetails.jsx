@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
+import { useLang } from "../i18n/LanguageContext";
 
 export default function GroupDetails() {
   const { id } = useParams();
@@ -21,7 +22,7 @@ export default function GroupDetails() {
   const [lessonDescription, setLessonDescription] = useState("");
   const [attendance, setAttendance] = useState({});
   const [allStudents, setAllStudents] = useState([]);
-  const [studentsLoaded, setStudentsLoaded] = useState(false);
+  const [allStudentsFetched, setAllStudentsFetched] = useState(false);
   const [videos, setVideos] = useState([]);
   const [videosLoading, setVideosLoading] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
@@ -38,6 +39,20 @@ export default function GroupDetails() {
   const [examsLoading, setExamsLoading] = useState(false);
   // Attendance loading state
   const [attendanceLoading, setAttendanceLoading] = useState(false);
+  // Toast state
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
+  const toastTimeoutRef = useRef(null);
+  const { t } = useLang();
+
+  const showToast = (message, type = "success") => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    setToast({ show: true, message, type });
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast({ show: false, message: "", type: "success" });
+    }, 2000);
+  };
 
   useEffect(() => {
     async function loadGroup() {
@@ -93,19 +108,24 @@ export default function GroupDetails() {
   }, [id]);
 
   useEffect(() => {
+    // Guruh hali yuklanmagan bo'lsa kutamiz
+    if (!group) return;
+    // Guruh ma'lumotida talabalar bor — barcha talabalarni yuklash shart emas
+    if (Array.isArray(group.students) && group.students.length > 0) return;
+    // Fallback: faqat guruhda talaba bo'lmasa, hammasini yuklab filtrlash uchun
     async function loadStudents() {
       try {
         const res = await fetchApi(`students`);
         if (res.status === 200) {
           setAllStudents(res.data?.data || res.data || []);
-          setStudentsLoaded(true);
+          setAllStudentsFetched(true);
         }
       } catch (err) {
         console.error(err);
       }
     }
     loadStudents();
-  }, []);
+  }, [group]);
 
   useEffect(() => {
     async function loadVideos() {
@@ -201,7 +221,7 @@ export default function GroupDetails() {
     const fileName = file.name.toLowerCase();
     const hasValidExt = allowedExtensions.some(ext => fileName.endsWith(ext));
     if (!hasValidExt) {
-      alert("Faqat video fayllarni yuklashingiz mumkin! (.mp4, .webm, .mpeg, .avi, .mkv, .m4v, .ogm, .mov)");
+      showToast(t("Faqat video fayllarni yuklashingiz mumkin! (.mp4, .webm, etc.)"), "error");
       return;
     }
     setUploadFile(file);
@@ -210,7 +230,7 @@ export default function GroupDetails() {
 
   const handleUploadVideo = async () => {
     if (!uploadFile || !selectedLessonId || !customVideoName.trim()) {
-      alert("Iltimos, darsni va video nomini to'ldiring!");
+      showToast(t("Iltimos, darsni va video nomini to'ldiring!"), "error");
       return;
     }
     setUploadLoading(true);
@@ -235,7 +255,7 @@ export default function GroupDetails() {
       );
 
       if (res.status === 200 || res.status === 201) {
-        alert("Video muvaffaqiyatli yuklandi!");
+        showToast(t("Video muvaffaqiyatli yuklandi!"), "success");
         setShowUploadModal(false);
         setUploadFile(null);
         setSelectedLessonId("");
@@ -248,8 +268,8 @@ export default function GroupDetails() {
       }
     } catch (error) {
       console.error(error);
-      const errMsg = error.response?.data?.message || error.response?.data?.error || "Videoni yuklashda xatolik yuz berdi.";
-      alert(errMsg);
+      const errMsg = error.response?.data?.message || error.response?.data?.error || t("Videoni yuklashda xatolik yuz berdi.");
+      showToast(errMsg, "error");
     } finally {
       setUploadLoading(false);
     }
@@ -350,6 +370,10 @@ export default function GroupDetails() {
         });
       });
 
+  // Guruhda talabalar bo'lsa darhol, aks holda barcha talabalar yuklangach tayyor
+  const studentsLoaded =
+    (Array.isArray(group?.students) && group.students.length > 0) || allStudentsFetched;
+
   const studentList = studentsLoaded
     ? groupStudents.map((student, index) => ({
         id: student?.id ?? `student-${index}`,
@@ -378,14 +402,40 @@ export default function GroupDetails() {
         const res = await fetchApi("attendance/all");
         if (res.status === 200) {
           const allRecords = res.data?.data || res.data || [];
-          // Filter records matching this group
-          const groupRecords = allRecords.filter(
-            (rec) => Number(rec.group_id) === Number(id)
-          );
-          // Build attendance map: { [student_id]: isPresent }
+          console.log("attendance/all sample:", allRecords[0]);
+
+          const gid = Number(id);
+          // Tanlangan kunning sanasi (yil/oy/kun)
+          const sel = getDayDate(selectedDay);
+          const isSameDay = (recDate) => {
+            if (!sel || !recDate) return false;
+            const d = new Date(recDate);
+            if (isNaN(d.getTime())) return false;
+            return (
+              d.getFullYear() === sel.getFullYear() &&
+              d.getMonth() === sel.getMonth() &&
+              d.getDate() === sel.getDate()
+            );
+          };
+
+          // Faqat shu guruh va AYNAN tanlangan kunning yozuvlaridan map yasaymiz
           const map = {};
-          groupRecords.forEach((rec) => {
-            map[rec.student_id] = rec.isPresent;
+          allRecords.forEach((rec) => {
+            const recGid = Number(rec.group_id ?? rec.groupId ?? rec.group?.id);
+            if (recGid !== gid) return;
+
+            const recDate =
+              rec.date ?? rec.created_at ?? rec.createdAt ?? rec.lesson?.created_at;
+            if (!isSameDay(recDate)) return;
+
+            const sid = rec.student_id ?? rec.studentId ?? rec.student?.id;
+            const present =
+              rec.isPresent ??
+              rec.is_present ??
+              rec.present ??
+              (typeof rec.status === "string" &&
+                ["present", "keldi", "PRESENT"].includes(rec.status));
+            if (sid != null) map[sid] = !!present;
           });
           setAttendance(map);
         }
@@ -418,16 +468,16 @@ export default function GroupDetails() {
         })
       );
       await Promise.all(attendancePromises);
-      alert("Davomat muvaffaqiyatli saqlandi!");
+      alert(t("Davomat muvaffaqiyatli saqlandi!"));
     } catch (error) {
       console.error(error);
-      alert("Davomatni saqlashda xatolik yuz berdi.");
+      alert(t("Davomatni saqlashda xatolik yuz berdi."));
     }
   };
 
   const handleSaveLesson = async () => {
     if (!lessonTopic.trim()) {
-      alert("Iltimos, dars mavzusini kiriting!");
+      alert(t("Iltimos, dars mavzusini kiriting!"));
       return;
     }
 
@@ -453,13 +503,13 @@ export default function GroupDetails() {
         );
         await Promise.all(attendancePromises);
 
-        alert("Mavzu va davomat muvaffaqiyatli saqlandi!");
+        alert(t("Mavzu va davomat muvaffaqiyatli saqlandi!"));
         setLessonTopic("");
         setLessonDescription("");
       }
     } catch (error) {
       console.error(error);
-      const xato = error.response?.data?.message || error.response?.data?.error || "Mavzuni saqlashda xatolik yuz berdi.";
+      const xato = error.response?.data?.message || error.response?.data?.error || t("Mavzuni saqlashda xatolik yuz berdi.");
       alert(xato);
     }
   };
@@ -1377,11 +1427,11 @@ export default function GroupDetails() {
           <button className="gd-back" onClick={() => navigate(-1)}>
             <i className="fa-solid fa-chevron-left"></i>
           </button>
-          {group?.course?.name || "Yuklanmoqda..."}
-          <span className="gd-badge">Aktiv</span>
+          {group?.course?.name || t("Yuklanmoqda...")}
+          <span className="gd-badge">{t("Aktiv")}</span>
         </div>
         <button className="gd-stat-btn">
-          <i className="fa-solid fa-chart-simple"></i> Statistika
+          <i className="fa-solid fa-chart-simple"></i> {t("Statistika")}
         </button>
       </div>
 
@@ -1391,19 +1441,19 @@ export default function GroupDetails() {
           className={`gd-tab ${activeTab === "malumotlar" ? "active" : ""}`}
           onClick={() => setActiveTab("malumotlar")}
         >
-          Ma'lumotlar
+          {t("Ma'lumotlar")}
         </button>
         <button
           className={`gd-tab ${activeTab === "darsliklar" ? "active" : ""}`}
           onClick={() => setActiveTab("darsliklar")}
         >
-          Guruh darsliklari
+          {t("Guruh darsliklari")}
         </button>
         <button
           className={`gd-tab ${activeTab === "davomat" ? "active" : ""}`}
           onClick={() => setActiveTab("davomat")}
         >
-          Akademik davomati
+          {t("Akademik davomati")}
         </button>
       </div>
 
@@ -1414,7 +1464,7 @@ export default function GroupDetails() {
             {/* Mentorlar */}
             <div className="gd-panel">
               <div className="gd-panel-header">
-                Guruh mentorlari
+                {t("Guruh mentorlari")}
                 {showMentors ? (
                   <i
                     className="fa-solid fa-xmark"
@@ -1435,12 +1485,21 @@ export default function GroupDetails() {
                     {group?.teachers?.map((teacher, index) => {
                       return (
                         <div key={index} className="gd-mentor-card">
-                          <img
-                            src={`https://najot-edu.softwareengineer.uz/files/${teacher?.photo}`}
-                            alt="mentor"
+                          <div
                             className="gd-mentor-img"
-                          />
-                          <span className="gd-mentor-role">Teacher</span>
+                            style={{ display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#765bcf", fontSize: 20, overflow: "hidden", position: "relative" }}
+                          >
+                            {(teacher?.full_name || "?").trim().charAt(0).toUpperCase()}
+                            {teacher?.photo && (
+                              <img
+                                src={`https://najot-edu.softwareengineer.uz/files/${teacher.photo}`}
+                                alt=""
+                                onError={(e) => { e.currentTarget.style.display = "none"; }}
+                                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                              />
+                            )}
+                          </div>
+                          <span className="gd-mentor-role">{t("Teacher")}</span>
                           <span className="gd-mentor-name">
                             {teacher?.full_name}
                           </span>
@@ -1455,7 +1514,7 @@ export default function GroupDetails() {
             {/* Parametrlar */}
             <div className="gd-panel">
               <div className="gd-panel-header">
-                Parametrlar
+                {t("Parametrlar")}
                 {showParams ? (
                   <i
                     className="fa-solid fa-xmark"
@@ -1473,35 +1532,35 @@ export default function GroupDetails() {
               {showParams && (
                 <div className="gd-panel-body" style={{ padding: "0 16px" }}>
                   <div className="gd-param-row">
-                    <span className="gd-param-label">Kurs:</span>
+                    <span className="gd-param-label">{t("Kurs:")}</span>
                     <span className="gd-param-value">{group?.course?.name}</span>
                   </div>
                   <div className="gd-param-row">
-                    <span className="gd-param-label">O'rta yosh:</span>
+                    <span className="gd-param-label">{t("O'rta yosh:")}</span>
                     <span className="gd-param-value">{group?.averageAge}</span>
                   </div>
                   <div className="gd-param-row">
-                    <span className="gd-param-label">O'quvchilar sig'imi:</span>
+                    <span className="gd-param-label">{t("O'quvchilar sig'imi:")}</span>
                     <span className="gd-param-value">{group?.room_capacity}</span>
                   </div>
                   <div className="gd-param-row">
-                    <span className="gd-param-label">Mavjud o'quvchilar:</span>
+                    <span className="gd-param-label">{t("Mavjud o'quvchilar:")}</span>
                     <span className="gd-param-value">{group?.student_count}</span>
                   </div>
                   <div className="gd-param-row">
                     <span className="gd-param-label">
-                      O'quv oyidagi darslar soni:
+                      {t("O'quv oyidagi darslar soni:")}
                     </span>
                     <span className="gd-param-value">20</span>
                   </div>
                   <div className="gd-param-row">
-                    <span className="gd-param-label">Kurs davomiyligi (oy):</span>
+                    <span className="gd-param-label">{t("Kurs davomiyligi (oy):")}</span>
                     <span className="gd-param-value">
                       {group?.course?.duration_month}
                     </span>
                   </div>
                   <div className="gd-param-row">
-                    <span className="gd-param-label">Jami darslar soni:</span>
+                    <span className="gd-param-label">{t("Jami darslar soni:")}</span>
                     <span className="gd-param-value">20</span>
                   </div>
                 </div>
@@ -1511,7 +1570,7 @@ export default function GroupDetails() {
 
           {/* Dars jadvali */}
           <div className="gd-schedule">
-            <div className="gd-schedule-title">Dars jadvali</div>
+            <div className="gd-schedule-title">{t("Dars jadvali")}</div>
 
             <div className="gd-schedule-row">
               <strong>{group?.teachers?.[0]?.full_name || "Mohirbek"}</strong>
@@ -1520,7 +1579,7 @@ export default function GroupDetails() {
                   ? group.week_day.map((d) => d.slice(0, 2)).join("/")
                   : "Du/Se/Ch/Pa/Ju"}
               </span>
-              <span>{group?.start_time || "09:30"} dan - 12:30 gacha</span>
+              <span>{group?.start_time || "09:30"} {t("dan - 12:30 gacha")}</span>
               <span>15 Yan, 2026 - 27 Iyun, 2026</span>
               <span>{group?.room?.name || "F2 Autodesk"} // 18</span>
             </div>
@@ -1528,7 +1587,7 @@ export default function GroupDetails() {
             <div className="gd-schedule-row" style={{ opacity: 0.7 }}>
               <strong>+++Yusupova Barchinoy</strong>
               <span>Du/Se/Ch/Pa/Ju</span>
-              <span>08:00 dan - 09:30 gacha</span>
+              <span>{t("08:00 dan - 09:30 gacha")}</span>
               <span>15 Yan, 2026 - 27 Iyun, 2026</span>
               <span>F2 Autodesk // 18</span>
             </div>
@@ -1545,7 +1604,7 @@ export default function GroupDetails() {
                   cursor: "pointer",
                 }}
               >
-                Yana ko'rsatish (9)
+                {t("Yana ko'rsatish")} (9)
               </button>
             </div>
 
@@ -1553,8 +1612,8 @@ export default function GroupDetails() {
               {!showAllMonths && (
                 <div className="gd-month-index">
                   {sortedScheduleKeys.indexOf(activeScheduleMonth) !== -1
-                    ? `${sortedScheduleKeys.indexOf(activeScheduleMonth) + 1}-o'quv oyi`
-                    : "O'quv oyi"}
+                    ? `${sortedScheduleKeys.indexOf(activeScheduleMonth) + 1}${t("-o'quv oyi")}`
+                    : t("O'quv oyi")}
                 </div>
               )}
               {!showAllMonths && (
@@ -1563,8 +1622,8 @@ export default function GroupDetails() {
                 </button>
               )}
               {showAllMonths
-                ? "Barcha oyliklar"
-                : `${getMonthLabel(activeScheduleMonth)} o'quv oyi`}
+                ? t("Barcha oyliklar")
+                : `${getMonthLabel(activeScheduleMonth)} ${t("o'quv oyi")}`}
               {!showAllMonths && (
                 <button className="gd-cal-nav" onClick={() => moveScheduleMonth(1)}>
                   <i className="fa-solid fa-chevron-right"></i>
@@ -1600,7 +1659,7 @@ export default function GroupDetails() {
                   ))
                 ) : (
                   <div className="gd-date-box active" style={{ minWidth: 120 }}>
-                    <span>Malumot yo'q</span>
+                    <span>{t("Malumot yo'q")}</span>
                   </div>
                 )
               ) : currentScheduleDays.length > 0 ? (
@@ -1631,7 +1690,7 @@ export default function GroupDetails() {
               <div className="gd-selected-day-card">
                 {/* Ma'lumot card */}
                 <div className="gd-info-card">
-                  <p className="gd-info-card-title">Ma'lumot</p>
+                  <p className="gd-info-card-title">{t("Ma'lumot")}</p>
                   <div className="gd-info-card-body">
                     <div className="gd-selected-day-row">
                       <div className="gd-avatar" style={{ overflow: "hidden" }}>
@@ -1647,19 +1706,19 @@ export default function GroupDetails() {
                       </div>
                       <div>
                         <p className="gd-teacher-name">{group?.teachers?.[0]?.full_name || "Mohirbek"}</p>
-                        <p className="gd-teacher-role">Teacher</p>
+                        <p className="gd-teacher-role">{t("Teacher")}</p>
                       </div>
                       <div className="gd-info-cols">
                         <div className="gd-info-col">
-                          <label>Dars kuni</label>
+                          <label>{t("Dars kuni")}</label>
                           <span>
                             {today.getFullYear()} M{String(today.getMonth() + 1).padStart(2, "0")} {String(selectedDay.day).padStart(2, "0")}
                           </span>
                         </div>
                         <div className="gd-info-col">
-                          <label>Holat</label>
+                          <label>{t("Holat")}</label>
                           <span className={selectedDay?.isCompleted ? "status-green" : "status-blue"}>
-                            {selectedDay?.isCompleted ? "Dars o'tilgan" : "Dars o'tilmagan"}
+                            {selectedDay?.isCompleted ? t("Dars o'tilgan") : t("Dars o'tilmagan")}
                           </span>
                         </div>
                       </div>
@@ -1669,7 +1728,7 @@ export default function GroupDetails() {
 
                 {/* Yo'qlama va mavzu kiritish card */}
                 <div className="gd-form-card">
-                  <p className="gd-form-card-title">Yo'qlama va mavzu kiritish</p>
+                  <p className="gd-form-card-title">{t("Yo'qlama va mavzu kiritish")}</p>
                   <div className="gd-selected-day-form">
                     <div className="gd-radio-row">
                       <label className={`gd-radio-label ${lessonMode === "plan" ? "active" : ""}`}>
@@ -1680,7 +1739,7 @@ export default function GroupDetails() {
                           onChange={() => setLessonMode("plan")}
                           disabled={selectedDayIsPast || selectedDay?.isCompleted}
                         />
-                        O'quv reja bo'yicha
+                        {t("O'quv reja bo'yicha")}
                       </label>
                       <label className={`gd-radio-label ${lessonMode === "boshqa" ? "active" : ""}`}>
                         <input
@@ -1690,27 +1749,27 @@ export default function GroupDetails() {
                           onChange={() => setLessonMode("boshqa")}
                           disabled={selectedDayIsPast || selectedDay?.isCompleted}
                         />
-                        Boshqa
+                        {t("Boshqa")}
                       </label>
                     </div>
                     <div className="gd-field-row">
                       <div className="gd-field">
-                        <label>* Mavzu</label>
+                        <label>* {t("Mavzu")}</label>
                         <input
                           className="gd-input"
                           value={lessonTopic}
                           onChange={(e) => setLessonTopic(e.target.value)}
-                          placeholder={selectedDay?.isCompleted ? "Mavzu kiritib bo'lingan" : "Mavzuni kiriting..."}
+                          placeholder={selectedDay?.isCompleted ? t("Mavzu kiritib bo'lingan") : t("Mavzuni kiriting...")}
                           disabled={selectedDayIsPast || selectedDay?.isCompleted}
                         />
                       </div>
                       <div className="gd-field">
-                        <label className="optional">Tavsif (ixtiyoriy)</label>
+                        <label className="optional">{t("Tavsif (ixtiyoriy)")}</label>
                         <textarea
                           className="gd-textarea"
                           value={lessonDescription}
                           onChange={(e) => setLessonDescription(e.target.value)}
-                          placeholder={selectedDay?.isCompleted ? "Tavsif kiritib bo'lingan" : "Dars haqida qo'shimcha ma'lumot..."}
+                          placeholder={selectedDay?.isCompleted ? t("Tavsif kiritib bo'lingan") : t("Dars haqida qo'shimcha ma'lumot...")}
                           disabled={selectedDayIsPast || selectedDay?.isCompleted}
                         />
                       </div>
@@ -1718,17 +1777,17 @@ export default function GroupDetails() {
                     <div className="gd-student-list">
                       <div className="gd-student-list-header">
                         <span>#</span>
-                        <span>O'quvchi ismi</span>
-                        <span>Keldi</span>
+                        <span>{t("O'quvchi ismi")}</span>
+                        <span>{t("Keldi")}</span>
                       </div>
                       {attendanceLoading ? (
                         <div style={{ textAlign: "center", padding: "20px", color: "#888", fontSize: "14px" }}>
                           <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 8 }}></i>
-                          Davomat yuklanmoqda...
+                          {t("Davomat yuklanmoqda...")}
                         </div>
                       ) : studentList.length === 0 ? (
                         <div style={{ textAlign: "center", padding: "20px", color: "#888", fontSize: "14px" }}>
-                          Guruhda o'quvchilar yo'q
+                          {t("Guruhda o'quvchilar yo'q")}
                         </div>
                       ) : (
                         studentList.map((student, idx) => (
@@ -1759,7 +1818,7 @@ export default function GroupDetails() {
                           cursor: selectedDayIsPast ? "not-allowed" : "pointer"
                         }}
                       >
-                        Davomatni saqlash
+                        {t("Davomatni saqlash")}
                       </button>
                       <button
                         className="gd-save-btn"
@@ -1771,7 +1830,7 @@ export default function GroupDetails() {
                           cursor: (selectedDayIsPast || selectedDay?.isCompleted) ? "not-allowed" : "pointer"
                         }}
                       >
-                        {selectedDay?.isCompleted ? "Dars o'tilgan" : "Saqlash"}
+                        {selectedDay?.isCompleted ? t("Dars o'tilgan") : t("Saqlash")}
                       </button>
                     </div>
                   </div>
@@ -1793,7 +1852,7 @@ export default function GroupDetails() {
                 }}
                 onClick={() => setShowAllMonths((prev) => !prev)}
               >
-                {showAllMonths ? "Yopish" : "Barchasini ko'rish"}
+                {showAllMonths ? t("Yopish") : t("Barchasini ko'rish")}
               </button>
             </div>
           </div>
@@ -1818,7 +1877,7 @@ export default function GroupDetails() {
                 margin: 0,
               }}
             >
-              Guruh darsliklari
+              {t("Guruh darsliklari")}
             </h3>
             <button
               onClick={() => {
@@ -1841,7 +1900,7 @@ export default function GroupDetails() {
                 cursor: "pointer",
               }}
             >
-              {activeDarslikTab === "imtihon" ? "Yangi imtihon" : "Qo'shish"}
+              {activeDarslikTab === "imtihon" ? t("Yangi imtihon") : t("Qo'shish")}
             </button>
           </div>
 
@@ -1851,25 +1910,25 @@ export default function GroupDetails() {
               className={`gd-tab-btn ${activeDarslikTab === "uyga" ? "active" : ""}`}
               onClick={() => setActiveDarslikTab("uyga")}
             >
-              Uyg'a vazifa
+              {t("Uyg'a vazifa")}
             </button>
             <button
               className={`gd-tab-btn ${activeDarslikTab === "video" ? "active" : ""}`}
               onClick={() => setActiveDarslikTab("video")}
             >
-              Videolar
+              {t("Videolar")}
             </button>
             <button
               className={`gd-tab-btn ${activeDarslikTab === "imtihon" ? "active" : ""}`}
               onClick={() => setActiveDarslikTab("imtihon")}
             >
-              Imtihonlar
+              {t("Imtihonlar")}
             </button>
             <button
               className={`gd-tab-btn ${activeDarslikTab === "jurnal" ? "active" : ""}`}
               onClick={() => setActiveDarslikTab("jurnal")}
             >
-              Jurnal
+              {t("Jurnal")}
             </button>
           </div>
 
@@ -1880,7 +1939,7 @@ export default function GroupDetails() {
                 <thead>
                   <tr>
                     <th style={{ width: "5%" }}>#</th>
-                    <th style={{ width: "25%" }}>Mavzu</th>
+                    <th style={{ width: "25%" }}>{t("Mavzu")}</th>
                     <th style={{ width: "8%", textAlign: "center" }}>
                       <i className="fa-solid fa-user"></i>
                     </th>
@@ -1890,9 +1949,9 @@ export default function GroupDetails() {
                     <th style={{ width: "8%", textAlign: "center" }}>
                       <i className="fa-solid fa-check"></i>
                     </th>
-                    <th style={{ width: "15%" }}>Berilan vaqt</th>
-                    <th style={{ width: "15%" }}>Tugash vaqti</th>
-                    <th style={{ width: "12%" }}>Dars sanasi</th>
+                    <th style={{ width: "15%" }}>{t("Berilan vaqt")}</th>
+                    <th style={{ width: "15%" }}>{t("Tugash vaqti")}</th>
+                    <th style={{ width: "12%" }}>{t("Dars sanasi")}</th>
                     <th style={{ width: "4%", textAlign: "center" }}></th>
                   </tr>
                 </thead>
@@ -1901,7 +1960,29 @@ export default function GroupDetails() {
                     return (
                       <tr key={hw.id}>
                         <td className="gd-table-index">{hw.id}</td>
-                        <td className="gd-table-subject">{hw.topic}</td>
+                        <td
+                          className="gd-table-subject"
+                          onClick={() => navigate(`/dashboard/groups/${id}/homework/${hw.id}`)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          {hw.homeworkPending > 0 ? (
+                            <span
+                              style={{
+                                display: "inline-block",
+                                width: "100%",
+                                background: "#f0795a",
+                                color: "#fff",
+                                fontWeight: 600,
+                                padding: "8px 14px",
+                                borderRadius: 8,
+                              }}
+                            >
+                              {hw.topic}
+                            </span>
+                          ) : (
+                            <span style={{ color: "#765bcf" }}>{hw.topic}</span>
+                          )}
+                        </td>
                         <td style={{ textAlign: "center", color: "#666" }}>
                           {hw.existStudentsIngroup}
                         </td>
@@ -1947,7 +2028,7 @@ export default function GroupDetails() {
                         colSpan="9"
                         style={{ textAlign: "center", color: "#999" }}
                       >
-                        Ma'lumot yo'q
+                        {t("Ma'lumot yo'q")}
                       </td>
                     </tr>
                   )}
@@ -1987,12 +2068,12 @@ export default function GroupDetails() {
                 <thead>
                   <tr>
                     <th style={{ width: "4%" }}>#</th>
-                    <th style={{ width: "22%" }}>Video nomi</th>
-                    <th style={{ width: "20%" }}>Dars nomi</th>
-                    <th style={{ width: "10%" }}>Status</th>
-                    <th style={{ width: "15%" }}>Dars sanasi</th>
-                    <th style={{ width: "10%" }}>Hajmi</th>
-                    <th style={{ width: "15%" }}>Qo'shilgan vaqti</th>
+                    <th style={{ width: "22%" }}>{t("Video nomi")}</th>
+                    <th style={{ width: "20%" }}>{t("Dars nomi")}</th>
+                    <th style={{ width: "10%" }}>{t("Status")}</th>
+                    <th style={{ width: "15%" }}>{t("Dars sanasi")}</th>
+                    <th style={{ width: "10%" }}>{t("Hajmi")}</th>
+                    <th style={{ width: "15%" }}>{t("Qo'shilgan vaqti")}</th>
                     <th style={{ width: "4%", textAlign: "center" }}></th>
                   </tr>
                 </thead>
@@ -2001,13 +2082,13 @@ export default function GroupDetails() {
                     <tr>
                       <td colSpan="8" style={{ textAlign: "center", padding: "24px", color: "#888" }}>
                         <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 8 }}></i>
-                        Yuklanmoqda...
+                        {t("Yuklanmoqda...")}
                       </td>
                     </tr>
                   ) : videos.length === 0 ? (
                     <tr>
                       <td colSpan="8" style={{ textAlign: "center", padding: "24px", color: "#aaa" }}>
-                        Videolar mavjud emas
+                        {t("Videolar mavjud emas")}
                       </td>
                     </tr>
                   ) : (
@@ -2035,7 +2116,7 @@ export default function GroupDetails() {
                           </td>
                           <td style={{ color: "#444" }}>{vid.lesson?.topic || "-"}</td>
                           <td>
-                            <span className="vid-status-badge">Tayyor</span>
+                            <span className="vid-status-badge">{t("Tayyor")}</span>
                           </td>
                           <td className="gd-table-date">{darsSanasi}</td>
                           <td style={{ color: "#666" }}>{hajmi}</td>
@@ -2095,17 +2176,17 @@ export default function GroupDetails() {
                 <thead>
                   <tr>
                     <th style={{ width: "5%" }}>#</th>
-                    <th style={{ width: "20%" }}>Mavzu</th>
+                    <th style={{ width: "20%" }}>{t("Mavzu")}</th>
                     <th style={{ width: "7%", textAlign: "center" }}>
                       <i className="fa-solid fa-user"></i>
                     </th>
                     <th style={{ width: "7%", textAlign: "center" }}>
                       <i className="fa-solid fa-xmark" style={{ color: "#ef4444" }}></i>
                     </th>
-                    <th style={{ width: "10%" }}>Status</th>
-                    <th style={{ width: "15%" }}>Dars vaqti</th>
-                    <th style={{ width: "15%" }}>Berilgan vaqt</th>
-                    <th style={{ width: "17%" }}>E'lon qilingan vaqti</th>
+                    <th style={{ width: "10%" }}>{t("Status")}</th>
+                    <th style={{ width: "15%" }}>{t("Dars vaqti")}</th>
+                    <th style={{ width: "15%" }}>{t("Berilgan vaqt")}</th>
+                    <th style={{ width: "17%" }}>{t("E'lon qilingan vaqti")}</th>
                     <th style={{ width: "4%", textAlign: "center" }}></th>
                   </tr>
                 </thead>
@@ -2114,13 +2195,13 @@ export default function GroupDetails() {
                     <tr>
                       <td colSpan="9" style={{ textAlign: "center", padding: "24px", color: "#888" }}>
                         <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 8 }}></i>
-                        Yuklanmoqda...
+                        {t("Yuklanmoqda...")}
                       </td>
                     </tr>
                   ) : exams.length === 0 ? (
                     <tr>
                       <td colSpan="9" style={{ textAlign: "center", padding: "24px", color: "#aaa" }}>
-                        Imtihonlar mavjud emas
+                        {t("Imtihonlar mavjud emas")}
                       </td>
                     </tr>
                   ) : (
@@ -2156,7 +2237,7 @@ export default function GroupDetails() {
                           </td>
                           <td>
                             <span className={isFaol ? "exam-status-faol" : "exam-status-tugagan"}>
-                              {isFaol ? "Faol" : "Tugagan"}
+                              {isFaol ? t("Faol") : t("Tugagan")}
                             </span>
                           </td>
                           <td className="gd-table-time">{darsVaqti}</td>
@@ -2181,7 +2262,7 @@ export default function GroupDetails() {
                 <thead>
                   <tr>
                     <th style={{ width: "5%" }}>#</th>
-                    <th style={{ width: "30%" }}>Mavzu</th>
+                    <th style={{ width: "30%" }}>{t("Mavzu")}</th>
                     <th style={{ width: "8%", textAlign: "center" }}>
                       <i className="fa-solid fa-user"></i>
                     </th>
@@ -2191,15 +2272,15 @@ export default function GroupDetails() {
                     <th style={{ width: "8%", textAlign: "center" }}>
                       <i className="fa-solid fa-check"></i>
                     </th>
-                    <th style={{ width: "15%" }}>Berilan vaqt</th>
-                    <th style={{ width: "15%" }}>Tugash vaqti</th>
-                    <th style={{ width: "11%" }}>Dars sanasi</th>
+                    <th style={{ width: "15%" }}>{t("Berilan vaqt")}</th>
+                    <th style={{ width: "15%" }}>{t("Tugash vaqti")}</th>
+                    <th style={{ width: "11%" }}>{t("Dars sanasi")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td className="gd-table-index">1</td>
-                    <td className="gd-table-subject">Dars 1 - Davomat</td>
+                    <td className="gd-table-subject">{t("Dars 1 - Davomat")}</td>
                     <td style={{ textAlign: "center", color: "#666" }}>5</td>
                     <td style={{ textAlign: "center", color: "#666" }}>0</td>
                     <td style={{ textAlign: "center", color: "#666" }}>5</td>
@@ -2218,7 +2299,7 @@ export default function GroupDetails() {
                   </tr>
                   <tr>
                     <td className="gd-table-index">2</td>
-                    <td className="gd-table-subject">Dars 2 - Davomat</td>
+                    <td className="gd-table-subject">{t("Dars 2 - Davomat")}</td>
                     <td style={{ textAlign: "center", color: "#666" }}>5</td>
                     <td style={{ textAlign: "center", color: "#666" }}>0</td>
                     <td style={{ textAlign: "center", color: "#666" }}>4</td>
@@ -2237,7 +2318,7 @@ export default function GroupDetails() {
                   </tr>
                   <tr>
                     <td className="gd-table-index">3</td>
-                    <td className="gd-table-subject">Dars 3 - Davomat</td>
+                    <td className="gd-table-subject">{t("Dars 3 - Davomat")}</td>
                     <td style={{ textAlign: "center", color: "#666" }}>4</td>
                     <td style={{ textAlign: "center", color: "#666" }}>1</td>
                     <td style={{ textAlign: "center", color: "#666" }}>3</td>
@@ -2256,7 +2337,7 @@ export default function GroupDetails() {
                   </tr>
                   <tr>
                     <td className="gd-table-index">4</td>
-                    <td className="gd-table-subject">Dars 4 - Davomat</td>
+                    <td className="gd-table-subject">{t("Dars 4 - Davomat")}</td>
                     <td style={{ textAlign: "center", color: "#666" }}>5</td>
                     <td style={{ textAlign: "center", color: "#666" }}>0</td>
                     <td style={{ textAlign: "center", color: "#666" }}>5</td>
@@ -2287,7 +2368,7 @@ export default function GroupDetails() {
               <thead>
                 <tr>
                   <th style={{ width: "5%" }}>#</th>
-                  <th style={{ width: "25%" }}>Dars mavzusi</th>
+                  <th style={{ width: "25%" }}>{t("Dars mavzusi")}</th>
                   <th style={{ width: "8%", textAlign: "center" }}>
                     <i className="fa-solid fa-user"></i>
                   </th>
@@ -2297,16 +2378,16 @@ export default function GroupDetails() {
                   <th style={{ width: "8%", textAlign: "center" }}>
                     <i className="fa-solid fa-check"></i>
                   </th>
-                  <th style={{ width: "15%" }}>Dars vaqti</th>
-                  <th style={{ width: "15%" }}>Tugash vaqti</th>
-                  <th style={{ width: "12%" }}>Dars sanasi</th>
+                  <th style={{ width: "15%" }}>{t("Dars vaqti")}</th>
+                  <th style={{ width: "15%" }}>{t("Tugash vaqti")}</th>
+                  <th style={{ width: "12%" }}>{t("Dars sanasi")}</th>
                   <th style={{ width: "4%", textAlign: "center" }}></th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td className="gd-table-index">1</td>
-                  <td className="gd-table-subject">1-dars: Kirish</td>
+                  <td className="gd-table-subject">{t("1-dars: Kirish")}</td>
                   <td style={{ textAlign: "center", color: "#666" }}>5</td>
                   <td style={{ textAlign: "center", color: "#666" }}>0</td>
                   <td style={{ textAlign: "center", color: "#666" }}>5</td>
@@ -2325,7 +2406,7 @@ export default function GroupDetails() {
                 </tr>
                 <tr>
                   <td className="gd-table-index">2</td>
-                  <td className="gd-table-subject">2-dars: Asoslar</td>
+                  <td className="gd-table-subject">{t("2-dars: Asoslar")}</td>
                   <td style={{ textAlign: "center", color: "#666" }}>5</td>
                   <td style={{ textAlign: "center", color: "#666" }}>0</td>
                   <td style={{ textAlign: "center", color: "#666" }}>4</td>
@@ -2344,7 +2425,7 @@ export default function GroupDetails() {
                 </tr>
                 <tr>
                   <td className="gd-table-index">3</td>
-                  <td className="gd-table-subject">3-dars: Amaliyot</td>
+                  <td className="gd-table-subject">{t("3-dars: Amaliyot")}</td>
                   <td style={{ textAlign: "center", color: "#666" }}>4</td>
                   <td style={{ textAlign: "center", color: "#666" }}>1</td>
                   <td style={{ textAlign: "center", color: "#666" }}>3</td>
@@ -2363,7 +2444,7 @@ export default function GroupDetails() {
                 </tr>
                 <tr>
                   <td className="gd-table-index">4</td>
-                  <td className="gd-table-subject">4-dars: Takrorlash</td>
+                  <td className="gd-table-subject">{t("4-dars: Takrorlash")}</td>
                   <td style={{ textAlign: "center", color: "#666" }}>5</td>
                   <td style={{ textAlign: "center", color: "#666" }}>0</td>
                   <td style={{ textAlign: "center", color: "#666" }}>5</td>
@@ -2382,7 +2463,7 @@ export default function GroupDetails() {
                 </tr>
                 <tr>
                   <td className="gd-table-index">5</td>
-                  <td className="gd-table-subject">5-dars: Imtihon</td>
+                  <td className="gd-table-subject">{t("5-dars: Imtihon")}</td>
                   <td style={{ textAlign: "center", color: "#666" }}>5</td>
                   <td style={{ textAlign: "center", color: "#666" }}>0</td>
                   <td style={{ textAlign: "center", color: "#666" }}>5</td>
@@ -2434,16 +2515,16 @@ export default function GroupDetails() {
             />
             <div className="vid-modal-footer">
               <div className="vid-modal-meta">
-                Fayl: <span>{selectedVideo.originalname || "-"}</span>
+                {t("Fayl:")} <span>{selectedVideo.originalname || "-"}</span>
               </div>
               <div className="vid-modal-meta">
-                Hajmi: <span>{selectedVideo.size_mb ? `${Number(selectedVideo.size_mb).toFixed(2)} MB` : "-"}</span>
+                {t("Hajmi:")} <span>{selectedVideo.size_mb ? `${Number(selectedVideo.size_mb).toFixed(2)} MB` : "-"}</span>
               </div>
               <div className="vid-modal-meta">
-                Dars: <span>{selectedVideo.lesson?.topic || "-"}</span>
+                {t("Dars:")} <span>{selectedVideo.lesson?.topic || "-"}</span>
               </div>
               <div className="vid-modal-meta">
-                Sana: <span>
+                {t("Sana:")} <span>
                   {selectedVideo.created_at
                     ? new Date(selectedVideo.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
                     : "-"}
@@ -2470,7 +2551,7 @@ export default function GroupDetails() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="up-modal-header">
-              <h3 className="up-modal-title">Qo'shish</h3>
+              <h3 className="up-modal-title">{t("Qo'shish")}</h3>
               <button
                 className="up-modal-close"
                 onClick={() => {
@@ -2510,10 +2591,10 @@ export default function GroupDetails() {
                   <path d="M8 12h8" />
                 </svg>
                 <p className="up-dropzone-title">
-                  Videofaylni yuklash uchun ushbu hudud ustiga bosing yoki faylni shu yerga olib keling
+                  {t("Videofaylni yuklash uchun ushbu hudud ustiga bosing yoki faylni shu yerga olib keling")}
                 </p>
                 <p className="up-dropzone-sub">
-                  Videofayl: .mp4, .webm, .mpeg, .avi, .mkv, .m4v, .ogm, .mov formatlaridan birida bo'lishi kerak
+                  {t("Videofayl: .mp4, .webm, .mpeg, .avi, .mkv, .m4v, .ogm, .mov formatlaridan birida bo'lishi kerak")}
                 </p>
                 <input
                   id="video-file-input"
@@ -2529,10 +2610,10 @@ export default function GroupDetails() {
                   <table className="up-table">
                     <thead>
                       <tr>
-                        <th style={{ width: "30%" }}>File name</th>
-                        <th style={{ width: "35%" }}><span style={{ color: "#ef4444" }}>*</span> Dars</th>
-                        <th style={{ width: "25%" }}><span style={{ color: "#ef4444" }}>*</span> Video nomi</th>
-                        <th style={{ width: "10%", textAlign: "center" }}>Actions</th>
+                        <th style={{ width: "30%" }}>{t("File name")}</th>
+                        <th style={{ width: "35%" }}><span style={{ color: "#ef4444" }}>*</span> {t("Dars")}</th>
+                        <th style={{ width: "25%" }}><span style={{ color: "#ef4444" }}>*</span> {t("Video nomi")}</th>
+                        <th style={{ width: "10%", textAlign: "center" }}>{t("Actions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2547,7 +2628,7 @@ export default function GroupDetails() {
                             onChange={(e) => setSelectedLessonId(e.target.value)}
                             disabled={uploadLoading}
                           >
-                            <option value="">Darsni tanlang</option>
+                            <option value="">{t("Darsni tanlang")}</option>
                             {lessonsList.map((les) => (
                               <option key={les.id} value={les.id}>
                                 {les.topic}
@@ -2595,7 +2676,7 @@ export default function GroupDetails() {
                 }}
                 disabled={uploadLoading}
               >
-                Bekor qilish
+                {t("Bekor qilish")}
               </button>
               {uploadFile && (
                 <button
@@ -2606,7 +2687,7 @@ export default function GroupDetails() {
                     background: uploadLoading || !selectedLessonId || !customVideoName.trim() ? "#cbd5e1" : "#10b981",
                   }}
                 >
-                  {uploadLoading ? "Yuklanmoqda..." : "Fayllarni yuklash"}
+                  {uploadLoading ? t("Yuklanmoqda...") : t("Fayllarni yuklash")}
                 </button>
               )}
             </div>

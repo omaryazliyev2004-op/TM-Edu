@@ -1,22 +1,24 @@
 import { NavLink, Outlet, Navigate, useLocation } from "react-router-dom";
+import { useLang } from "../i18n/LanguageContext";
 
 export default function Boshqarish() {
+  const { t } = useLang();
   const location = useLocation();
-  
+
   if (location.pathname === "/dashboard/boshqarish" || location.pathname === "/dashboard/boshqarish/") {
     return <Navigate to="/dashboard/boshqarish/xonalar" replace />;
   }
 
   const tabs = [
-    { name: "Kurslar", path: "/dashboard/boshqarish/kurslar" },
-    { name: "Xonalar", path: "/dashboard/boshqarish/xonalar" },
-    { name: "Xodimlar", path: "/dashboard/boshqarish/hodimlar" },
+    { name: t("Kurslar"), path: "/dashboard/boshqarish/kurslar" },
+    { name: t("Xonalar"), path: "/dashboard/boshqarish/xonalar" },
+    { name: t("Xodimlar"), path: "/dashboard/boshqarish/hodimlar" },
   ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#222", marginBottom: 16 }}>Boshqarish</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#222", marginBottom: 16 }}>{t("Boshqarish")}</h1>
         <div style={{ display: "flex", gap: 24, borderBottom: "2px solid #eee" }}>
           {tabs.map((tab, idx) => (
             <NavLink

@@ -6,6 +6,8 @@ import Oqituvchilar from "./layouts/oqituvchilar";
 import Sinflar from "./layouts/Sinflar";
 import GroupDetails from "./layouts/GroupDetails";
 import HomeworkCreate from "./layouts/HomeworkCreate";
+import HomeworkDetails from "./layouts/HomeworkDetails";
+import HomeworkReview from "./layouts/HomeworkReview";
 import ExamCreate from "./layouts/ExamCreate";
 import ExamDetails from "./layouts/ExamDetails";
 import ExamReview from "./layouts/ExamReview";
@@ -51,6 +53,14 @@ export const route = createBrowserRouter([
       {
         path: "/dashboard/groups/:id/homework/create",
         element: <HomeworkCreate />,
+      },
+      {
+        path: "/dashboard/groups/:groupId/homework/:homeworkId",
+        element: <HomeworkDetails />,
+      },
+      {
+        path: "/dashboard/groups/:groupId/homework/:homeworkId/student/:studentId/review",
+        element: <HomeworkReview />,
       },
       {
         path: "/dashboard/groups/:id/exam/create",

@@ -3,8 +3,9 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
-import { useState, useEffect } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useLang } from "../i18n/LanguageContext";
 
 const boshqarishMenuItems = [
   { icon: "fa-graduation-cap", label: "Kurslar", to: "/dashboard/boshqarish/kurslar" },
@@ -21,15 +22,37 @@ const navItems = [
 ];
 
 export default function DashboardLayout() {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => localStorage.getItem("theme") === "dark");
   const [boshqarishOpen, setBoshqarishOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
 
   const location = useLocation();
+  const navigate = useNavigate();
+  const { lang, changeLang, t } = useLang();
   const isBoshqarish = location.pathname.startsWith("/dashboard/boshqarish");
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/");
+  };
+
+  // Profil menyusidan tashqariga bosilganda yopamiz
+  useEffect(() => {
+    if (!profileOpen) return;
+    const onClick = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [profileOpen]);
 
   useEffect(() => {
     document.body.classList.toggle("dark", isDark);
+    localStorage.setItem("theme", isDark ? "dark" : "light");
   }, [isDark]);
 
   useEffect(() => {
@@ -283,8 +306,8 @@ export default function DashboardLayout() {
                   className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}
                 >
                   <i className={`fa-solid ${item.icon} nav-icon`}></i>
-                  <span className="nav-label">{item.label}</span>
-                  <span className="nav-tip">{item.label}</span>
+                  <span className="nav-label">{t(item.label)}</span>
+                  <span className="nav-tip">{t(item.label)}</span>
                 </NavLink>
               ))}
 
@@ -294,8 +317,8 @@ export default function DashboardLayout() {
                 className={`nav-item${isBoshqarish ? " bq-active" : ""}`}
               >
                 <i className="fa-solid fa-gear nav-icon"></i>
-                <span className="nav-label">Boshqarish</span>
-                <span className="nav-tip">Boshqarish</span>
+                <span className="nav-label">{t("Boshqarish")}</span>
+                <span className="nav-tip">{t("Boshqarish")}</span>
                 <i className={`fa-solid fa-chevron-right chevron${boshqarishOpen ? " open" : ""}`}></i>
               </button>
             </div>
@@ -306,8 +329,8 @@ export default function DashboardLayout() {
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 26, flexShrink: 0 }}>🔔</span>
                   <div>
-                    <p style={{ fontWeight: 600, fontSize: 14, margin: 0, color: "#222" }}>Obuna</p>
-                    <p style={{ fontSize: 12, margin: 0, color: "#e53935" }}>Obunangiz tugagan</p>
+                    <p style={{ fontWeight: 600, fontSize: 14, margin: 0, color: "#222" }}>{t("Obuna")}</p>
+                    <p style={{ fontSize: 12, margin: 0, color: "#e53935" }}>{t("Obunangiz tugagan")}</p>
                   </div>
                 </div>
                 <div style={{
@@ -316,7 +339,7 @@ export default function DashboardLayout() {
                   justifyContent: "center", gap: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
                 }}>
                   <i className="fa-solid fa-arrow-rotate-right"></i>
-                  Obunani yangilash
+                  {t("Obunani yangilash")}
                 </div>
               </div>
             )}
@@ -333,7 +356,7 @@ export default function DashboardLayout() {
           )}
           <div className={`side-panel${boshqarishOpen ? " open" : ""}`}>
             <div className="panel-header">
-              <span className="panel-title">Boshqarish</span>
+              <span className="panel-title">{t("Boshqarish")}</span>
               <button className="panel-close-btn" onClick={() => setBoshqarishOpen(false)}>
                 <i className="fa-solid fa-xmark"></i>
               </button>
@@ -349,7 +372,7 @@ export default function DashboardLayout() {
                   <span className="panel-icon-wrap">
                     <i className={`fa-solid ${item.icon}`} style={{ fontSize: 12, color: "#765bcf" }}></i>
                   </span>
-                  {item.label}
+                  {t(item.label)}
                 </NavLink>
               ))}
             </div>
@@ -367,13 +390,13 @@ export default function DashboardLayout() {
 
               <button className="tb-add-btn">
                 <i className="fa-solid fa-plus"></i>
-                Qo'shish
+                {t("Qo'shish")}
                 <i className="fa-solid fa-chevron-down" style={{ fontSize: 11 }}></i>
               </button>
 
               <div className="tb-search-wrap">
                 <i className="fa-solid fa-magnifying-glass"></i>
-                <input className="tb-search" placeholder="Qidirish..." />
+                <input className="tb-search" placeholder={t("Qidirish...")} />
               </div>
             </div>
 
@@ -384,12 +407,13 @@ export default function DashboardLayout() {
                 <Select
                   labelId="lang-label"
                   id="lang-select"
-                  defaultValue={10}
+                  value={lang}
+                  onChange={(e) => changeLang(e.target.value)}
                   sx={{ width: 150, height: 38, bgcolor: "white", borderRadius: "10px" }}
                 >
-                  <MenuItem value={10}>O'zbekcha</MenuItem>
-                  <MenuItem value={20}>Ruscha</MenuItem>
-                  <MenuItem value={30}>Ingilischa</MenuItem>
+                  <MenuItem value="uz">O'zbekcha</MenuItem>
+                  <MenuItem value="ru">Ruscha</MenuItem>
+                  <MenuItem value="en">Ingilischa</MenuItem>
                 </Select>
               </FormControl>
 
@@ -409,7 +433,54 @@ export default function DashboardLayout() {
                 <i className={`fa-regular ${isDark ? "fa-sun" : "fa-moon"}`} style={{ color: isDark ? "#f59e0b" : "#fff", fontSize: 18 }}></i>
               </div>
 
-              <Avatar alt="User" src="/logoedu.png" sx={{ width: 36, height: 36 }} />
+              <div ref={profileRef} style={{ position: "relative" }}>
+                <Avatar
+                  alt="User"
+                  src="/logoedu.png"
+                  sx={{ width: 36, height: 36, cursor: "pointer" }}
+                  onClick={() => setProfileOpen((o) => !o)}
+                />
+                {profileOpen && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 10px)",
+                      right: 0,
+                      minWidth: 160,
+                      background: "#fff",
+                      borderRadius: 10,
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.14)",
+                      border: "1px solid #eee",
+                      padding: 6,
+                      zIndex: 1000,
+                    }}
+                  >
+                    <button
+                      onClick={handleLogout}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        width: "100%",
+                        padding: "10px 12px",
+                        border: "none",
+                        background: "transparent",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: "#e53935",
+                        textAlign: "left",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#fdecea")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <i className="fa-solid fa-right-from-bracket"></i>
+                      Log out
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

@@ -4,11 +4,14 @@ import './index.css'
 import { RouterProvider } from 'react-router-dom'
 import { route } from './routes'
 import { AppProvider } from './context/AppContext'
+import { LanguageProvider } from './i18n/LanguageContext'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AppProvider>
-      <RouterProvider router={route} />
-    </AppProvider>
+    <LanguageProvider>
+      <AppProvider>
+        <RouterProvider router={route} />
+      </AppProvider>
+    </LanguageProvider>
   </StrictMode>,
 )

@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
+import { useLang } from "../i18n/LanguageContext";
 
 export default function ExamCreate() {
+  const { t } = useLang();
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -53,7 +55,7 @@ export default function ExamCreate() {
   const createExam = async () => {
     const cleanDesc = description.replace(/<[^>]*>/g, "").trim();
     if (!topic || !cleanDesc || !deadlineDate || !deadlineTime) {
-      alert("Iltimos, barcha majburiy maydonlarni to'ldiring!");
+      alert(t("Iltimos, barcha majburiy maydonlarni to'ldiring!"));
       return;
     }
 
@@ -71,12 +73,12 @@ export default function ExamCreate() {
 
       const res = await fetchApi.post("exams", formData);
       if (res.status === 200 || res.status === 201) {
-        alert("Imtihon muvaffaqiyatli e'lon qilindi!");
+        alert(t("Imtihon muvaffaqiyatli e'lon qilindi!"));
         navigate(`/dashboard/sinflar/${id}`);
       }
     } catch (err) {
       console.error(err);
-      const msg = err.response?.data?.message || err.response?.data?.error || "Xatolik yuz berdi.";
+      const msg = err.response?.data?.message || err.response?.data?.error || t("Xatolik yuz berdi.");
       alert(msg);
     } finally {
       setLoading(false);
@@ -405,13 +407,13 @@ export default function ExamCreate() {
           <button className="ec-back-btn" onClick={() => navigate(`/dashboard/sinflar/${id}`)}>
             <i className="fa-solid fa-chevron-left"></i>
           </button>
-          <h1 className="ec-title">Imtihon yaratish</h1>
+          <h1 className="ec-title">{t("Imtihon yaratish")}</h1>
         </div>
 
         {/* Info box */}
         <div className="ec-info-box">
           <i className="fa-solid fa-circle-info"></i>
-          <span>Oxirgi 7 kundagi uyga vazifa berilmagan mavzularni tanlay olasiz!</span>
+          <span>{t("Oxirgi 7 kundagi uyga vazifa berilmagan mavzularni tanlay olasiz!")}</span>
         </div>
 
         {/* Form */}
@@ -419,7 +421,7 @@ export default function ExamCreate() {
           {/* Mavzu dropdown */}
           <div className="ec-field">
             <label className="ec-label">
-              <span>*</span>Mavzu
+              <span>*</span>{t("Mavzu")}
             </label>
             <select
               className="ec-select"
@@ -427,10 +429,10 @@ export default function ExamCreate() {
               onChange={(e) => setTopic(e.target.value)}
               disabled={loading || topicsLoading}
             >
-              <option value="">Mavzulardan birini tanlang</option>
-              {topics.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.topic}
+              <option value="">{t("Mavzulardan birini tanlang")}</option>
+              {topics.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.topic}
                 </option>
               ))}
             </select>
@@ -439,7 +441,7 @@ export default function ExamCreate() {
           {/* Izoh Rich text editor */}
           <div className="ec-field">
             <label className="ec-label">
-              <span>*</span>Izoh
+              <span>*</span>{t("Izoh")}
             </label>
             <div className="ec-editor-container">
               {/* Toolbar */}
@@ -505,7 +507,7 @@ export default function ExamCreate() {
                   type="button" 
                   className="ec-tb-btn" 
                   onClick={() => {
-                    const url = prompt("Link manzilini kiriting:");
+                    const url = prompt(t("Link manzilini kiriting:"));
                     if (url) execCmd("createLink", url);
                   }}
                 >
@@ -519,7 +521,7 @@ export default function ExamCreate() {
                 className="ec-editor-area"
                 contentEditable={true}
                 onInput={handleEditorInput}
-                placeholder="Izoh kiriting..."
+                placeholder={t("Izoh kiriting...")}
                 style={{ minHeight: "150px" }}
               />
             </div>
@@ -540,7 +542,7 @@ export default function ExamCreate() {
             <div className="ec-upload-box" onClick={() => document.getElementById("ec-file-input").click()}>
               <div className="ec-upload-btn-text">
                 <i className="fa-solid fa-arrow-down-to-bracket"></i>
-                Yuklash
+                {t("Yuklash")}
               </div>
               {file && (
                 <div className="ec-file-info">
@@ -556,7 +558,7 @@ export default function ExamCreate() {
             {/* Tugash sanasi */}
             <div className="ec-field">
               <label className="ec-label">
-                <span>*</span>Tugash sanasi
+                <span>*</span>{t("Tugash sanasi")}
               </label>
               <div className="ec-input-wrapper">
                 <input
@@ -572,7 +574,7 @@ export default function ExamCreate() {
             {/* Tugash vaqti */}
             <div className="ec-field">
               <label className="ec-label">
-                <span>*</span>Tugash vaqti
+                <span>*</span>{t("Tugash vaqti")}
               </label>
               <div className="ec-input-wrapper">
                 <input
@@ -594,7 +596,7 @@ export default function ExamCreate() {
               onClick={() => navigate(`/dashboard/sinflar/${id}`)}
               disabled={loading}
             >
-              Bekor qilish
+              {t("Bekor qilish")}
             </button>
             <button
               type="button"
@@ -602,7 +604,7 @@ export default function ExamCreate() {
               onClick={createExam}
               disabled={loading || !topic || !description.trim() || !deadlineDate || !deadlineTime}
             >
-              {loading ? "Saqlanmoqda..." : "E'lon qilish"}
+              {loading ? t("Saqlanmoqda...") : t("E'lon qilish")}
             </button>
           </div>
         </div>

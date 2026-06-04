@@ -1,5 +1,8 @@
+import { useLang } from "../i18n/LanguageContext";
+
 export default function Sovgalar() {
+    const { t } = useLang();
     return(
-        <><h2>Sovg'alar</h2></>
+        <><h2>{t("Sovg'alar")}</h2></>
     )
 }
