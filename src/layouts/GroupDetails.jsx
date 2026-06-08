@@ -108,14 +108,11 @@ export default function GroupDetails() {
   }, [id]);
 
   useEffect(() => {
-    // Guruh hali yuklanmagan bo'lsa kutamiz
-    if (!group) return;
-    // Guruh ma'lumotida talabalar bor — barcha talabalarni yuklash shart emas
-    if (Array.isArray(group.students) && group.students.length > 0) return;
-    // Fallback: faqat guruhda talaba bo'lmasa, hammasini yuklab filtrlash uchun
+    // Barcha talabalarni yuklaymiz (pagination'siz, katta limit) — guruh bo'yicha
+    // ishonchli filtrlash uchun. group.students ko'p guruhlarda to'liq kelmaydi.
     async function loadStudents() {
       try {
-        const res = await fetchApi(`students`);
+        const res = await fetchApi(`students?page=1&limit=1000`);
         if (res.status === 200) {
           setAllStudents(res.data?.data || res.data || []);
           setAllStudentsFetched(true);
@@ -125,7 +122,7 @@ export default function GroupDetails() {
       }
     }
     loadStudents();
-  }, [group]);
+  }, []);
 
   useEffect(() => {
     async function loadVideos() {
@@ -360,19 +357,24 @@ export default function GroupDetails() {
 
   const selectedDayIsPast = selectedDay && isPastDay(selectedDay);
 
-  const groupStudents = (group?.students && group.students.length > 0)
-    ? group.students
-    : allStudents.filter((s) => {
-        const sGroups = s.groups || [];
-        return sGroups.some((g) => {
-          const gid = g && typeof g === "object" ? g.id : g;
-          return Number(gid) === Number(id);
-        });
-      });
+  // Har bir talaba o'z guruhlarini e'lon qiladi — shu bo'yicha filtrlash eng ishonchlisi
+  const filteredFromAll = allStudents.filter((s) => {
+    const sGroups = s.groups || [];
+    return sGroups.some((g) => {
+      const gid = g && typeof g === "object" ? g.id : g;
+      return Number(gid) === Number(id);
+    });
+  });
 
-  // Guruhda talabalar bo'lsa darhol, aks holda barcha talabalar yuklangach tayyor
+  // Barcha talabalardan filtrlangan ro'yxat bo'lsa uni, aks holda group.students ni ishlatamiz
+  const groupStudents =
+    allStudentsFetched && filteredFromAll.length > 0
+      ? filteredFromAll
+      : group?.students || [];
+
+  // Talabalar yuklangach (yoki group.students bo'lsa) tayyor
   const studentsLoaded =
-    (Array.isArray(group?.students) && group.students.length > 0) || allStudentsFetched;
+    allStudentsFetched || (Array.isArray(group?.students) && group.students.length > 0);
 
   const studentList = studentsLoaded
     ? groupStudents.map((student, index) => ({
@@ -1427,7 +1429,7 @@ export default function GroupDetails() {
           <button className="gd-back" onClick={() => navigate(-1)}>
             <i className="fa-solid fa-chevron-left"></i>
           </button>
-          {group?.course?.name || t("Yuklanmoqda...")}
+          {group?.name || t("Yuklanmoqda...")}
           <span className="gd-badge">{t("Aktiv")}</span>
         </div>
         <button className="gd-stat-btn">
@@ -1962,7 +1964,7 @@ export default function GroupDetails() {
                         <td className="gd-table-index">{hw.id}</td>
                         <td
                           className="gd-table-subject"
-                          onClick={() => navigate(`/dashboard/groups/${id}/homework/${hw.id}`)}
+                          onClick={() => navigate(`/dashboard/groups/${id}/homework/${hw.homework?.[0]?.id ?? hw.id}`)}
                           style={{ cursor: "pointer" }}
                         >
                           {hw.homeworkPending > 0 ? (

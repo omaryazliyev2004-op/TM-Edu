@@ -335,6 +335,10 @@ export default function HomeworkReview() {
         {/* Homework task */}
         <div className="hr-card muted">
           <h2 className="hr-card-title">{t("Uy vazifasi")}</h2>
+          <div className="hr-inner" style={{ marginBottom: 12 }}>
+            <span className="hr-label">{t("Mavzu:")}</span>
+            <div className="hr-text">{homeworkTopic}</div>
+          </div>
           <div className="hr-inner">
             <span className="hr-label">{t("Izoh:")}</span>
             <div className="hr-text">{homeworkDesc}</div>

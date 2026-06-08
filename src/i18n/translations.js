@@ -104,6 +104,9 @@ export const dictionary = {
     "O'qituvchi qidirish...": "Поиск преподавателя...",
     "O'qituvchi topilmadi": "Преподаватель не найден",
     "Bitta yoki bir nechta o'qituvchini tanlang": "Выберите одного или нескольких преподавателей",
+    "Talaba qidirish...": "Поиск студента...",
+    "Talaba topilmadi": "Студент не найден",
+    "Bitta yoki bir nechta talabani tanlang": "Выберите одного или нескольких студентов",
 
     // ── Sinflar / Guruhlar ──
     "Xatolik yuz berdi. Guruhni o'chirib bo'lmadi.": "Произошла ошибка. Не удалось удалить группу.",
@@ -268,6 +271,7 @@ export const dictionary = {
     "Baholashda xatolik yuz berdi.": "Произошла ошибка при оценивании.",
     "Ma'lumot yuklanmoqda...": "Загрузка данных...",
     "Uy vazifasi": "Домашнее задание",
+    "Mavzu:": "Тема:",
     "Izoh:": "Комментарий:",
     "Vaqti:": "Время:",
     "Fayllar soni:": "Количество файлов:",
@@ -439,6 +443,9 @@ export const dictionary = {
     "O'qituvchi qidirish...": "Search teacher...",
     "O'qituvchi topilmadi": "No teacher found",
     "Bitta yoki bir nechta o'qituvchini tanlang": "Select one or more teachers",
+    "Talaba qidirish...": "Search student...",
+    "Talaba topilmadi": "No student found",
+    "Bitta yoki bir nechta talabani tanlang": "Select one or more students",
 
     // ── Groups (Sinflar) ──
     "Xatolik yuz berdi. Guruhni o'chirib bo'lmadi.": "An error occurred. Could not delete the group.",
@@ -603,6 +610,7 @@ export const dictionary = {
     "Baholashda xatolik yuz berdi.": "An error occurred while grading.",
     "Ma'lumot yuklanmoqda...": "Loading data...",
     "Uy vazifasi": "Homework",
+    "Mavzu:": "Topic:",
     "Izoh:": "Comment:",
     "Vaqti:": "Time:",
     "Fayllar soni:": "Number of files:",
