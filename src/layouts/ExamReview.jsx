@@ -1,13 +1,18 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
 import { useLang } from "../i18n/LanguageContext";
 
 export default function ExamReview() {
   const { t } = useLang();
   const navigate = useNavigate();
+  const location = useLocation();
   const { groupId, examId, studentId } = useParams();
+  const isTeacherPath = location.pathname.startsWith("/teacher");
+  const examBackPath = isTeacherPath
+    ? `/teacher/guruhlar/${groupId}/exams/${examId}`
+    : `/dashboard/groups/${groupId}/exams/${examId}`;
 
   const [student, setStudent] = useState({
     name: "Rahmonbergan Otabek o'g'li Mahmudov",
@@ -104,7 +109,7 @@ export default function ExamReview() {
       // Typically we would post to an API like `exams/submissions/${studentId}/grade` or similar
       // Since it's mock API for now, we'll alert success and go back
       alert(`Muvaffaqiyatli saqlandi! Ball: ${score}. Izoh: ${comment}`);
-      navigate(`/dashboard/groups/${groupId}/exams/${examId}`);
+      navigate(examBackPath);
     } catch (err) {
       console.error(err);
       alert(t("Xatolik yuz berdi."));
@@ -156,10 +161,11 @@ export default function ExamReview() {
         /* Cards Layout */
         .er-card {
           background: #fff;
-          border-radius: 8px;
-          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          border: none;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
           padding: 24px;
-          margin-bottom: 20px;
+          margin-bottom: 24px;
         }
 
         .er-card-title {
@@ -511,7 +517,7 @@ export default function ExamReview() {
       >
         {/* Breadcrumbs */}
         <div className="er-breadcrumbs">
-          <span className="er-bc-link" onClick={() => navigate(`/dashboard/groups/${groupId}/exams/${examId}`)}>
+          <span className="er-bc-link" onClick={() => navigate(examBackPath)}>
             {t("Kutayotganlar")}
           </span>
           <span className="er-bc-separator">&gt;</span>
@@ -626,7 +632,7 @@ export default function ExamReview() {
           <div className="er-footer" style={{ margin: "0", padding: "0" }}>
             <button
               className="er-btn er-btn-cancel"
-              onClick={() => navigate(`/dashboard/groups/${groupId}/exams/${examId}`)}
+              onClick={() => navigate(examBackPath)}
               disabled={loading}
               style={{ flex: 1, maxWidth: "180px" }}
             >

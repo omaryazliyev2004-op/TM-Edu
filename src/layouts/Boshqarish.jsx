@@ -10,9 +10,11 @@ export default function Boshqarish() {
   }
 
   const tabs = [
-    { name: t("Kurslar"), path: "/dashboard/boshqarish/kurslar" },
-    { name: t("Xonalar"), path: "/dashboard/boshqarish/xonalar" },
-    { name: t("Xodimlar"), path: "/dashboard/boshqarish/hodimlar" },
+    { name: t("Kurslar"),   path: "/dashboard/boshqarish/kurslar" },
+    { name: t("Xonalar"),   path: "/dashboard/boshqarish/xonalar" },
+    { name: t("Filiallar"), path: "/dashboard/boshqarish/filiallar" },
+    { name: t("Xodimlar"),  path: "/dashboard/boshqarish/hodimlar" },
+    { name: t("Sabablar"),  path: "/dashboard/boshqarish/sabablar" },
   ];
 
   return (
@@ -28,8 +30,8 @@ export default function Boshqarish() {
                 paddingBottom: 8,
                 fontSize: 14,
                 fontWeight: isActive ? 600 : 500,
-                color: isActive ? "#765bcf" : "#888",
-                borderBottom: isActive ? "2px solid #765bcf" : "2px solid transparent",
+                color: isActive ? "#7c3aed" : "#888",
+                borderBottom: isActive ? "2px solid #7c3aed" : "2px solid transparent",
                 marginBottom: -2,
                 textDecoration: "none",
                 transition: "color 0.2s, border-color 0.2s"

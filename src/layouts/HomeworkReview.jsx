@@ -50,36 +50,85 @@ export default function HomeworkReview() {
   const [files, setFiles] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
+  const isTeacherPath = location.pathname.startsWith("/teacher");
   const backToList = () =>
-    navigate(`/dashboard/groups/${groupId}/homework/${homeworkId}`);
+    navigate(
+      isTeacherPath
+        ? `/teacher/guruhlar/${groupId}/homework/${homeworkId}`
+        : `/dashboard/groups/${groupId}/homework/${homeworkId}`
+    );
 
   useEffect(() => {
     async function loadResult() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetchApi(
-          `group/${groupId}/homework/${homeworkId}/result/${studentId}`
-        );
-        if (res.status === 200) {
-          let payload = res.data?.data ?? res.data ?? {};
-          // Ba'zi endpointlar bitta topshiriqni massiv ichida qaytaradi
-          if (Array.isArray(payload)) payload = payload[0] || {};
-          console.log("homework result:", payload);
-          setData(payload);
-          if (payload.grade != null) setScore(Number(payload.grade));
+
+        // Bitta talaba topshirig'ini olish uchun lessonId kerak.
+        // Avval ro'yxat sahifasidan uzatilgan state/natija ichidan olamiz —
+        // shunda qo'shimcha so'rov yubormaymiz. Topilmasagina homework/{groupId}.
+        const passedResult = location.state?.result;
+        let lessonId =
+          location.state?.lessonId ??
+          passedResult?.lesson_id ??
+          passedResult?.lessonId ??
+          passedResult?.lesson?.id;
+        if (!lessonId) {
+          try {
+            const hwRes = await fetchApi(`homework/${groupId}`);
+            const list = hwRes.data?.data ?? hwRes.data ?? [];
+            const hw = (Array.isArray(list) ? list : []).find(
+              (h) =>
+                String(h.homework?.[0]?.id) === String(homeworkId) ||
+                String(h.id) === String(homeworkId)
+            );
+            lessonId = hw?.id;
+          } catch (metaErr) {
+            console.error("lessonId aniqlashda xatolik:", metaErr);
+          }
         }
+
+        // Asosiy manba: alohida talaba topshirig'i endpointi.
+        if (lessonId) {
+          const res = await fetchApi(
+            `group/${groupId}/lesson/${lessonId}/homework/${homeworkId}/student/${studentId}`
+          );
+          if (res.status === 200) {
+            let payload = res.data?.data ?? res.data ?? {};
+            if (Array.isArray(payload)) payload = payload[0] || {};
+            console.log("homework result:", payload);
+            setData(payload);
+            if (payload.grade != null) setScore(Number(payload.grade));
+            return;
+          }
+        }
+
+        // Zaxira: ro'yxat sahifasidan uzatilgan natija.
+        const passed = location.state?.result;
+        if (passed && typeof passed === "object") {
+          setData(passed);
+          if (passed.grade != null) setScore(Number(passed.grade));
+          return;
+        }
+        setError(t("Talaba topshirig'i topilmadi"));
       } catch (err) {
         console.error("Natijani yuklashda xatolik:", err);
-        setError(
-          err.response?.data?.message || t("Ma'lumotni yuklashda xatolik yuz berdi")
-        );
+        // Endpoint xato bersa ham, state'dagi natija bo'lsa ko'rsatamiz.
+        const passed = location.state?.result;
+        if (passed && typeof passed === "object") {
+          setData(passed);
+          if (passed.grade != null) setScore(Number(passed.grade));
+        } else {
+          setError(
+            err.response?.data?.message || t("Ma'lumotni yuklashda xatolik yuz berdi")
+          );
+        }
       } finally {
         setLoading(false);
       }
     }
     if (groupId && homeworkId && studentId) loadResult();
-  }, [groupId, homeworkId, studentId, t]);
+  }, [groupId, homeworkId, studentId, t, location.state]);
 
   // Field extraction — API javob shakli: { id, file, title, students: { id, full_name } }
   const studentName =
@@ -90,13 +139,21 @@ export default function HomeworkReview() {
     data?.name ||
     t("Noma'lum");
   const studentComment =
-    data?.title || data?.text || data?.comment || data?.description || data?.answer || "";
+    data?.title || data?.text || data?.comment || data?.answer || "";
+  // Uy vazifasining mavzusi va izohi (API: data.homework.{title,file})
+  const homeworkTitle =
+    data?.homework?.title || data?.homework?.topic || homeworkTopic;
   const homeworkDesc =
     data?.homework?.description ||
-    data?.homework?.topic ||
     data?.description ||
     location.state?.description ||
-    homeworkTopic;
+    "";
+  // Uy vazifasiga biriktirilgan fayl(lar)
+  const homeworkFiles = data?.homework?.file
+    ? [data.homework.file]
+    : Array.isArray(data?.homework?.files)
+    ? data.homework.files
+    : [];
   const submissionFiles = Array.isArray(data?.files)
     ? data.files
     : Array.isArray(data?.homework_files)
@@ -118,15 +175,18 @@ export default function HomeworkReview() {
     data?.answer?.id ??
     data?.homework_answer?.id ??
     data?.id;
-  const statusValue = data?.status || "PENDING";
-  const statusText =
-    statusValue === "ACCEPTED"
-      ? t("Qabul qilingan")
-      : statusValue === "REJECTED"
-      ? t("Qaytarilgan")
-      : statusValue === "CHECKED"
-      ? t("Tekshirilgan")
-      : t("Kutayabti");
+  // API status'i odatda o'qiladigan matn ("Berilmagan", "Tekshirilmoqda" ...)
+  // bo'lib keladi; enum kodlari kelsa, ularni tarjima qilamiz.
+  const statusValue = data?.status || "";
+  const STATUS_LABELS = {
+    ACCEPTED: "Qabul qilingan",
+    REJECTED: "Qaytarilgan",
+    CHECKED: "Tekshirilgan",
+    PENDING: "Kutayabti",
+  };
+  const statusText = statusValue
+    ? t(STATUS_LABELS[statusValue] || statusValue)
+    : t("Kutayabti");
 
   // Theme colors driven by passing score (>=60 accepted, else rejected)
   const isPassed = score >= 60;
@@ -177,6 +237,43 @@ export default function HomeworkReview() {
     }
   };
 
+  // Fayl ro'yxatini rasm/ikonka thumbnail'lari ko'rinishida chizadi
+  const renderThumbs = (list) => (
+    <div className="hr-thumbs">
+      {list.map((f, i) => {
+        const path = filePath(f);
+        // Uyga vazifa fayllari .../files/files/<nom> da turadi.
+        // To'liq URL bo'lsa o'zini ishlatamiz; aks holda base + "files/" + nom.
+        const clean = String(path).replace(/^\/+/, "");
+        const url = /^https?:\/\//.test(path)
+          ? path
+          : FILE_BASE + (clean.startsWith("files/") ? clean : "files/" + clean);
+        return isImage(path) ? (
+          <a key={i} href={url} target="_blank" rel="noreferrer">
+            <img
+              className="hr-thumb"
+              src={url}
+              alt={`fayl-${i + 1}`}
+              onError={(e) => {
+                // Rasm yuklanmasa — fayl ikonkasini ko'rsatamiz (havola baribir ishlaydi)
+                e.currentTarget.style.display = "none";
+                const icon = e.currentTarget.nextElementSibling;
+                if (icon) icon.style.display = "flex";
+              }}
+            />
+            <span className="hr-file-icon" style={{ display: "none" }}>
+              <i className="fa-solid fa-file"></i>
+            </span>
+          </a>
+        ) : (
+          <a key={i} className="hr-file-icon" href={url} target="_blank" rel="noreferrer">
+            <i className="fa-solid fa-file"></i>
+          </a>
+        );
+      })}
+    </div>
+  );
+
   if (loading) {
     return (
       <div style={{ padding: "24px" }}>
@@ -212,8 +309,9 @@ export default function HomeworkReview() {
         .hr-bc-sep { color: #cbd5e1; }
         .hr-bc-current { color: #94a3b8; }
         .hr-card {
-          background: #fff; border: 1px solid #ececf0; border-radius: 12px;
-          padding: 24px; margin-bottom: 20px;
+          background: #fff; border: none; border-radius: 16px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+          padding: 24px; margin-bottom: 24px;
         }
         .hr-card.muted { background: #f7f8fa; }
         .hr-card-title { font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 16px; }
@@ -245,7 +343,7 @@ export default function HomeworkReview() {
           color: #94a3b8; background: #f8fafc; text-decoration: none;
         }
         .hr-comment-box {
-          border-left: 3px solid #6366f1; background: #f8fafc; border-radius: 8px;
+          border-left: 3px solid #7c3aed; background: #f8fafc; border-radius: 8px;
           padding: 14px 18px;
         }
         .hr-comment-box a { color: #2563eb; word-break: break-all; }
@@ -288,8 +386,8 @@ export default function HomeworkReview() {
           border: 2px dashed #6ee7b7; border-radius: 10px; padding: 36px 20px; text-align: center;
           cursor: pointer; background: #fff; transition: all .2s; margin-bottom: 24px;
         }
-        .hr-dropzone:hover { background: #f0fdf4; border-color: #10b981; }
-        .hr-dropzone i { font-size: 34px; color: #10b981; margin-bottom: 12px; }
+        .hr-dropzone:hover { background: #f5f3ff; border-color: #7c3aed; }
+        .hr-dropzone i { font-size: 34px; color: #7c3aed; margin-bottom: 12px; }
         .hr-dz-title { font-size: 16px; color: #334155; font-weight: 500; margin: 0 0 6px; }
         .hr-dz-sub { font-size: 13px; color: #94a3b8; margin: 0; }
         .hr-dz-files { margin-top: 12px; font-size: 13px; color: #475569; }
@@ -329,20 +427,34 @@ export default function HomeworkReview() {
             {t(statusLabel)}
           </span>
           <span className="hr-bc-sep">&gt;</span>
-          <span className="hr-bc-current">{t(homeworkTopic)}</span>
+          <span className="hr-bc-current">{homeworkTitle}</span>
         </div>
 
         {/* Homework task */}
         <div className="hr-card muted">
           <h2 className="hr-card-title">{t("Uy vazifasi")}</h2>
-          <div className="hr-inner" style={{ marginBottom: 12 }}>
+          <div
+            className="hr-inner"
+            style={{ marginBottom: homeworkDesc || homeworkFiles.length ? 12 : 0 }}
+          >
             <span className="hr-label">{t("Mavzu:")}</span>
-            <div className="hr-text">{homeworkTopic}</div>
+            <div className="hr-text">{homeworkTitle}</div>
           </div>
-          <div className="hr-inner">
-            <span className="hr-label">{t("Izoh:")}</span>
-            <div className="hr-text">{homeworkDesc}</div>
-          </div>
+          {homeworkDesc && (
+            <div
+              className="hr-inner"
+              style={{ marginBottom: homeworkFiles.length ? 12 : 0 }}
+            >
+              <span className="hr-label">{t("Izoh:")}</span>
+              <div className="hr-text">{homeworkDesc}</div>
+            </div>
+          )}
+          {homeworkFiles.length > 0 && (
+            <div className="hr-inner">
+              <span className="hr-label">{t("Vazifa fayli:")}</span>
+              {renderThumbs(homeworkFiles)}
+            </div>
+          )}
         </div>
 
         {/* Student submission */}
@@ -364,41 +476,7 @@ export default function HomeworkReview() {
             <div className="hr-label" style={{ marginBottom: 0 }}>
               {t("Fayl:")} <strong style={{ color: "#1e293b" }}>{submissionFiles.length}</strong>
             </div>
-            {submissionFiles.length > 0 && (
-              <div className="hr-thumbs">
-                {submissionFiles.map((f, i) => {
-                  const path = filePath(f);
-                  // Uyga vazifa fayllari .../files/files/<nom> da turadi.
-                  // To'liq URL bo'lsa o'zini ishlatamiz; aks holda base + "files/" + nom.
-                  const clean = String(path).replace(/^\/+/, "");
-                  const url = /^https?:\/\//.test(path)
-                    ? path
-                    : FILE_BASE + (clean.startsWith("files/") ? clean : "files/" + clean);
-                  return isImage(path) ? (
-                    <a key={i} href={url} target="_blank" rel="noreferrer">
-                      <img
-                        className="hr-thumb"
-                        src={url}
-                        alt={`fayl-${i + 1}`}
-                        onError={(e) => {
-                          // Rasm yuklanmasa — fayl ikonkasini ko'rsatamiz (havola baribir ishlaydi)
-                          e.currentTarget.style.display = "none";
-                          const icon = e.currentTarget.nextElementSibling;
-                          if (icon) icon.style.display = "flex";
-                        }}
-                      />
-                      <span className="hr-file-icon" style={{ display: "none" }}>
-                        <i className="fa-solid fa-file"></i>
-                      </span>
-                    </a>
-                  ) : (
-                    <a key={i} className="hr-file-icon" href={url} target="_blank" rel="noreferrer">
-                      <i className="fa-solid fa-file"></i>
-                    </a>
-                  );
-                })}
-              </div>
-            )}
+            {submissionFiles.length > 0 && renderThumbs(submissionFiles)}
             {studentComment && (
               <div className="hr-comment-box">
                 <span className="hr-label">{t("Uyga vazifa izohi:")}</span>

@@ -36,18 +36,20 @@ export default function Asosiy() {
       <style>{`
         .stat-card {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
-          border-radius: 12px;
+          border-radius: 16px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         .stat-card:hover {
           transform: translateY(-3px);
-          box-shadow: 0 8px 24px rgba(124,77,255,0.13);
+          box-shadow: 0 8px 24px rgba(124,58,237,0.12);
         }
         .acc-item {
           background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
+          border: none;
+          border-radius: 16px;
           margin-bottom: 12px;
           overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         .acc-header {
           width: 100%;
@@ -87,11 +89,11 @@ export default function Asosiy() {
           {statsData.map((item, idx) => (
             <div
               key={idx}
-              className="stat-card border bg-white border-[#e2e8f0] flex justify-center items-center flex-col gap-2 cursor-pointer py-6"
+              className="stat-card bg-white flex justify-center items-center flex-col gap-2 cursor-pointer py-6"
             >
-              <i className={item.icon + " text-[#765bcf] text-[20px]"}></i>
-              <h2 className="font-medium text-[12px] text-[#666]">{item.label}</h2>
-              <h2 className="font-bold text-[24px] text-[#222]">{item.count}</h2>
+              <i className={item.icon + " text-[#7c3aed] text-[22px]"}></i>
+              <h2 className="font-medium text-[12px] text-[#64748b]">{item.label}</h2>
+              <h2 className="font-bold text-[24px] text-[#1e293b]">{item.count}</h2>
             </div>
           ))}
         </div>

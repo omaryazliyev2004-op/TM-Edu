@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
 import { useLang } from "../i18n/LanguageContext";
 
 export default function GroupDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [group, setGroup] = useState(null);
   const [homework, setHomework] = useState(null);
   const [schedule, setSchedule] = useState(null);
@@ -39,10 +40,27 @@ export default function GroupDetails() {
   const [examsLoading, setExamsLoading] = useState(false);
   // Attendance loading state
   const [attendanceLoading, setAttendanceLoading] = useState(false);
+  // attendance/all dagi shu guruhga tegishli student_id'lar (roster)
+  const [attendanceRosterIds, setAttendanceRosterIds] = useState([]);
   // Toast state
   const [toast, setToast] = useState({ show: false, message: "", type: "info" });
   const toastTimeoutRef = useRef(null);
   const { t } = useLang();
+  const isTeacherPath = location.pathname.startsWith("/teacher");
+  const homeworkCreatePath = isTeacherPath
+    ? `/teacher/guruhlar/${id}/homework/create`
+    : `/dashboard/groups/${id}/homework/create`;
+  const homeworkDetailsPath = (homeworkId) =>
+    isTeacherPath
+      ? `/teacher/guruhlar/${id}/homework/${homeworkId}`
+      : `/dashboard/groups/${id}/homework/${homeworkId}`;
+  const examCreatePath = isTeacherPath
+    ? `/teacher/guruhlar/${id}/exam/create`
+    : `/dashboard/groups/${id}/exam/create`;
+  const examDetailsPath = (examId) =>
+    isTeacherPath
+      ? `/teacher/guruhlar/${id}/exams/${examId}`
+      : `/dashboard/groups/${id}/exams/${examId}`;
 
   const showToast = (message, type = "success") => {
     if (toastTimeoutRef.current) {
@@ -357,8 +375,21 @@ export default function GroupDetails() {
 
   const selectedDayIsPast = selectedDay && isPastDay(selectedDay);
 
-  // Har bir talaba o'z guruhlarini e'lon qiladi — shu bo'yicha filtrlash eng ishonchlisi
+  // Guruh students ro'yxatidagi id'lar (obyekt yoki son bo'lishi mumkin)
+  const groupStudentIds = new Set(
+    (group?.students || [])
+      .map((s) => Number(s && typeof s === "object" ? s.id : s))
+      .filter(Boolean)
+  );
+
+  // attendance/all dan kelgan roster id'lar
+  const rosterSet = new Set(attendanceRosterIds.map(Number));
+
+  // Talaba shu guruhga tegishli bo'lsa: o'z groups massivida, guruh students ro'yxatida
+  // yoki attendance/all yozuvlarida (group_id mos) bo'lsa
   const filteredFromAll = allStudents.filter((s) => {
+    if (groupStudentIds.has(Number(s.id))) return true;
+    if (rosterSet.has(Number(s.id))) return true;
     const sGroups = s.groups || [];
     return sGroups.some((g) => {
       const gid = g && typeof g === "object" ? g.id : g;
@@ -404,9 +435,17 @@ export default function GroupDetails() {
         const res = await fetchApi("attendance/all");
         if (res.status === 200) {
           const allRecords = res.data?.data || res.data || [];
-          console.log("attendance/all sample:", allRecords[0]);
 
           const gid = Number(id);
+
+          // Shu so'rovdan guruhga tegishli barcha student_id'larni (roster) ham
+          // yig'ib olamiz — alohida attendance/all so'rovini takrorlamaymiz
+          const rosterIds = allRecords
+            .filter((r) => Number(r.group_id ?? r.groupId ?? r.group?.id) === gid)
+            .map((r) => Number(r.student_id ?? r.studentId ?? r.student?.id))
+            .filter(Boolean);
+          setAttendanceRosterIds([...new Set(rosterIds)]);
+
           // Tanlangan kunning sanasi (yil/oy/kun)
           const sel = getDayDate(selectedDay);
           const isSameDay = (recDate) => {
@@ -548,9 +587,9 @@ export default function GroupDetails() {
           align-items: center;
         }
         .gd-title {
-          font-size: 22px;
+          font-size: 26px;
           font-weight: 700;
-          color: #222;
+          color: #1e293b;
           display: flex;
           align-items: center;
           gap: 12px;
@@ -580,31 +619,24 @@ export default function GroupDetails() {
 
         .gd-tabs {
           display: flex;
-          gap: 24px;
-          border-bottom: 1px solid #e0e0e0;
+          gap: 4px;
           margin-bottom: 24px;
         }
         .gd-tab {
-          padding: 10px 0;
+          padding: 8px 16px;
+          border-radius: 10px;
           border: none;
-          background: none;
+          background: transparent;
           font-size: 14px;
           font-weight: 600;
-          color: #888;
+          color: #94a3b8;
           cursor: pointer;
           position: relative;
+          transition: all 0.15s;
         }
         .gd-tab.active {
-          color: #765bcf;
-        }
-        .gd-tab.active::after {
-          content: "";
-          position: absolute;
-          bottom: -1px;
-          left: 0;
-          width: 100%;
-          height: 2px;
-          background: #765bcf;
+          background: #7c3aed;
+          color: #fff;
         }
 
         .gd-grid {
@@ -615,20 +647,23 @@ export default function GroupDetails() {
           align-items: start;
         }
         .gd-panel {
-          border: 1px solid #e0e0e0;
-          border-radius: 12px;
+          border: none;
+          border-radius: 16px;
           background: #fff;
           overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         .gd-panel-header {
-          background: #4285f4;
+          background: #7c3aed;
           color: #fff;
-          padding: 12px 16px;
+          border-bottom: 1px solid #6d28d9;
+          padding: 14px 18px;
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 700;
           display: flex;
           justify-content: space-between;
           align-items: center;
+          border-radius: 16px 16px 0 0;
         }
         .gd-panel-body {
           padding: 16px;
@@ -692,10 +727,11 @@ export default function GroupDetails() {
 
         /* Schedule Section */
         .gd-schedule {
-          border: 1px solid #e0e0e0;
-          border-radius: 12px;
+          border: none;
+          border-radius: 16px;
           background: #fff;
-          padding: 20px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+          padding: 24px;
           margin-bottom: 24px;
         }
         .gd-schedule-title {
@@ -807,10 +843,11 @@ export default function GroupDetails() {
           gap: 16px;
         }
         .gd-info-card {
-          border: 1px solid #e8eaf0;
-          border-radius: 12px;
+          border: none;
+          border-radius: 16px;
           background: #fff;
           overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         .gd-info-card-title {
           font-size: 13px;
@@ -880,10 +917,11 @@ export default function GroupDetails() {
           font-weight: 500;
         }
         .gd-form-card {
-          border: 1px solid #e8eaf0;
-          border-radius: 12px;
+          border: none;
+          border-radius: 16px;
           background: #fff;
           overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         .gd-form-card-title {
           font-size: 13px;
@@ -1116,10 +1154,10 @@ export default function GroupDetails() {
           cursor: pointer;
         }
         .gd-tab-btn.active {
-          background: #fff;
-          color: #4285f4;
+          background: #7c3aed;
+          color: #fff;
           font-weight: 600;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          box-shadow: 0 4px 10px rgba(124,58,237,0.25);
         }
 
         /* Video Modal */
@@ -1800,7 +1838,6 @@ export default function GroupDetails() {
                               type="button"
                               className={`gd-switch ${attendance[student.id] ? "on" : ""}`}
                               onClick={() => toggleAttendance(student.id)}
-                              disabled={selectedDayIsPast}
                             >
                               <span />
                             </button>
@@ -1813,11 +1850,10 @@ export default function GroupDetails() {
                       <button
                         className="gd-save-btn"
                         type="button"
-                        disabled={selectedDayIsPast}
                         onClick={handleSaveAttendance}
                         style={{
-                          background: selectedDayIsPast ? "#ccc" : "#3b82f6",
-                          cursor: selectedDayIsPast ? "not-allowed" : "pointer"
+                          background: "#3b82f6",
+                          cursor: "pointer"
                         }}
                       >
                         {t("Davomatni saqlash")}
@@ -1886,9 +1922,9 @@ export default function GroupDetails() {
                 if (activeDarslikTab === "video") {
                   setShowUploadModal(true);
                 } else if (activeDarslikTab === "imtihon") {
-                  navigate(`/dashboard/groups/${id}/exam/create`);
+                  navigate(examCreatePath);
                 } else {
-                  navigate(`/dashboard/groups/${id}/homework/create`);
+                  navigate(homeworkCreatePath);
                 }
               }}
               style={{
@@ -1907,30 +1943,34 @@ export default function GroupDetails() {
           </div>
 
           {/* Filter Tabs */}
-          <div className="gd-tabs-buttons">
+          <div style={{ display: "flex", gap: "16px", marginBottom: "24px", borderBottom: "1px solid #f1f5f9", paddingBottom: "16px", alignItems: "center" }}>
             <button
               className={`gd-tab-btn ${activeDarslikTab === "uyga" ? "active" : ""}`}
               onClick={() => setActiveDarslikTab("uyga")}
+              style={activeDarslikTab === "uyga" ? { background: "#7C3AED", color: "#fff", padding: "8px 16px", borderRadius: "10px", border: "none", fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" } : { background: "transparent", color: "#64748B", border: "none", fontWeight: 600, fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
             >
-              {t("Uyg'a vazifa")}
+              <i className="fa-solid fa-book-open"></i> {t("Uyga vazifa")}
             </button>
             <button
               className={`gd-tab-btn ${activeDarslikTab === "video" ? "active" : ""}`}
               onClick={() => setActiveDarslikTab("video")}
+              style={activeDarslikTab === "video" ? { background: "#7C3AED", color: "#fff", padding: "8px 16px", borderRadius: "10px", border: "none", fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" } : { background: "transparent", color: "#64748B", border: "none", fontWeight: 600, fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
             >
-              {t("Videolar")}
+              <i className="fa-solid fa-video"></i> {t("Videolar")}
             </button>
             <button
               className={`gd-tab-btn ${activeDarslikTab === "imtihon" ? "active" : ""}`}
               onClick={() => setActiveDarslikTab("imtihon")}
+              style={activeDarslikTab === "imtihon" ? { background: "#7C3AED", color: "#fff", padding: "8px 16px", borderRadius: "10px", border: "none", fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" } : { background: "transparent", color: "#64748B", border: "none", fontWeight: 600, fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
             >
-              {t("Imtihonlar")}
+              <i className="fa-solid fa-file-lines"></i> {t("Imtihonlar")}
             </button>
             <button
               className={`gd-tab-btn ${activeDarslikTab === "jurnal" ? "active" : ""}`}
               onClick={() => setActiveDarslikTab("jurnal")}
+              style={activeDarslikTab === "jurnal" ? { background: "#7C3AED", color: "#fff", padding: "8px 16px", borderRadius: "10px", border: "none", fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" } : { background: "transparent", color: "#64748B", border: "none", fontWeight: 600, fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
             >
-              {t("Jurnal")}
+              <i className="fa-solid fa-address-book"></i> {t("Jurnal")}
             </button>
           </div>
 
@@ -1964,35 +2004,25 @@ export default function GroupDetails() {
                         <td className="gd-table-index">{hw.id}</td>
                         <td
                           className="gd-table-subject"
-                          onClick={() => navigate(`/dashboard/groups/${id}/homework/${hw.homework?.[0]?.id ?? hw.id}`)}
-                          style={{ cursor: "pointer" }}
+                          onClick={() => navigate(homeworkDetailsPath(hw.homework?.[0]?.id ?? hw.id))}
+                          style={{ cursor: "pointer", fontWeight: 600, color: "#1e293b" }}
                         >
-                          {hw.homeworkPending > 0 ? (
-                            <span
-                              style={{
-                                display: "inline-block",
-                                width: "100%",
-                                background: "#f0795a",
-                                color: "#fff",
-                                fontWeight: 600,
-                                padding: "8px 14px",
-                                borderRadius: 8,
-                              }}
-                            >
-                              {hw.topic}
-                            </span>
-                          ) : (
-                            <span style={{ color: "#765bcf" }}>{hw.topic}</span>
-                          )}
+                          {hw.topic}
                         </td>
-                        <td style={{ textAlign: "center", color: "#666" }}>
-                          {hw.existStudentsIngroup}
+                        <td style={{ textAlign: "center" }}>
+                          <span style={{ display: "inline-block", minWidth: "24px", padding: "4px 8px", borderRadius: "6px", background: "#F4F1FF", color: "#7C3AED", fontSize: "12px", fontWeight: 700 }}>
+                            {hw.existStudentsIngroup || 0}
+                          </span>
                         </td>
-                        <td style={{ textAlign: "center", color: "#666" }}>
-                          {hw.homeworkPending}
+                        <td style={{ textAlign: "center" }}>
+                          <span style={{ display: "inline-block", minWidth: "24px", padding: "4px 8px", borderRadius: "6px", background: "#FFF4E5", color: "#F97316", fontSize: "12px", fontWeight: 700 }}>
+                            {hw.homeworkPending || 0}
+                          </span>
                         </td>
-                        <td style={{ textAlign: "center", color: "#666" }}>
-                          {hw.homeworkAccept}
+                        <td style={{ textAlign: "center" }}>
+                          <span style={{ display: "inline-block", minWidth: "24px", padding: "4px 8px", borderRadius: "6px", background: "#ECFDF5", color: "#10B981", fontSize: "12px", fontWeight: 700 }}>
+                            {hw.homeworkAccept || 0}
+                          </span>
                         </td>
                         <td className="gd-table-time">
                           {formatDate(hw.homework?.[0]?.created_at)}
@@ -2226,7 +2256,7 @@ export default function GroupDetails() {
                           <td>
                             <button
                               className="exam-mavzu-link"
-                              onClick={() => navigate(`/dashboard/groups/${id}/exams/${ex.id}`)}
+                              onClick={() => navigate(examDetailsPath(ex.id))}
                             >
                               {ex.title || ex.topic || "Examination"}
                             </button>
@@ -2630,7 +2660,7 @@ export default function GroupDetails() {
                             onChange={(e) => setSelectedLessonId(e.target.value)}
                             disabled={uploadLoading}
                           >
-                            <option value="">{t("Darsni tanlang")}</option>
+                            <option value="" disabled hidden>{t("Darsni tanlang")}</option>
                             {lessonsList.map((les) => (
                               <option key={les.id} value={les.id}>
                                 {les.topic}

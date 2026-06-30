@@ -14,6 +14,13 @@ const kunlarMap = {
 };
 const kunlarList = Object.keys(kunlarMap);
 
+function isGroupActive(group) {
+  if (typeof group?.is_active === "boolean") return group.is_active;
+  const status = String(group?.status || "").toLowerCase();
+  if (status) return !["inactive", "archive", "archived", "tugagan", "finished"].includes(status);
+  return true;
+}
+
 export default function Sinflar() {
   const navigate = useNavigate();
   const { t } = useLang();
@@ -133,6 +140,33 @@ export default function Sinflar() {
       alert(t("Xatolik yuz berdi. Guruhni o'chirib bo'lmadi."));
       console.log(error);
     }
+  };
+
+  const toggleGroupFrontend = (group) => {
+    const nextActive = !isGroupActive(group);
+    const updatedGroup = {
+      ...group,
+      is_active: nextActive,
+      status: nextActive ? "active" : "inactive",
+    };
+
+    if (activeTab === "arxiv") {
+      setArchived((prev) => prev.map((g) => (g.id === group.id ? updatedGroup : g)));
+      return;
+    }
+
+    setUsers((prev) => {
+      if (prev?.data) {
+        return {
+          ...prev,
+          data: prev.data.map((g) => (g.id === group.id ? updatedGroup : g)),
+        };
+      }
+      if (Array.isArray(prev)) {
+        return prev.map((g) => (g.id === group.id ? updatedGroup : g));
+      }
+      return prev;
+    });
   };
 
   // Edit state
@@ -350,37 +384,37 @@ export default function Sinflar() {
         .g-label { display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px; }
         .g-label span { color: #e53935; }
         .g-input { width: 100%; height: 42px; border-radius: 8px; border: 1.5px solid #e2e8f0; padding: 0 12px; font-size: 14px; outline: none; transition: border-color 0.15s; margin-bottom: 14px; background: #fff; box-sizing: border-box; }
-        .g-input:focus { border-color: #765bcf; }
+        .g-input:focus { border-color: #7c3aed; }
         .g-select { width: 100%; height: 42px; border-radius: 8px; border: 1.5px solid #e2e8f0; padding: 0 12px; font-size: 14px; outline: none; background: #fff; cursor: pointer; margin-bottom: 14px; box-sizing: border-box; }
-        .g-select:focus { border-color: #765bcf; }
+        .g-select:focus { border-color: #7c3aed; }
         .g-textarea { width: 100%; min-height: 72px; border-radius: 8px; border: 1.5px solid #e2e8f0; padding: 10px 12px; font-size: 14px; outline: none; resize: vertical; transition: border-color 0.15s; margin-bottom: 14px; background: #fff; box-sizing: border-box; }
-        .g-textarea:focus { border-color: #765bcf; }
+        .g-textarea:focus { border-color: #7c3aed; }
 
         /* ── Kunlar checkboxes ── */
         .g-kunlar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
         .g-kun-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #333; cursor: pointer; }
         .g-cb { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; background: #fff; }
-        .g-cb.checked { background: #765bcf; border-color: #765bcf; }
+        .g-cb.checked { background: #7c3aed; border-color: #7c3aed; }
 
         /* ── Add btn ── */
-        .g-add-btn { width: 100%; height: 42px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; color: #765bcf; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 14px; }
+        .g-add-btn { width: 100%; height: 42px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; color: #7c3aed; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 14px; }
 
         /* ── Footer btns ── */
         .g-btn { height: 38px; padding: 0 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .g-btn-outline { border: 1px solid #e0e0e0; background: #fff; color: #444; flex: 1; justify-content: center; }
         .g-btn-outline:hover { background: #f5f5f5; }
-        .g-btn-primary { border: none; background: #765bcf; color: #fff; flex: 1; justify-content: center; }
+        .g-btn-primary { border: none; background: #7c3aed; color: #fff; flex: 1; justify-content: center; }
         .g-btn-primary:hover { background: #5e48a8; }
 
         /* ── Stat cards ── */
-        .g-stat-card { flex: 1; background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 18px 20px; position: relative; min-width: 180px; }
-        .g-stat-card-menu { position: absolute; top: 14px; right: 14px; background: none; border: none; color: #bbb; font-size: 16px; cursor: pointer; }
+        .g-stat-card { flex: 1; background: #fff; border: none; border-radius: 16px; padding: 20px 22px; position: relative; min-width: 180px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .g-stat-card-menu { position: absolute; top: 14px; right: 14px; background: none; border: none; color: #d1d5db; font-size: 16px; cursor: pointer; }
 
         /* ── Table ── */
         .g-table { width: 100%; border-collapse: collapse; background: #fff; }
-        .g-th { padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #888; border-bottom: 1px solid #eee; white-space: nowrap; }
-        .g-td { padding: 14px 16px; font-size: 13px; color: #444; border-bottom: 1px solid #f5f5f5; vertical-align: middle; white-space: nowrap; }
-        .g-row:hover { background: #fafafa; }
+        .g-th { padding: 16px 20px; text-align: left; font-size: 13.5px; font-weight: 700; color: #1e293b; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+        .g-td { padding: 16px 20px; font-size: 14px; font-weight: 500; color: #1e293b; border-bottom: 1px solid #f1f5f9; vertical-align: middle; white-space: nowrap; }
+        .g-row:hover { background: #f8fafc; }
 
         /* ── Teacher Column Scroll ── */
         .g-oqituvchi-cell { max-height: 90px; overflow-y: auto; min-width: 150px; padding-right: 8px; }
@@ -392,7 +426,7 @@ export default function Sinflar() {
 
         /* ── Toggle ── */
         .g-toggle { width: 36px; height: 20px; border-radius: 20px; background: #ccc; position: relative; cursor: pointer; transition: background 0.25s; border: none; }
-        .g-toggle.on { background: #765bcf; }
+        .g-toggle.on { background: #7c3aed; }
         .g-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left 0.25s; }
         .g-toggle.on::after { left: 18px; }
 
@@ -403,7 +437,7 @@ export default function Sinflar() {
         /* ── Modal ── */
         .g-modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 700; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.25s; }
         .g-modal-wrap.open { opacity: 1; pointer-events: all; }
-        .g-modal { background: #fff; width: 380px; max-height: 80vh; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); display: flex; flex-direction: column; transform: scale(0.95); transition: 0.25s; }
+        .g-modal { background: #fff; width: 380px; max-height: 80vh; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); display: flex; flex-direction: column; transform: scale(0.95); transition: 0.25s; }
         .g-modal-wrap.open .g-modal { transform: scale(1); }
         .g-modal-header { padding: 20px 24px 14px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: flex-start; }
         .g-modal-title { font-size: 16px; font-weight: 700; color: #222; margin: 0 0 4px; }
@@ -414,10 +448,10 @@ export default function Sinflar() {
         .g-modal-row:last-child { border-bottom: none; }
 
         /* ── Action buttons ── */
-        .g-act-btn { width: 30px; height: 30px; border-radius: 7px; border: 1px solid transparent; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #888; transition: 0.15s; font-size: 13px; }
-        .g-act-btn:hover { background: #f0f0f0; color: #333; }
-        .g-act-btn.red:hover { background: #ffebee; color: #e53935; }
-        .g-act-btn.blue:hover { background: #e8f0fe; color: #1a73e8; }
+        .g-act-btn { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8; transition: 0.15s; font-size: 15px; }
+        .g-act-btn:hover { background: #f1f5f9; color: #334155; }
+        .g-act-btn.red:hover { background: #fef2f2; color: #ef4444; }
+        .g-act-btn.blue:hover { background: #eff6ff; color: #3b82f6; }
 
         /* ── Guruh o'chirish modali ── */
         .g-del-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease-out; }
@@ -543,13 +577,13 @@ export default function Sinflar() {
 
           <label className="g-label">{t("Kurs")} <span>*</span></label>
           <select className="g-select" value={kurs} onChange={e => setKurs(e.target.value)}>
-            <option value="">{t("Tanlang")}</option>
+            <option value="" disabled hidden>{t("Tanlang")}</option>
             {allCourses.map(k => <option key={k.id} value={k.id}>{k.name}</option>)}
           </select>
 
           <label className="g-label">{t("Xona")} <span>*</span></label>
           <select className="g-select" value={xona} onChange={e => setXona(e.target.value)}>
-            <option value="">{t("Tanlang")}</option>
+            <option value="" disabled hidden>{t("Tanlang")}</option>
             {allRooms.map(x => <option key={x.id} value={x.id}>{x.name || x.nom}</option>)}
           </select>
 
@@ -565,9 +599,9 @@ export default function Sinflar() {
                   key={kun}
                   type="button"
                   onClick={() => togleKun(kun)}
-                  className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-medium transition ${isSelected ? "border-[#765bcf] bg-[#f5f0ff] text-[#1f2937]" : "border-[#d1d5db] bg-white text-[#374151]"}`}
+                  className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-medium transition ${isSelected ? "border-[#7c3aed] bg-[#f5f0ff] text-[#1f2937]" : "border-[#d1d5db] bg-white text-[#374151]"}`}
                 >
-                  <span className={`flex h-5 w-5 items-center justify-center rounded border text-white ${isSelected ? "border-[#765bcf] bg-[#765bcf]" : "border-[#d1d5db] bg-white text-transparent"}`}>
+                  <span className={`flex h-5 w-5 items-center justify-center rounded border text-white ${isSelected ? "border-[#7c3aed] bg-[#7c3aed]" : "border-[#d1d5db] bg-white text-transparent"}`}>
                     <i className="fa-solid fa-check text-[10px]" />
                   </span>
                   <span>{kun}</span>
@@ -591,7 +625,7 @@ export default function Sinflar() {
               {selectedTeachers.map(id => {
                 const t = allTeachers.find(tl => tl.id === id);
                 return t ? (
-                  <span key={id} style={{ background: "rgba(118,91,207,0.1)", color: "#765bcf", borderRadius: 6, padding: "3px 10px", fontSize: 13, fontWeight: 600 }}>
+                  <span key={id} style={{ background: "rgba(124,58,237,0.1)", color: "#7c3aed", borderRadius: 6, padding: "3px 10px", fontSize: 13, fontWeight: 600 }}>
                     {t.full_name || t.name || "—"}
                   </span>
                 ) : null;
@@ -601,7 +635,7 @@ export default function Sinflar() {
           <button className="g-add-btn" onClick={openTeacherModal}>
             <i className="fa-solid fa-plus"></i> {t("Qo'shish")}
             {selectedTeachers.length > 0 && (
-              <span style={{ marginLeft: 6, background: "#765bcf", color: "#fff", borderRadius: 10, padding: "1px 8px", fontSize: 12 }}>{selectedTeachers.length}</span>
+              <span style={{ marginLeft: 6, background: "#7c3aed", color: "#fff", borderRadius: 10, padding: "1px 8px", fontSize: 12 }}>{selectedTeachers.length}</span>
             )}
           </button>
 
@@ -611,7 +645,7 @@ export default function Sinflar() {
               {selectedTalabalar.map(id => {
                 const s = allStudents.find(sl => sl.id === id);
                 return s ? (
-                  <span key={id} style={{ background: "rgba(118,91,207,0.1)", color: "#765bcf", borderRadius: 6, padding: "3px 10px", fontSize: 13, fontWeight: 600 }}>
+                  <span key={id} style={{ background: "rgba(124,58,237,0.1)", color: "#7c3aed", borderRadius: 6, padding: "3px 10px", fontSize: 13, fontWeight: 600 }}>
                     {s.full_name || s.name || "—"}
                   </span>
                 ) : null;
@@ -621,7 +655,7 @@ export default function Sinflar() {
           <button className="g-add-btn" onClick={openStudentModal}>
             <i className="fa-solid fa-plus"></i> {t("Qo'shish")}
             {selectedTalabalar.length > 0 && (
-              <span style={{ marginLeft: 6, background: "#765bcf", color: "#fff", borderRadius: 10, padding: "1px 8px", fontSize: 12 }}>{selectedTalabalar.length}</span>
+              <span style={{ marginLeft: 6, background: "#7c3aed", color: "#fff", borderRadius: 10, padding: "1px 8px", fontSize: 12 }}>{selectedTalabalar.length}</span>
             )}
           </button>
         </div>
@@ -632,34 +666,50 @@ export default function Sinflar() {
       </div>
 
       {/* ── Page Header ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#222", margin: 0 }}>{t("Guruhlar")}</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+        <div>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1e293b", margin: "0 0 8px 0" }}>{t("Guruhlar")}</h1>
+        </div>
         {activeTab !== "arxiv" && (
           <button
             onClick={openDrawer}
             style={{
-              height: 36, padding: "0 14px", borderRadius: 8,
-              border: "none", background: "#765bcf", color: "#fff",
-              fontSize: 13, fontWeight: 600, cursor: "pointer",
-              display: "flex", alignItems: "center", gap: 6
+              height: 44, padding: "0 20px", borderRadius: 12,
+              border: "none", background: "#7c3aed", color: "#fff",
+              fontSize: 14, fontWeight: 700, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 8,
+              boxShadow: "0 10px 15px -3px rgba(124,58,237,0.2)"
             }}
           >
-            <i className="fa-solid fa-plus" style={{ fontSize: 12 }}></i> {t("Guruh qo'shish")}
+            <i className="fa-solid fa-plus" style={{ fontSize: 13 }}></i> {t("Guruh qo'shish")}
           </button>
         )}
       </div>
 
       {/* ── Tabs ── */}
-      <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #eee", marginBottom: 20 }}>
-        <button className={`g-tab ${activeTab === "guruhlar" ? "active" : ""}`} onClick={() => setActiveTab("guruhlar")}>
+      <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
+        <button
+          onClick={() => setActiveTab("guruhlar")}
+          style={{
+            padding: "8px 18px", borderRadius: 10, border: "none", fontWeight: 600, fontSize: 14, cursor: "pointer",
+            background: activeTab === "guruhlar" ? "#7c3aed" : "transparent",
+            color: activeTab === "guruhlar" ? "#fff" : "#9ca3af",
+            transition: "all 0.15s"
+          }}
+        >
           {t("Guruhlar")}
         </button>
         <button
-          className={`g-tab ${activeTab === "arxiv" ? "active" : ""}`}
-          style={{ display: "flex", alignItems: "center", gap: 6 }}
           onClick={() => setActiveTab("arxiv")}
+          style={{
+            padding: "8px 18px", borderRadius: 10, border: "none", fontWeight: 600, fontSize: 14, cursor: "pointer",
+            background: activeTab === "arxiv" ? "#7c3aed" : "transparent",
+            color: activeTab === "arxiv" ? "#fff" : "#9ca3af",
+            display: "flex", alignItems: "center", gap: 6,
+            transition: "all 0.15s"
+          }}
         >
-          <i className="fa-solid fa-calendar-days" style={{ fontSize: 12 }}></i> {t("Arxiv")}
+          {t("Arxiv")}
         </button>
       </div>
 
@@ -668,7 +718,7 @@ export default function Sinflar() {
         <div className="g-stat-card bg-white">
           <button className="g-stat-card-menu"><i className="fa-solid fa-ellipsis-vertical"></i></button>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <i className="fa-solid fa-users" style={{ color: "#765bcf", fontSize: 18 }}></i>
+            <i className="fa-solid fa-users" style={{ color: "#7c3aed", fontSize: 18 }}></i>
             <span style={{ fontSize: 13, color: "#888" }}>{t("Jami guruhlar")}</span>
           </div>
           <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{users?.data?.length || users?.length || 0}</div>
@@ -677,7 +727,7 @@ export default function Sinflar() {
         <div className="g-stat-card bg-white">
           <button className="g-stat-card-menu"><i className="fa-solid fa-ellipsis-vertical"></i></button>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <i className="fa-solid fa-user-tie" style={{ color: "#765bcf", fontSize: 18 }}></i>
+            <i className="fa-solid fa-user-tie" style={{ color: "#7c3aed", fontSize: 18 }}></i>
             <span style={{ fontSize: 13, color: "#888" }}>{t("O'qituvchilar")}</span>
           </div>
           <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{allTeachers?.length || 0}</div>
@@ -686,7 +736,7 @@ export default function Sinflar() {
         <div className="g-stat-card bg-white">
           <button className="g-stat-card-menu"><i className="fa-solid fa-ellipsis-vertical"></i></button>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <i className="fa-solid fa-user-graduate" style={{ color: "#765bcf", fontSize: 18 }}></i>
+            <i className="fa-solid fa-user-graduate" style={{ color: "#7c3aed", fontSize: 18 }}></i>
             <span style={{ fontSize: 13, color: "#888" }}>{t("O'quvchilar")}</span>
           </div>
           <div style={{ fontSize: 32, fontWeight: 700, color: "#222" }}>{studentsCount}</div>
@@ -695,7 +745,7 @@ export default function Sinflar() {
       </div>
 
       {/* ── Table ── */}
-      <div className="bg-white" style={{ border: "1px solid #eee", borderRadius: 12, overflow: "hidden" }}>
+      <div className="bg-white" style={{ border: "none", borderRadius: 16, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
         <div style={{ overflowX: "auto" }}>
           <table className="g-table">
             <thead>
@@ -726,26 +776,40 @@ export default function Sinflar() {
                   </td>
                 </tr>
               )}
-              {(activeTab === "arxiv" ? archived : users?.data || []).map(g => (
+              {(activeTab === "arxiv" ? archived : users?.data || []).map(g => {
+                const active = isGroupActive(g);
+                return (
                 <tr key={g.id} className="g-row">
                   <td className="g-td">
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       {activeTab === "arxiv" ? (
-                        <span style={{
-                          fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
-                          background: "rgba(150,150,150,0.15)", color: "#888"
-                        }}>
-                          {t("ARXIV")}
-                        </span>
-                      ) : (
                         <>
-                          <button className={`g-toggle ${g.id ? "on" : ""}`} disabled />
+                          <button
+                            className={`g-toggle ${active ? "on" : ""}`}
+                            type="button"
+                            onClick={() => toggleGroupFrontend(g)}
+                          />
                           <span style={{
                             fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
-                            background: g.id ? "rgba(76,175,80,0.1)" : "rgba(200,200,200,0.2)",
-                            color: g.id ? "#4caf50" : "#999"
+                            background: active ? "rgba(76,175,80,0.1)" : "rgba(150,150,150,0.15)",
+                            color: active ? "#4caf50" : "#888"
                           }}>
-                            {g.id ? t("FAOL") : t("NOFAOL")}
+                            {active ? t("FAOL") : t("ARXIV")}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            className={`g-toggle ${active ? "on" : ""}`}
+                            type="button"
+                            onClick={() => toggleGroupFrontend(g)}
+                          />
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
+                            background: active ? "rgba(76,175,80,0.1)" : "rgba(200,200,200,0.2)",
+                            color: active ? "#4caf50" : "#999"
+                          }}>
+                            {active ? t("FAOL") : t("NOFAOL")}
                           </span>
                         </>
                       )}
@@ -761,7 +825,7 @@ export default function Sinflar() {
                     </span>
                   </td>
                   <td className="g-td">
-                    <span style={{ color: "#765bcf", fontWeight: 600 }}>{g.course?.name || ""}</span>
+                    <span style={{ color: "#7c3aed", fontWeight: 600 }}>{g.course?.name || ""}</span>
                   </td>
                   <td className="g-td">{g.course?.duration_month || 0} {t("oy")}</td>
                   <td className="g-td">
@@ -796,7 +860,8 @@ export default function Sinflar() {
                     )}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

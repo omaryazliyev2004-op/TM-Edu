@@ -298,41 +298,41 @@ export default function Oqituvchilar() {
 
         .oq-label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 8px; }
         .oq-input { width: 100%; height: 44px; border-radius: 8px; border: 1.5px solid #e2e8f0; padding: 0 14px; font-size: 14px; outline: none; transition: border-color 0.15s; margin-bottom: 16px; background: #fff; box-sizing: border-box; }
-        .oq-input:focus { border-color: #765bcf; }
+        .oq-input:focus { border-color: #7c3aed; }
 
         .oq-table { width: 100%; border-collapse: collapse; }
-        .oq-th { padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #888; border-bottom: 1px solid #eee; white-space: nowrap; }
-        .oq-td { padding: 14px 16px; font-size: 13px; color: #444; border-bottom: 1px solid #f5f5f5; vertical-align: middle; white-space: nowrap; }
+        .oq-th { padding: 16px 20px; text-align: left; font-size: 13.5px; font-weight: 700; color: #1e293b; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+        .oq-td { padding: 16px 20px; font-size: 14px; color: #1e293b; font-weight: 500; border-bottom: 1px solid #f1f5f9; vertical-align: middle; white-space: nowrap; }
         .table-row { transition: background 0.15s; }
-        .table-row:hover { background: #fafafa; }
+        .table-row:hover { background: #f8fafc; }
 
-        .custom-cb { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; flex-shrink: 0; }
-        .custom-cb.checked { background: #765bcf; border-color: #765bcf; color: #fff; font-size: 10px; }
+        .custom-cb { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #cbd5e1; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; flex-shrink: 0; }
+        .custom-cb.checked { background: #7c3aed; border-color: #7c3aed; color: #fff; font-size: 10px; }
 
-        .badge { display: inline-flex; padding: 3px 8px; border-radius: 6px; border: 1px solid #eee; font-size: 12px; margin-right: 4px; color: #555; background: #f5f5f5; font-weight: 500; white-space: nowrap; }
-        .badge-row { display: flex; align-items: center; gap: 6px; overflow-x: auto; max-width: 260px; min-width: 0; padding-bottom: 2px; }
+        .badge { display: inline-flex; padding: 5px 10px; border-radius: 6px; border: none; font-size: 12px; margin-right: 6px; color: #334155; background: #f1f5f9; font-weight: 600; white-space: nowrap; }
+        .badge-row { display: flex; align-items: center; gap: 4px; overflow-x: auto; max-width: 260px; min-width: 0; padding-bottom: 2px; }
         .badge-row::-webkit-scrollbar { height: 6px; }
         .badge-row::-webkit-scrollbar-track { background: transparent; }
         .badge-row::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
         .oq-td.group-cell { max-width: 260px; min-width: 0; }
 
-        .act-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid transparent; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #888; transition: 0.15s; font-size: 13px; }
-        .act-btn:hover { background: #f0f0f0; color: #333; }
-        .act-btn.red:hover { background: #ffebee; color: #e53935; }
+        .act-btn { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8; transition: 0.15s; font-size: 15px; }
+        .act-btn:hover { background: #f1f5f9; color: #334155; }
+        .act-btn.red:hover { background: #fef2f2; color: #ef4444; }
 
-        .top-btn { height: 38px; padding: 0 16px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.15s; }
-        .btn-outline { border: 1px solid #e0e0e0; background: #fff; color: #444; }
-        .btn-outline:hover { background: #f5f5f5; }
-        .btn-primary { border: none; background: #765bcf; color: #fff; }
-        .btn-primary:hover { background: #5e48a8; }
+        .top-btn { padding: 0 20px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.15s; height: 40px; }
+        .btn-outline { border: 1px solid #e5e7eb; background: #fff; color: #1e293b; }
+        .btn-outline:hover { background: #f8fafc; }
+        .btn-primary { border: none; background: #7c3aed; color: #fff; height: 44px; border-radius: 12px; }
+        .btn-primary:hover { background: #6d28d9; }
 
         .drag-drop { border: 2px dashed #e2e8f0; border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; margin-bottom: 16px; transition: 0.2s; }
-        .drag-drop:hover { border-color: #765bcf; background: #f8f7ff; }
+        .drag-drop:hover { border-color: #7c3aed; background: #f8f7ff; }
 
         /* ── Guruh modal ── */
         .oq-modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 700; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.25s; }
         .oq-modal-wrap.open { opacity: 1; pointer-events: all; }
-        .oq-modal { background: #fff; width: 400px; max-height: 70vh; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); display: flex; flex-direction: column; transform: scale(0.95); transition: 0.25s; }
+        .oq-modal { background: #fff; width: 400px; max-height: 70vh; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); display: flex; flex-direction: column; transform: scale(0.95); transition: 0.25s; }
         .oq-modal-wrap.open .oq-modal { transform: scale(1); }
         .oq-modal-header { padding: 20px 24px 14px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: flex-start; }
         .oq-modal-title { font-size: 16px; font-weight: 700; color: #222; margin: 0 0 4px; }
@@ -515,7 +515,7 @@ export default function Oqituvchilar() {
               {selectedGuruhlar.map(id => {
                 const g = allGroups.find(gl => gl.id === id);
                 return g ? (
-                  <span key={id} style={{ background: "rgba(118,91,207,0.1)", color: "#765bcf", borderRadius: 6, padding: "3px 10px", fontSize: 13, fontWeight: 600 }}>
+                  <span key={id} style={{ background: "rgba(124,58,237,0.1)", color: "#7c3aed", borderRadius: 6, padding: "3px 10px", fontSize: 13, fontWeight: 600 }}>
                     {g.name || g.nomi}
                   </span>
                 ) : null;
@@ -529,7 +529,7 @@ export default function Oqituvchilar() {
               border: "1.5px solid #e2e8f0", background: "#fff",
               display: "flex", alignItems: "center", gap: 10,
               paddingLeft: 16, cursor: "pointer", marginBottom: 16,
-              color: "#765bcf", fontWeight: 600, fontSize: 15
+              color: "#7c3aed", fontWeight: 600, fontSize: 15
             }}
           >
             <i className="fa-solid fa-plus"></i> {selectedGuruhlar.length > 0 ? `${selectedGuruhlar.length} ${t("ta guruh tanlandi")}` : t("Qo'shish")}
@@ -544,7 +544,7 @@ export default function Oqituvchilar() {
               onChange={(e) => setRasm(e.target.files[0])}
             />
             {rasm ? (
-              <div style={{ color: "#765bcf", fontWeight: 600, fontSize: 14 }}>
+              <div style={{ color: "#7c3aed", fontWeight: 600, fontSize: 14 }}>
                 <i className="fa-solid fa-file-image" style={{ marginRight: 8 }}></i>
                 {rasm.name}
               </div>
@@ -552,7 +552,7 @@ export default function Oqituvchilar() {
               <>
                 <i className="fa-solid fa-cloud" style={{ fontSize: 28, color: "#aaa", marginBottom: 10 }}></i>
                 <div style={{ fontSize: 13 }}>
-                  <span style={{ color: "#765bcf", fontWeight: 600, cursor: "pointer" }}>Click to upload</span>
+                  <span style={{ color: "#7c3aed", fontWeight: 600, cursor: "pointer" }}>Click to upload</span>
                   <span style={{ color: "#888" }}> or drag and drop</span>
                 </div>
                 <div style={{ fontSize: 12, color: "#aaa", marginTop: 4 }}>JPG or PNG (max. 800x800px)</div>
@@ -575,7 +575,7 @@ export default function Oqituvchilar() {
             onClick={create}
             style={{
               flex: 1, height: 44, borderRadius: 10,
-              border: "none", background: "#765bcf",
+              border: "none", background: "#7c3aed",
               color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer"
             }}
           >
@@ -585,43 +585,43 @@ export default function Oqituvchilar() {
       </div>
 
       {/* Page Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#222", margin: 0 }}>{t("O'qituvchilar")}</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+        <div>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1e293b", margin: "0 0 8px 0" }}>{t("O'qituvchilar")}</h1>
+          <p style={{ fontSize: 14, color: "#94a3b8", margin: 0 }}>
+            {t("Ushbu sahifada siz o'qituvchilar ro'yxatini va ularning ma'lumotlarini topasiz. Har bir o'qituvchining ismi, fanlari va aloqa ma'lumotlari keltirilgan.")}
+          </p>
+        </div>
         <button
           className="top-btn btn-primary"
           onClick={openAddTeacher}
-          style={{ height: 36, fontSize: 13 }}
         >
-          <i className="fa-solid fa-plus" style={{ fontSize: 12 }}></i> {t("O'qituvchi qo'shish")}
+          <i className="fa-solid fa-plus" style={{ fontSize: 14 }}></i> {t("O'qituvchi qo'shish")}
         </button>
       </div>
-      <p style={{ fontSize: 13, color: "#666", margin: "0 0 20px 0" }}>
-        {t("Ushbu sahifada siz o'qituvchilar ro'yxatini va ularning ma'lumotlarini topasiz. Har bir o'qituvchining ismi, fanlari va aloqa ma'lumotlari keltirilgan.")}
-      </p>
 
       {/* Table Card */}
-      <div className="bg-white" style={{ border: "1px solid #eee", borderRadius: 12, overflow: "hidden" }}>
+      <div className="bg-white" style={{ border: "none", borderRadius: 16, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
         {/* Toolbar */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 20px", borderBottom: "1px solid #f0f0f0" }}>
-          <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", borderBottom: "1px solid #f1f5f9" }}>
+          <div style={{ display: "flex", gap: 12 }}>
             <button className="top-btn btn-outline">
-              <i className="fa-solid fa-filter" style={{ fontSize: 12 }}></i> {t("Filters")}
+              <i className="fa-solid fa-filter" style={{ fontSize: 14 }}></i> {t("Filters")}
             </button>
             <button
               className="top-btn btn-outline"
               onClick={() => { setView(view === "archive" ? "active" : "archive"); setPage(1); }}
-              style={view === "archive" ? { background: "#765bcf", color: "#fff", borderColor: "#765bcf" } : undefined}
+              style={view === "archive" ? { background: "#7c3aed", color: "#fff", borderColor: "#7c3aed" } : undefined}
             >
-              <i className="fa-solid fa-box-archive" style={{ fontSize: 12 }}></i> {t("Arxiv")}
+              {t("Arxiv")}
             </button>
           </div>
           <div style={{ position: "relative" }}>
-            <i className="fa-solid fa-magnifying-glass" style={{ position: "absolute", left: 12, top: 12, color: "#bbb", fontSize: 13 }}></i>
             <input
               placeholder={t("Search")}
               style={{
-                height: 38, width: 220, borderRadius: 8, border: "1px solid #eee",
-                paddingLeft: 36, outline: "none", fontSize: 14, background: "#fafafa"
+                height: 40, width: 240, borderRadius: 10, border: "1px solid #e5e7eb",
+                paddingLeft: 16, outline: "none", fontSize: 14, background: "#fff", color: "#1e293b"
               }}
             />
           </div>
@@ -637,7 +637,7 @@ export default function Oqituvchilar() {
                     {users?.data?.length > 0 && users.data.every(d => d.selected) && <i className="fa-solid fa-check"></i>}
                   </div>
                 </th>
-                <th className="oq-th">{t("Nomi")} <i className="fa-solid fa-arrow-down" style={{ fontSize: 10, marginLeft: 2 }}></i></th>
+                <th className="oq-th">{t("Nomi")} <i className="fa-solid fa-arrow-down" style={{ fontSize: 11, marginLeft: 6, color: "#94a3b8" }}></i></th>
                 <th className="oq-th">{t("Guruh")}</th>
                 <th className="oq-th">{t("Telefon raqamlari")}</th>
                 <th className="oq-th">{t("Email")}</th>
@@ -676,7 +676,7 @@ export default function Oqituvchilar() {
                   </td>
                   <td className="oq-td">
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(118,91,207,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#765bcf", fontSize: 13, overflow: "hidden", flexShrink: 0, position: "relative" }}>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(124,58,237,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#7c3aed", fontSize: 13, overflow: "hidden", flexShrink: 0, position: "relative" }}>
                         {(row.full_name || "?").trim().charAt(0).toUpperCase()}
                         {row.photo && (
                           <img
@@ -733,9 +733,9 @@ export default function Oqituvchilar() {
                 onClick={() => typeof p === "number" && setPage(p)}
                 style={{
                   width: 32, height: 32, borderRadius: 8, border: "none",
-                  background: p === safePage ? "#765bcf" : "transparent",
-                  color: p === safePage ? "#fff" : "#666",
-                  fontWeight: p === safePage ? 700 : 400,
+                  background: p === safePage ? "#7c3aed" : "transparent",
+                  color: p === safePage ? "#fff" : "#64748b",
+                  fontWeight: p === safePage ? 700 : 500,
                   cursor: p !== "..." ? "pointer" : "default",
                   fontSize: 14
                 }}

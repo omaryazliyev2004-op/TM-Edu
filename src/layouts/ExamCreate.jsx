@@ -1,12 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
 import { useLang } from "../i18n/LanguageContext";
+import CustomSelect from "../components/CustomSelect";
 
 export default function ExamCreate() {
   const { t } = useLang();
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
+  const backPath = location.pathname.startsWith("/teacher")
+    ? `/teacher/guruhlar/${id}`
+    : `/dashboard/sinflar/${id}`;
 
   const [topic, setTopic] = useState("");
   const [description, setDescription] = useState("");
@@ -74,7 +79,7 @@ export default function ExamCreate() {
       const res = await fetchApi.post("exams", formData);
       if (res.status === 200 || res.status === 201) {
         alert(t("Imtihon muvaffaqiyatli e'lon qilindi!"));
-        navigate(`/dashboard/sinflar/${id}`);
+        navigate(backPath);
       }
     } catch (err) {
       console.error(err);
@@ -118,7 +123,7 @@ export default function ExamCreate() {
         }
 
         .ec-title {
-          font-size: 24px;
+          font-size: 26px;
           font-weight: 700;
           color: #1e293b;
           margin: 0;
@@ -190,8 +195,8 @@ export default function ExamCreate() {
         }
 
         .ec-select:focus, .ec-input:focus {
-          border-color: #10b981;
-          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+          border-color: #7c3aed;
+          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
         }
 
         /* Rich Text Editor Styling */
@@ -204,7 +209,7 @@ export default function ExamCreate() {
         }
 
         .ec-editor-container:focus-within {
-          border-color: #10b981;
+          border-color: #7c3aed;
         }
 
         .ec-editor-toolbar {
@@ -301,8 +306,8 @@ export default function ExamCreate() {
         }
 
         .ec-upload-box:hover {
-          border-color: #10b981;
-          background: #f0fdf4;
+          border-color: #7c3aed;
+          background: #f5f3ff;
         }
 
         .ec-upload-btn-text {
@@ -323,7 +328,7 @@ export default function ExamCreate() {
           align-items: center;
           gap: 6px;
           font-size: 13px;
-          color: #10b981;
+          color: #7c3aed;
           font-weight: 600;
           margin-top: 8px;
         }
@@ -387,12 +392,14 @@ export default function ExamCreate() {
         }
 
         .ec-btn-submit {
-          background: #10b981;
+          background: #7c3aed;
           color: #fff;
+          border-radius: 12px;
+          box-shadow: 0 10px 15px -3px rgba(124,58,237,0.2);
         }
 
         .ec-btn-submit:hover {
-          background: #059669;
+          background: #6d28d9;
         }
 
         .ec-btn-submit:disabled {
@@ -404,7 +411,7 @@ export default function ExamCreate() {
       <div className="ec-container">
         {/* Header */}
         <div className="ec-header">
-          <button className="ec-back-btn" onClick={() => navigate(`/dashboard/sinflar/${id}`)}>
+          <button className="ec-back-btn" onClick={() => navigate(backPath)}>
             <i className="fa-solid fa-chevron-left"></i>
           </button>
           <h1 className="ec-title">{t("Imtihon yaratish")}</h1>
@@ -423,19 +430,13 @@ export default function ExamCreate() {
             <label className="ec-label">
               <span>*</span>{t("Mavzu")}
             </label>
-            <select
-              className="ec-select"
+            <CustomSelect
+              className="ec-select-custom"
               value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              disabled={loading || topicsLoading}
-            >
-              <option value="">{t("Mavzulardan birini tanlang")}</option>
-              {topics.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.topic}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setTopic(val)}
+              options={topics.map(item => ({ value: item.id, label: item.topic }))}
+              placeholder={t("Mavzulardan birini tanlang")}
+            />
           </div>
 
           {/* Izoh Rich text editor */}
@@ -593,7 +594,7 @@ export default function ExamCreate() {
             <button
               type="button"
               className="ec-btn ec-btn-cancel"
-              onClick={() => navigate(`/dashboard/sinflar/${id}`)}
+              onClick={() => navigate(backPath)}
               disabled={loading}
             >
               {t("Bekor qilish")}

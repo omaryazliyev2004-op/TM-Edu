@@ -229,6 +229,21 @@ export default function Talabalar() {
     (g.name || g.nomi || "").toLowerCase().includes(guruhQidiruv.toLowerCase())
   ) || [];
 
+  const normalizePhone = (value) => {
+    const digits = String(value || "").replace(/\D/g, "");
+    if (!digits) return "";
+    if (digits.startsWith("998") && digits.length === 12) return `+${digits}`;
+    if (digits.length === 9) return `+998${digits}`;
+    return value?.startsWith("+") ? `+${digits}` : digits;
+  };
+
+  const phoneForApi = (value) => {
+    const digits = String(value || "").replace(/\D/g, "");
+    if (digits.startsWith("998") && digits.length === 12) return digits.slice(3);
+    if (digits.length >= 9) return digits.slice(-9);
+    return digits;
+  };
+
   // Pagination
   // Active: server-side (?page=&limit=) — qatorlar allaqachon kerakli sahifa.
   // Archive: client-side (hammasi yuklangan).
@@ -250,7 +265,12 @@ export default function Talabalar() {
 
   const create = async () => {
     try {
-      const cleanedPhone = tel.replace(/[^0-9+]/g, "");
+      const displayPhone = normalizePhone(tel);
+      const cleanedPhone = phoneForApi(displayPhone);
+      if (!/^\d{9}$/.test(cleanedPhone)) {
+        alert(t("Telefon raqam +998XXXXXXXXX formatida bo'lishi kerak."));
+        return;
+      }
       const formData = new FormData();
 
       formData.append("full_name", fio);
@@ -271,7 +291,7 @@ export default function Talabalar() {
         .filter((id) => !isNaN(id) && id > 0 && allGroups.some((ag) => ag.id === id));
 
       validGroupIds.forEach((g) => {
-        formData.append("groups[]", g);
+        formData.append("groups", g);
       });
 
       let res;
@@ -364,19 +384,19 @@ export default function Talabalar() {
         .oq-footer { padding: 16px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 12px; }
         
         .oq-label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 8px; }
-        .oq-input { width: 100%; height: 44px; border-radius: 8px; border: 1.5px solid #e2e8f0; padding: 0 14px; font-size: 14px; outline: none; transition: border-color 0.15s; margin-bottom: 16px; background: #fff; }
-        .oq-input:focus { border-color: #765bcf; }
+        .oq-input { width: 100%; height: 44px; border-radius: 8px; border: 1.5px solid #e2e8f0; padding: 0 14px; font-size: 14px; outline: none; transition: border-color 0.15s; margin-bottom: 16px; background: #fff; box-sizing: border-box; }
+        .oq-input:focus { border-color: #7c3aed; }
         
         /* Table styles */
-        .oq-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #eee; table-layout: fixed; }
-        .oq-th { padding: 12px 10px; text-align: left; font-size: 13px; font-weight: 600; color: #888; border-bottom: 1px solid #eee; white-space: nowrap; }
-        .oq-td { padding: 10px; font-size: 13px; color: #444; border-bottom: 1px solid #f5f5f5; vertical-align: middle; white-space: normal; word-break: break-word; overflow-wrap: anywhere; }
+        .oq-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 16px; overflow: hidden; border: none; table-layout: fixed; }
+        .oq-th { padding: 16px 12px; text-align: left; font-size: 13.5px; font-weight: 700; color: #1e293b; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+        .oq-td { padding: 12px; font-size: 14px; font-weight: 500; color: #1e293b; border-bottom: 1px solid #f1f5f9; vertical-align: middle; white-space: normal; word-break: break-word; overflow-wrap: anywhere; }
         .table-row { transition: background 0.15s; }
-        .table-row:hover { background: #fafafa; }
+        .table-row:hover { background: #f8fafc; }
         
         /* Checkbox & badges */
         .custom-cb { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; }
-        .custom-cb.checked { background: #765bcf; border-color: #765bcf; color: #fff; font-size: 10px; }
+        .custom-cb.checked { background: #7c3aed; border-color: #7c3aed; color: #fff; font-size: 10px; }
         
         .badge { display: inline-flex; padding: 4px 8px; border-radius: 6px; border: 1px solid #eee; font-size: 12px; margin-right: 4px; color: #555; background: #f5f5f5; font-weight: 500; white-space: nowrap; }
         .badge-row { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; max-width: 100%; overflow-x: auto; padding-bottom: 4px; }
@@ -388,21 +408,21 @@ export default function Talabalar() {
         .act-btn:hover { background: #f0f0f0; color: #222; }
         
         /* Top buttons */
-        .top-btn { height: 38px; padding: 0 16px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.15s; }
-        .btn-outline { border: 1px solid #e0e0e0; background: #fff; color: #444; }
-        .btn-outline:hover { background: #f5f5f5; }
-        .btn-primary { border: none; background: #765bcf; color: #fff; }
-        .btn-primary:hover { background: #5e48a8; }
+        .top-btn { height: 40px; padding: 0 18px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: 0.15s; }
+        .btn-outline { border: 1px solid #e5e7eb; background: #f9fafb; color: #4b5563; }
+        .btn-outline:hover { background: #f3f4f6; }
+        .btn-primary { border: none; background: #7c3aed; color: #fff; box-shadow: 0 10px 15px -3px rgba(124,58,237,0.2); }
+        .btn-primary:hover { background: #6d28d9; }
         
         .drag-drop { border: 2px dashed #e2e8f0; border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; margin-bottom: 16px; transition: 0.2s; }
-        .drag-drop:hover { border-color: #765bcf; background: #f8f7ff; }
+        .drag-drop:hover { border-color: #7c3aed; background: #f8f7ff; }
 
         /* Modal Overlay & Modal */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 600; opacity: 0; pointer-events: none; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
         .modal-overlay.open { opacity: 1; pointer-events: all; }
         
-        .t-modal { background: #fff; width: 400px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); transform: scale(0.95); transition: 0.3s; padding: 24px; }
-        .modal-overlay.open .t-modal { transform: scale(1); }
+        .oq-modal { background: #fff; width: 420px; max-height: 70vh; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); display: flex; flex-direction: column; transform: scale(0.95); transition: 0.25s; padding: 24px; }
+        .modal-overlay.open .oq-modal { transform: scale(1); }
 
         .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
         .delete-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 700; display: flex; align-items: center; justify-content: center; }
@@ -421,16 +441,16 @@ export default function Talabalar() {
         .guruh-btn {
           width: 100%; min-height: 46px; border-radius: 10px; border: 1.5px dashed #cbd5e1;
           background: #f8f9fc; display: flex; align-items: center; justify-content: center; gap: 8px;
-          color: #765bcf; font-weight: 600; font-size: 14px; cursor: pointer; margin-bottom: 8px;
-          transition: all 0.15s ease;
+          color: #7c3aed; font-weight: 600; font-size: 14px; cursor: pointer; margin-bottom: 8px;
         }
-        .guruh-btn:hover { border-color: #765bcf; background: rgba(118,91,207,0.06); }
-        .guruh-btn.has-selection { border-style: solid; border-color: #765bcf; background: rgba(118,91,207,0.06); }
+        .guruh-btn i { font-size: 16px; }
+        .guruh-btn:hover { border-color: #7c3aed; background: rgba(124,58,237,0.06); }
+        .guruh-btn.has-selection { border-style: solid; border-color: #7c3aed; background: rgba(124,58,237,0.06); }
 
         .guruh-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
         .guruh-chip {
           display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
-          background: rgba(118,91,207,0.1); color: #765bcf; font-size: 13px; font-weight: 600;
+          background: rgba(124,58,237,0.1); color: #7c3aed; font-size: 13px; font-weight: 600;
         }
         .guruh-chip i { cursor: pointer; font-size: 11px; opacity: 0.7; }
         .guruh-chip i:hover { opacity: 1; }
@@ -438,7 +458,7 @@ export default function Talabalar() {
 
       {/* MODAL Overlay (Guruh qoshish) */}
       <div className={`modal-overlay ${modalOpen ? "open" : ""}`}>
-        <div className="t-modal bg-white">
+        <div className="oq-modal bg-white">
           <div className="modal-header">
             <div>
               <h2 className="modal-title">{t("Guruhga biriktirish")}</h2>
@@ -508,7 +528,13 @@ export default function Talabalar() {
         </div>
         <div className="oq-body">
           <label className="oq-label">{t("Telefon raqam")}</label>
-          <input className="oq-input" value={tel} onChange={e => setTel(e.target.value)} />
+          <input
+            className="oq-input"
+            type="tel"
+            placeholder="+998901234567"
+            value={tel}
+            onChange={(e) => setTel(normalizePhone(e.target.value))}
+          />
 
           <label className="oq-label">{t("Mail")}</label>
           <input className="oq-input" type="email" placeholder={t("Elektron pochtani kiriting")} value={email} onChange={e => setEmail(e.target.value)} />
@@ -571,22 +597,22 @@ export default function Talabalar() {
               onChange={(e) => setRasm(e.target.files[0])}
             />
             {rasm ? (
-              <div style={{ color: "#765bcf", fontWeight: 600, fontSize: 14 }}>
+              <div style={{ color: "#7c3aed", fontWeight: 600, fontSize: 14 }}>
                 <i className="fa-solid fa-file-image" style={{ marginRight: 8 }}></i>
                 {rasm.name}
               </div>
             ) : (
               <>
-                <i className="fa-solid fa-arrow-up-from-bracket" style={{ fontSize: 24, color: "#999", marginBottom: 10 }}></i>
-                <div style={{ fontSize: 13, color: "#765bcf", fontWeight: 600 }}>{t("Click to upload")} <span style={{ color: "#888", fontWeight: 400 }}>{t("or drag and drop")}</span></div>
-                <div style={{ fontSize: 12, color: "#999", marginTop: 4 }}>{t("JPG or PNG (max. 2 MB)")}</div>
+                <i className="fa-solid fa-cloud-arrow-up" style={{ fontSize: 28, color: "#aaa", marginBottom: 10 }}></i>
+                <div style={{ fontSize: 13, color: "#7c3aed", fontWeight: 600 }}>{t("Click to upload")} <span style={{ color: "#888", fontWeight: 400 }}>{t("or drag and drop")}</span></div>
+                <div style={{ fontSize: 12, color: "#aaa", marginTop: 4 }}>JPG, PNG (max. 5MB)</div>
               </>
             )}
           </label>
         </div>
         <div className="oq-footer">
           <button className="top-btn btn-outline" onClick={() => setDrawer(false)} style={{ flex: 1, justifyContent: "center" }}>{t("Bekor qilish")}</button>
-          <button className="top-btn btn-primary" onClick={create} style={{ flex: 1, justifyContent: "center", background: "#765bcf", color: "#fff", border: "none" }}>
+          <button className="top-btn btn-primary" onClick={create} style={{ flex: 1, justifyContent: "center", background: "#7c3aed", color: "#fff", border: "none" }}>
             {editingStudent ? t("Yangilash") : t("Saqlash")}
           </button>
         </div>
@@ -594,18 +620,18 @@ export default function Talabalar() {
 
       {/* Page Header */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#222", margin: 0 }}>{t("Talabalar")}</h1>
-          <button className="top-btn btn-primary" onClick={openAddStudent}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1e293b", margin: 0 }}>{t("Talabalar")}</h1>
+          <button className="top-btn btn-primary" onClick={openAddStudent} style={{ height: 44, borderRadius: 12, padding: "0 20px", fontSize: 14, fontWeight: 700 }}>
             <i className="fa-solid fa-plus"></i> {t("Talaba qo'shish")}
           </button>
         </div>
-        <p style={{ fontSize: 14, color: "#666", margin: 0 }}>
+        <p style={{ fontSize: 14, color: "#94a3b8", margin: 0 }}>
           {t("Ushbu sahifada siz Talabalar ro'yxatini va ularning ma'lumotlarini topasiz. Har bir Talaba ismi, fanlari va aloqa ma'lumotlari keltirilgan.")}
         </p>
       </div>
 
-      <div className="bg-white" style={{ border: "1px solid #eee", borderRadius: 12, padding: "16px 20px" }}>
+      <div className="bg-white" style={{ border: "none", borderRadius: 16, padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
         {/* Table Toolbar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ position: "relative" }}>
@@ -619,7 +645,7 @@ export default function Talabalar() {
             <button
               className="top-btn btn-outline"
               onClick={() => { setView(view === "archive" ? "active" : "archive"); setPage(1); }}
-              style={view === "archive" ? { background: "#765bcf", color: "#fff", borderColor: "#765bcf" } : { color: "#666" }}
+              style={view === "archive" ? { background: "#7c3aed", color: "#fff", borderColor: "#7c3aed" } : { color: "#666" }}
             >
               <i className="fa-solid fa-box-archive"></i> {t("Arxiv")}
             </button>
@@ -676,7 +702,7 @@ export default function Talabalar() {
                   </td>
                   <td className="oq-td">
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(118,91,207,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#765bcf", fontSize: 13, overflow: "hidden", flexShrink: 0, position: "relative" }}>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(124,58,237,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#7c3aed", fontSize: 13, overflow: "hidden", flexShrink: 0, position: "relative" }}>
                         {(row.full_name || "?").trim().charAt(0).toUpperCase()}
                         {row.photo && (
                           <img
@@ -729,7 +755,7 @@ export default function Talabalar() {
               <button
                 key={i}
                 onClick={() => typeof p === "number" && setPage(p)}
-                style={{ width: 32, height: 32, borderRadius: 8, border: "none", background: p === safePage ? "rgba(118,91,207,0.1)" : "transparent", color: p === safePage ? "#765bcf" : "#666", fontWeight: p === safePage ? 700 : 500, cursor: p !== "..." ? "pointer" : "default" }}
+                style={{ width: 32, height: 32, borderRadius: 8, border: "none", background: p === safePage ? "rgba(124,58,237,0.1)" : "transparent", color: p === safePage ? "#7c3aed" : "#666", fontWeight: p === safePage ? 700 : 500, cursor: p !== "..." ? "pointer" : "default" }}
               >
                 {p}
               </button>

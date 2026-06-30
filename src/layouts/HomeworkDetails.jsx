@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
 import { useLang } from "../i18n/LanguageContext";
 
@@ -24,6 +24,12 @@ export default function HomeworkDetails() {
   const { t } = useLang();
   const { groupId, homeworkId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isTeacherPath = location.pathname.startsWith("/teacher");
+  const reviewPath = (studentId) =>
+    isTeacherPath
+      ? `/teacher/guruhlar/${groupId}/homework/${homeworkId}/student/${studentId}/review`
+      : `/dashboard/groups/${groupId}/homework/${homeworkId}/student/${studentId}/review`;
   const [homework, setHomework] = useState(null);
   const [resultsByStatus, setResultsByStatus] = useState({
     PENDING: [],
@@ -203,13 +209,21 @@ export default function HomeworkDetails() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`-mb-px flex items-center gap-2 py-3 px-0.5 text-sm font-semibold cursor-pointer border-b-2 whitespace-nowrap transition-colors ${
                     active
-                      ? "text-[#1a1a2e] dark:text-slate-100 border-[#18a957]"
+                      ? "text-[#1a1a2e] dark:text-slate-100 border-[#7c3aed]"
                       : "text-[#8a909c] dark:text-slate-400 border-transparent hover:text-[#1a1a2e] dark:hover:text-slate-100"
                   }`}
                 >
                   {t(tab.label)}
                   {tab.badge && resultsByStatus[tab.key]?.length > 0 && (
-                    <span className="bg-[#ffb420] text-[#1a1a2e] rounded-full px-2 py-px text-xs font-bold min-w-5 text-center">
+                    <span 
+                      className={`text-white rounded-full px-2 py-px text-xs font-bold min-w-5 text-center ${
+                        tab.key === "PENDING" ? "bg-[#3b82f6]" : 
+                        tab.key === "ACCEPTED" ? "bg-[#22c55e]" : 
+                        tab.key === "REJECTED" ? "bg-[#eab308]" : 
+                        tab.key === "CHECKED" ? "bg-[#ef4444]" : 
+                        "bg-[#7c3aed]"
+                      }`}
+                    >
                       {resultsByStatus[tab.key].length}
                     </span>
                   )}
@@ -260,8 +274,16 @@ export default function HomeworkDetails() {
                   const openReview = () => {
                     if (!clickable) return;
                     navigate(
-                      `/dashboard/groups/${groupId}/homework/${homeworkId}/student/${studentId}/review`,
-                      { state: { statusLabel: activeLabel, topic: homework?.topic } }
+                      reviewPath(studentId),
+                      {
+                        state: {
+                          statusLabel: activeLabel,
+                          topic: homework?.topic,
+                          result,
+                          lessonId:
+                            result.lesson_id ?? result.lessonId ?? result.lesson?.id,
+                        },
+                      }
                     );
                   };
 

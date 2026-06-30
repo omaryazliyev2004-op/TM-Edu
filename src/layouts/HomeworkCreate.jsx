@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
 import { useLang } from "../i18n/LanguageContext";
+import CustomSelect from "../components/CustomSelect";
 
 export default function HomeworkCreate() {
   const { t } = useLang();
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
+  const backPath = location.pathname.startsWith("/teacher")
+    ? `/teacher/guruhlar/${id}`
+    : `/dashboard/sinflar/${id}`;
 
   const [topic, setTopic] = useState(0);
   const [description, setDescription] = useState("");
@@ -35,7 +40,7 @@ export default function HomeworkCreate() {
 
       if (res.status === 200 || res.status === 201) {
         // Sahifani qayta yuklamasdan guruh sahifasiga qaytamiz
-        navigate(`/dashboard/sinflar/${id}`);
+        navigate(backPath);
       }
     } catch (error) {
       alert(t("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring."));
@@ -86,27 +91,27 @@ export default function HomeworkCreate() {
         .hw-container { max-width: 800px; margin: 0; }
         .hw-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
         .hw-back { background: none; border: none; font-size: 20px; color: #222; cursor: pointer; padding: 0; }
-        .hw-title { font-size: 22px; font-weight: 700; color: #222; margin: 0; }
+        .hw-title { font-size: 26px; font-weight: 700; color: #1e293b; margin: 0; }
         .hw-field { margin-bottom: 20px; }
         .hw-label { display: block; font-size: 14px; font-weight: 600; color: #222; margin-bottom: 8px; }
         .hw-label span { color: #e53935; }
         .hw-input { width: 100%; height: 42px; border-radius: 8px; border: 1.5px solid #e2e8f0; padding: 0 12px; font-size: 14px; outline: none; background: #fff; box-sizing: border-box; }
-        .hw-input:focus { border-color: #765bcf; }
-        .hw-input[type="select"], .hw-input option { color: #222; }
+        .hw-input:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1); }
+        .hw-input[type="select"], .hw-input option { color: #1e293b; }
         .hw-textarea { width: 100%; min-height: 200px; border-radius: 8px; border: 1.5px solid #e2e8f0; padding: 12px; font-size: 14px; outline: none; resize: vertical; background: #fff; box-sizing: border-box; font-family: inherit; }
-        .hw-textarea:focus { border-color: #765bcf; }
+        .hw-textarea:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1); }
         .hw-upload { border: 2px dashed #ddd; border-radius: 8px; padding: 40px 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa; }
-        .hw-upload:hover { border-color: #765bcf; background: #f5f0ff; }
-        .hw-upload-icon { font-size: 32px; color: #765bcf; margin-bottom: 12px; }
+        .hw-upload:hover { border-color: #7c3aed; background: #f5f3ff; }
+        .hw-upload-icon { font-size: 32px; color: #7c3aed; margin-bottom: 12px; }
         .hw-upload-text { font-size: 14px; color: #666; }
         .hw-file-input { display: none; }
-        .hw-file-name { font-size: 13px; color: #765bcf; font-weight: 600; margin-top: 12px; }
+        .hw-file-name { font-size: 13px; color: #7c3aed; font-weight: 600; margin-top: 12px; }
         .hw-footer { display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end; }
         .hw-btn { height: 38px; padding: 0 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
         .hw-btn-cancel { border: 1px solid #e0e0e0; background: #fff; color: #444; }
         .hw-btn-cancel:hover { background: #f5f5f5; }
-        .hw-btn-submit { background: #16a34a; color: #fff; }
-        .hw-btn-submit:hover { background: #15803d; }
+        .hw-btn-submit { background: #7c3aed; color: #fff; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(124,58,237,0.2); }
+        .hw-btn-submit:hover { background: #6d28d9; }
         .hw-btn-submit:disabled { background: #ccc; cursor: not-allowed; }
       `}</style>
 
@@ -115,7 +120,7 @@ export default function HomeworkCreate() {
         <div className="hw-header">
           <button
             className="hw-back"
-            onClick={() => navigate(`/dashboard/sinflar/${id}`)}
+            onClick={() => navigate(backPath)}
           >
             <i className="fa-solid fa-chevron-left"></i>
           </button>
@@ -127,26 +132,14 @@ export default function HomeworkCreate() {
           <label className="hw-label">
             {t("Mavzu")} <span>*</span>
           </label>
-          <select
-            className="hw-input"
-            style={{
-              appearance: "none",
-              paddingRight: "30px",
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23222' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "right 12px center",
-              backgroundSize: "12px",
-            }}
+          <CustomSelect
+            options={topics.map(item => ({ value: item.id, label: item.topic }))}
             value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-          >
-            <option value="">{t("Mavzulardan birini tanlang")}</option>
-            {topics.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.topic}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => setTopic(val)}
+            placeholder={t("Mavzulardan birini tanlang")}
+            className="hw-input-select"
+            style={{ marginBottom: "14px", height: "auto" }}
+          />
         </div>
 
         <div className="hw-field">
@@ -189,7 +182,7 @@ export default function HomeworkCreate() {
         <div className="hw-footer">
           <button
             className="hw-btn hw-btn-cancel"
-            onClick={() => navigate(`/dashboard/sinflar/${id}`)}
+            onClick={() => navigate(backPath)}
           >
             {t("Bekor qilish")}
           </button>

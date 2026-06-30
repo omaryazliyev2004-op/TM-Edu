@@ -1,12 +1,21 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
 import { useLang } from "../i18n/LanguageContext";
 
 export default function ExamDetails() {
   const { t } = useLang();
   const navigate = useNavigate();
+  const location = useLocation();
   const { groupId, examId } = useParams();
+  const isTeacherPath = location.pathname.startsWith("/teacher");
+  const backPath = isTeacherPath
+    ? `/teacher/guruhlar/${groupId}`
+    : `/dashboard/sinflar/${groupId}`;
+  const reviewPath = (studentId) =>
+    isTeacherPath
+      ? `/teacher/guruhlar/${groupId}/exams/${examId}/student/${studentId}/review`
+      : `/dashboard/groups/${groupId}/exams/${examId}/student/${studentId}/review`;
 
   const [exam, setExam] = useState({
     title: "Examination",
@@ -207,7 +216,7 @@ export default function ExamDetails() {
         }
 
         .ed-title {
-          font-size: 22px;
+          font-size: 26px;
           font-weight: 700;
           color: #1e293b;
           margin: 0;
@@ -216,8 +225,8 @@ export default function ExamDetails() {
         /* Detail Card */
         .ed-card {
           background: #fff;
-          border-radius: 12px;
-          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          border: none;
           box-shadow: 0 1px 3px rgba(0,0,0,0.05);
           overflow: hidden;
           margin-bottom: 24px;
@@ -307,18 +316,22 @@ export default function ExamDetails() {
           left: 0;
           right: 0;
           height: 2.5px;
-          background: #10b981;
+          background: #7c3aed;
           border-radius: 4px;
         }
 
         .ed-badge {
-          background: #fef3c7;
-          color: #d97706;
+          color: #fff;
           font-size: 11px;
           font-weight: 700;
-          padding: 2px 6px;
+          padding: 2px 8px;
           border-radius: 20px;
+          margin-left: 6px;
         }
+        .ed-badge.waiting { background: #3b82f6; }
+        .ed-badge.accepted { background: #22c55e; }
+        .ed-badge.returned { background: #eab308; }
+        .ed-badge.not-submitted { background: #ef4444; }
 
         /* Table Section */
         .ed-table-wrapper {
@@ -349,7 +362,7 @@ export default function ExamDetails() {
         }
 
         .ed-student-link {
-          color: #3b82f6;
+          color: #7c3aed;
           text-decoration: none;
           font-weight: 600;
           cursor: pointer;
@@ -397,7 +410,7 @@ export default function ExamDetails() {
         }
 
         .ed-edit-icon:hover {
-          color: #10b981;
+          color: #7c3aed;
         }
 
         .ed-empty {
@@ -447,7 +460,7 @@ export default function ExamDetails() {
         }
 
         .ed-modal-input:focus {
-          border-color: #10b981;
+          border-color: #7c3aed;
         }
 
         .ed-modal-actions {
@@ -472,7 +485,7 @@ export default function ExamDetails() {
         }
 
         .ed-modal-btn-save {
-          background: #10b981;
+          background: #7c3aed;
           color: #fff;
         }
       `}</style>
@@ -480,7 +493,7 @@ export default function ExamDetails() {
       <div className="ed-container">
         {/* Header */}
         <div className="ed-header">
-          <button className="ed-back-btn" onClick={() => navigate(`/dashboard/sinflar/${groupId}`)}>
+          <button className="ed-back-btn" onClick={() => navigate(backPath)}>
             <i className="fa-solid fa-chevron-left"></i>
           </button>
           <h1 className="ed-title">{exam.title}</h1>
@@ -512,24 +525,28 @@ export default function ExamDetails() {
               onClick={() => setActiveTab("waiting")}
             >
               {t("Kutayotganlar")}
+              {waitingStudents.length > 0 && <span className="ed-badge waiting">{waitingStudents.length}</span>}
             </button>
             <button
               className={`ed-tab-btn ${activeTab === "returned" ? "active" : ""}`}
               onClick={() => setActiveTab("returned")}
             >
               {t("Qaytarilganlar")}
+              {returnedStudents.length > 0 && <span className="ed-badge returned">{returnedStudents.length}</span>}
             </button>
             <button
               className={`ed-tab-btn ${activeTab === "accepted" ? "active" : ""}`}
               onClick={() => setActiveTab("accepted")}
             >
-              {t("Qabul qilinganlar")} <span className="ed-badge">{acceptedStudents.length}</span>
+              {t("Qabul qilinganlar")} 
+              {acceptedStudents.length > 0 && <span className="ed-badge accepted">{acceptedStudents.length}</span>}
             </button>
             <button
               className={`ed-tab-btn ${activeTab === "notSubmitted" ? "active" : ""}`}
               onClick={() => setActiveTab("notSubmitted")}
             >
               {t("Bajarilmagan")}
+              {notSubmittedStudents.length > 0 && <span className="ed-badge not-submitted">{notSubmittedStudents.length}</span>}
             </button>
           </div>
 
@@ -554,7 +571,7 @@ export default function ExamDetails() {
                       <td>
                         <button
                           className="ed-student-link"
-                          onClick={() => navigate(`/dashboard/groups/${groupId}/exams/${examId}/student/${student.id}/review`)}
+                          onClick={() => navigate(reviewPath(student.id))}
                         >
                           {student.name}
                         </button>

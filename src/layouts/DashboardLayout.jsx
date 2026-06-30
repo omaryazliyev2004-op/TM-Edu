@@ -10,15 +10,17 @@ import { useLang } from "../i18n/LanguageContext";
 const boshqarishMenuItems = [
   { icon: "fa-graduation-cap", label: "Kurslar", to: "/dashboard/boshqarish/kurslar" },
   { icon: "fa-door-open", label: "Xonalar", to: "/dashboard/boshqarish/xonalar" },
-  { icon: "fa-users", label: "Hodimlar", to: "/dashboard/boshqarish/hodimlar" },
+  { icon: "fa-building", label: "Filiallar", to: "/dashboard/boshqarish/filiallar" },
+  { icon: "fa-users", label: "Xodimlar", to: "/dashboard/boshqarish/hodimlar" },
+  { icon: "fa-circle-exclamation", label: "Sabablar", to: "/dashboard/boshqarish/sabablar" },
 ];
 
 const navItems = [
-  { icon: "fa-house", label: "Asosiy", to: "/dashboard", end: true },
-  { icon: "fa-user-tie", label: "O'qituvcilar", to: "/dashboard/o'qituvcilar" },
-  { icon: "fa-layer-group", label: "Guruhlar", to: "/dashboard/sinflar" },
-  { icon: "fa-user-graduate", label: "Talabalar", to: "/dashboard/talabalar" },
-  { icon: "fa-gem", label: "Sovg'alar", to: "/dashboard/sovg'alar" },
+  { icon: "fa-solid fa-house",          label: "Asosiy",        to: "/dashboard", end: true },
+  { icon: "fa-solid fa-id-card",        label: "O'qituvchilar", to: "/dashboard/o'qituvcilar" },
+  { icon: "fa-solid fa-users",          label: "Guruhlar",      to: "/dashboard/sinflar" },
+  { icon: "fa-solid fa-graduation-cap", label: "Talabalar",     to: "/dashboard/talabalar" },
+  { icon: "fa-solid fa-gift",           label: "Sov'g'alar",    to: "/dashboard/sovg'alar" },
 ];
 
 export default function DashboardLayout() {
@@ -69,7 +71,7 @@ export default function DashboardLayout() {
           display: flex;
           height: 100vh;
           overflow: hidden;
-          background: #f2f2f2;
+          background: #f1f5f9;
         }
 
         /* ── SIDEBAR ── */
@@ -82,63 +84,72 @@ export default function DashboardLayout() {
         }
         .sidebar-inner {
           height: 100%;
-          padding: 20px 8px 14px;
-          border-radius: 0 16px 16px 0;
+          padding: 0 0 16px 0;
           background: #fff;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
           overflow: hidden;
+          border-right: 1px solid #f3f4f6;
+          box-shadow: 1px 0 0 #f3f4f6;
         }
 
         /* ── TOGGLE BUTTON on sidebar right edge ── */
         .toggle-btn {
           position: absolute;
-          right: -14px;
-          top: 32px;
-          width: 28px; height: 28px;
-          border-radius: 12px;
-          border: 2px solid #e8e8e8;
-          background: #765bcf;
+          right: -16px;
+          top: 51px;
+          width: 32px; height: 32px;
+          border-radius: 50%;
+          border: 1.5px solid rgba(124,58,237,0.15);
+          background: #7c3aed;
           color: #fff;
-          font-size: 11px;
+          font-size: 14px;
           cursor: pointer;
           display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-          transition: background 0.15s, box-shadow 0.15s;
+          box-shadow: 0 4px 12px rgba(124,58,237,0.3);
+          transition: background 0.15s, transform 0.15s;
           z-index: 400;
         }
         .toggle-btn:hover {
-          background: #5e48a8;
-          box-shadow: 0 2px 12px rgba(118,91,207,0.4);
+          background: #6d28d9;
+          transform: scale(1.1);
         }
 
         /* ── NAV ITEM ── */
         .nav-item {
           position: relative;
           width: 100%;
-          height: 42px;
-          padding: 0 10px;
-          border-radius: 10px;
+          height: 54px;
+          padding: 0 16px;
+          border-radius: 16px;
           display: flex;
           align-items: center;
-          gap: 10px;
-          font-size: 13.5px;
+          gap: 14px;
+          font-size: 16px;
           font-weight: 600;
-          color: #555;
+          color: #6b7280;
           text-decoration: none;
-          transition: background 0.15s, color 0.15s;
+          transition: background 0.2s, color 0.2s, transform 0.2s;
           background: none;
           border: none;
           cursor: pointer;
           white-space: nowrap;
           overflow: hidden;
         }
-        .nav-item:hover  { background: rgba(118,91,207,0.07); color: #765bcf; }
+        .nav-item:hover { background: #f5f3ff; color: #7c3aed; transform: translateX(4px); }
         .nav-item.active,
-        .nav-item.bq-active { background: rgba(118,91,207,0.14); color: #765bcf; }
+        .nav-item.bq-active {
+          background: #7c3aed;
+          color: #fff;
+          box-shadow: 0 20px 25px -5px rgba(167,139,250,0.35), 0 8px 10px -6px rgba(124,58,237,0.2);
+          transform: scale(1.02);
+        }
+        .nav-item.active .nav-icon,
+        .nav-item.bq-active .nav-icon { color: #fff; transform: none; }
 
-        .nav-icon { width: 20px; text-align: center; flex-shrink: 0; font-size: 15px; }
+        .nav-icon { width: 20px; text-align: center; flex-shrink: 0; font-size: 20px; color: #6b7280; transition: color 0.2s, transform 0.2s; }
+        .nav-item:hover .nav-icon { color: #7c3aed; transform: scale(1.1); }
 
         .nav-label {
           overflow: hidden;
@@ -193,35 +204,35 @@ export default function DashboardLayout() {
           display: flex;
           flex-direction: column;
         }
-        .side-panel.open { width: 200px; opacity: 1; }
+        .side-panel.open { width: 280px; opacity: 1; }
 
         .panel-header {
           display: flex; align-items: center; justify-content: space-between;
-          padding: 14px 14px 10px 16px;
+          padding: 16px 16px 12px 20px;
           border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
         }
-        .panel-title { font-weight: 700; font-size: 15px; color: #222; }
+        .panel-title { font-weight: 700; font-size: 16px; color: #222; }
         .panel-close-btn {
-          width: 26px; height: 26px; border-radius: 7px; border: none;
-          background: rgba(118,91,207,0.12); color: #765bcf; font-size: 13px;
+          width: 28px; height: 28px; border-radius: 8px; border: none;
+          background: rgba(124,58,237,0.12); color: #7c3aed; font-size: 14px;
           cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
         .panel-items {
-          flex: 1; overflow-y: auto; padding: 8px;
-          display: flex; flex-direction: column; gap: 2px;
+          flex: 1; overflow-y: auto; padding: 12px;
+          display: flex; flex-direction: column; gap: 6px;
         }
         .panel-link {
-          display: flex; align-items: center; gap: 10px;
-          padding: 9px 12px; border-radius: 9px;
-          font-size: 13px; font-weight: 500; color: #444;
+          display: flex; align-items: center; gap: 12px;
+          padding: 10px 14px; border-radius: 10px;
+          font-size: 14px; font-weight: 500; color: #444;
           text-decoration: none; white-space: nowrap;
           transition: background 0.15s, color 0.15s;
         }
-        .panel-link:hover { background: rgba(118,91,207,0.09); color: #765bcf; }
-        .panel-link.active { background: rgba(118,91,207,0.14); color: #765bcf; font-weight: 700; }
+        .panel-link:hover { background: rgba(124,58,237,0.09); color: #7c3aed; }
+        .panel-link.active { background: rgba(124,58,237,0.14); color: #7c3aed; font-weight: 700; }
         .panel-icon-wrap {
-          width: 28px; height: 28px; border-radius: 7px;
-          background: rgba(118,91,207,0.10);
+          width: 32px; height: 32px; border-radius: 8px;
+          background: rgba(124,58,237,0.10);
           display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
         .side-panel-overlay {
@@ -230,53 +241,71 @@ export default function DashboardLayout() {
 
         /* ── OBUNA ── */
         .obuna-box {
-          border: 1px solid rgb(253,219,219); border-radius: 12px;
-          background: rgb(255,239,239); padding: 12px;
-          display: flex; flex-direction: column; gap: 8px;
+          margin: 0 16px 8px;
+          border-radius: 24px;
+          background: rgba(255,247,237,0.6);
+          border: 1px solid rgba(254,215,170,0.5);
+          padding: 20px;
+          display: flex; flex-direction: column; gap: 14px;
           overflow: hidden; flex-shrink: 0;
         }
 
         /* ── MAIN ── */
         .main-content {
           flex: 1; display: flex; flex-direction: column;
-          overflow: hidden; background: #f2f2f2;
+          overflow: hidden; background: #f1f5f9;
         }
         .topbar {
           display: flex; align-items: center; justify-content: space-between;
-          gap: 12px; padding: 4px 20px; flex-shrink: 0;
-          background: #f2f2f2;
-          margin-top: 10px;
+          gap: 12px; padding: 12px 24px; flex-shrink: 0;
+          background: #fff;
+          border-bottom: 1px solid #f3f4f6;
         }
-        .topbar-left { display: flex; align-items: center; gap: 10px; }
-        .topbar-right { display: flex; align-items: center; gap: 10px; }
+        .topbar-left { display: flex; align-items: center; gap: 12px; }
+        .topbar-right { display: flex; align-items: center; gap: 12px; }
         .tb-icon-btn {
-          width: 38px; height: 38px; border-radius: 10px;
-          background: #fff; border: none; cursor: pointer;
+          width: 40px; height: 40px; border-radius: 12px;
+          background: #f9fafb; border: 1px solid #e5e7eb; cursor: pointer;
           display: flex; align-items: center; justify-content: center;
-          color: #555; font-size: 15px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+          color: #4b5563; font-size: 16px;
           transition: background 0.15s;
         }
-        .tb-icon-btn:hover { background: #f0eeff; color: #765bcf; }
+        .tb-icon-btn:hover { background: #f3f4f6; }
+        .tb-icon-btn-sm {
+          width: 36px; height: 36px; border-radius: 12px;
+          background: #f9fafb; border: 1px solid #e5e7eb; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          color: #6b7280; font-size: 15px;
+          transition: background 0.15s;
+          position: relative;
+        }
+        .tb-icon-btn-sm:hover { background: #f3f4f6; }
         .tb-add-btn {
-          height: 38px; padding: 0 16px;
-          border-radius: 10px; border: none;
-          background: #765bcf; color: #fff;
-          font-size: 13.5px; font-weight: 700;
+          height: 40px; padding: 0 20px;
+          border-radius: 12px; border: none;
+          background: #7c3aed; color: #fff;
+          font-size: 13px; font-weight: 800;
           cursor: pointer; display: flex; align-items: center; gap: 8px;
-          transition: background 0.15s;
+          transition: background 0.15s, box-shadow 0.15s;
+          box-shadow: 0 10px 15px -3px rgba(124,58,237,0.2);
         }
-        .tb-add-btn:hover { background: #5e48a8; }
+        .tb-add-btn:hover { background: #6d28d9; box-shadow: 0 10px 15px -3px rgba(109,40,217,0.3); }
+        .tb-search-wrap {
+          display: flex; align-items: center; gap: 8px;
+          padding: 0 12px;
+          border-radius: 12px; border: 1px solid #e5e7eb;
+          background: #fff; height: 40px; width: 240px;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+          transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .tb-search-wrap:focus-within { border-color: #c4b5fd; box-shadow: 0 0 0 4px rgba(124,58,237,0.07); }
         .tb-search {
-          height: 38px; width: 200px;
-          border-radius: 10px; border: 1.5px solid #eee;
-          background: #fff; padding: 0 14px 0 36px;
-          font-size: 13px; color: #555; outline: none;
-          transition: border-color 0.15s;
+          width: 100%; border: none; outline: none;
+          font-size: 14.5px; color: #111; background: transparent;
+          font-weight: 500;
         }
-        .tb-search:focus { border-color: #765bcf; }
-        .tb-search-wrap { position: relative; }
-        .tb-search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 13px; pointer-events: none; }
+        .tb-search::placeholder { color: #9ca3af; }
+        .tb-search-icon { color: #9ca3af; font-size: 13px; flex-shrink: 0; }
         .page-content { flex: 1; overflow-y: auto; padding: 16px 20px 20px; }
       `}</style>
 
@@ -288,24 +317,27 @@ export default function DashboardLayout() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               {/* Logo */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, paddingLeft: 2, overflow: "hidden" }}>
-                <img style={{ width: 36, height: 36, flexShrink: 0, borderRadius: 10 }} src="/logoedu.png" alt="" />
+              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "28px 20px 20px", overflow: "hidden" }}>
+                <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 16, background: "#ede9fe", display: "flex", alignItems: "center", justifyContent: "center", color: "#7c3aed", fontSize: 24, boxShadow: "0 2px 8px rgba(124,58,237,0.15)" }}>
+                  <i className="fa-solid fa-graduation-cap"></i>
+                </div>
                 <span style={{
-                  fontWeight: 700, fontSize: 17, color: "#765bcf", whiteSpace: "nowrap",
+                  fontWeight: 800, fontSize: 22, color: "#1f2d5a", whiteSpace: "nowrap", letterSpacing: "-0.5px",
                   opacity: collapsed ? 0 : 1, maxWidth: collapsed ? 0 : 180, overflow: "hidden",
                   transition: "opacity 0.2s, max-width 0.28s"
-                }}>EduCoin</span>
+                }}>TM-Edu</span>
               </div>
 
+            <div style={{ flex: 1, padding: "0 12px", display: "flex", flexDirection: "column", gap: 6 }}>
               {/* Nav items */}
               {navItems.map((item, idx) => (
                 <NavLink
                   key={idx}
                   to={item.to}
                   end={item.end}
-                  className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}
+                  className={({ isActive }) => `nav-item${isActive && !isBoshqarish ? " active" : ""}`}
                 >
-                  <i className={`fa-solid ${item.icon} nav-icon`}></i>
+                  <i className={`${item.icon} nav-icon`}></i>
                   <span className="nav-label">{t(item.label)}</span>
                   <span className="nav-tip">{t(item.label)}</span>
                 </NavLink>
@@ -316,31 +348,38 @@ export default function DashboardLayout() {
                 onClick={() => setBoshqarishOpen(o => !o)}
                 className={`nav-item${isBoshqarish ? " bq-active" : ""}`}
               >
-                <i className="fa-solid fa-gear nav-icon"></i>
+                <i className="fa-solid fa-table-columns nav-icon"></i>
                 <span className="nav-label">{t("Boshqarish")}</span>
                 <span className="nav-tip">{t("Boshqarish")}</span>
                 <i className={`fa-solid fa-chevron-right chevron${boshqarishOpen ? " open" : ""}`}></i>
               </button>
             </div>
+            </div>
 
             {/* Obuna box */}
             {!collapsed && (
               <div className="obuna-box">
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 26, flexShrink: 0 }}>🔔</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 16, background: "#fed7aa", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#f97316", boxShadow: "0 2px 8px rgba(249,115,22,0.15)" }}>
+                    <i className="fa-solid fa-clipboard-list" style={{ fontSize: 22 }}></i>
+                  </div>
                   <div>
-                    <p style={{ fontWeight: 600, fontSize: 14, margin: 0, color: "#222" }}>{t("Obuna")}</p>
-                    <p style={{ fontSize: 12, margin: 0, color: "#e53935" }}>{t("Obunangiz tugagan")}</p>
+                    <p style={{ fontWeight: 700, fontSize: 15.5, margin: "0 0 2px", color: "#1e293b", lineHeight: 1.2 }}>{t("Obuna")}</p>
+                    <p style={{ fontSize: 13.5, margin: 0, color: "#f97316", fontWeight: 600 }}>{t("Obunangiz tugagan")}</p>
                   </div>
                 </div>
-                <div style={{
-                  height: 36, borderRadius: 10, background: "rgb(222,76,43)",
-                  color: "#fff", display: "flex", alignItems: "center",
-                  justifyContent: "center", gap: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
-                }}>
-                  <i className="fa-solid fa-arrow-rotate-right"></i>
+                <button style={{
+                  width: "100%", height: 48, borderRadius: 16, background: "#f97316",
+                  color: "#fff", display: "flex", alignItems: "center", border: "none",
+                  justifyContent: "center", gap: 8, fontSize: 14.5, fontWeight: 700, cursor: "pointer",
+                  boxShadow: "0 4px 12px rgba(249,115,22,0.25)", transition: "background 0.15s, transform 0.15s"
+                }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#ea580c"}
+                  onMouseLeave={e => e.currentTarget.style.background = "#f97316"}
+                >
+                  <i className="fa-solid fa-bolt"></i>
                   {t("Obunani yangilash")}
-                </div>
+                </button>
               </div>
             )}
           </div>
@@ -395,51 +434,67 @@ export default function DashboardLayout() {
               </button>
 
               <div className="tb-search-wrap">
-                <i className="fa-solid fa-magnifying-glass"></i>
+                <i className="fa-solid fa-magnifying-glass tb-search-icon"></i>
                 <input className="tb-search" placeholder={t("Qidirish...")} />
               </div>
             </div>
 
             {/* Right side */}
             <div className="topbar-right">
-              <FormControl>
-                <InputLabel id="lang-label"></InputLabel>
-                <Select
-                  labelId="lang-label"
-                  id="lang-select"
-                  value={lang}
-                  onChange={(e) => changeLang(e.target.value)}
-                  sx={{ width: 150, height: 38, bgcolor: "white", borderRadius: "10px" }}
-                >
-                  <MenuItem value="uz">O'zbekcha</MenuItem>
-                  <MenuItem value="ru">Ruscha</MenuItem>
-                  <MenuItem value="en">Ingilischa</MenuItem>
-                </Select>
-              </FormControl>
-
-              <button className="tb-icon-btn">
-                <i className="fa-regular fa-bell"></i>
-              </button>
-
-              <div
-                style={{
-                  backgroundColor: isDark ? "#fff" : "#3b4358",
-                  width: 38, height: 38, borderRadius: 12,
-                  display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-                  transition: "all 0.3s ease"
-                }}
-                onClick={() => setIsDark(!isDark)}
-              >
-                <i className={`fa-regular ${isDark ? "fa-sun" : "fa-moon"}`} style={{ color: isDark ? "#f59e0b" : "#fff", fontSize: 18 }}></i>
+              {/* Til tanlash */}
+              <div style={{ position: "relative" }}>
+                <i className="fa-solid fa-globe" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#6b7280", zIndex: 1, pointerEvents: "none", fontSize: 14 }}></i>
+                <FormControl>
+                  <Select
+                    value={lang}
+                    onChange={(e) => changeLang(e.target.value)}
+                    IconComponent={() => <i className="fa-solid fa-chevron-down" style={{ position: "absolute", right: 12, color: "#9ca3af", fontSize: 11, pointerEvents: "none" }}></i>}
+                    sx={{
+                      width: 155, height: 36, bgcolor: "#f9fafb", borderRadius: "12px", border: "1px solid #e5e7eb",
+                      '& .MuiSelect-select': { paddingLeft: "36px !important", fontSize: "13px", fontWeight: 600, color: "#4b5563", paddingRight: "32px !important" },
+                      '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                      '&:hover': { bgcolor: "#f3f4f6" }
+                    }}
+                  >
+                    <MenuItem value="uz" sx={{ fontSize: 13, fontWeight: 600 }}>O'zbekcha</MenuItem>
+                    <MenuItem value="ru" sx={{ fontSize: 13, fontWeight: 600 }}>Ruscha</MenuItem>
+                    <MenuItem value="en" sx={{ fontSize: 13, fontWeight: 600 }}>Inglizcha</MenuItem>
+                  </Select>
+                </FormControl>
               </div>
 
+              {/* Bell */}
+              <button className="tb-icon-btn-sm" style={{ position: "relative" }}>
+                <i className="fa-regular fa-bell"></i>
+                <span style={{ position: "absolute", top: 9, right: 9, width: 7, height: 7, background: "#ef4444", borderRadius: "50%", border: "1.5px solid #fff" }}></span>
+              </button>
+
+              {/* Dark mode */}
+              <button
+                className="tb-icon-btn-sm"
+                onClick={() => setIsDark(!isDark)}
+                style={{
+                  background: isDark ? "#0f172a" : "#f9fafb",
+                  borderColor: isDark ? "#0f172a" : "#e5e7eb",
+                  color: isDark ? "#fff" : "#6b7280"
+                }}
+              >
+                <i className={`fa-regular ${isDark ? "fa-sun" : "fa-moon"}`} style={{ color: isDark ? "#fbbf24" : "#6b7280" }}></i>
+              </button>
+
+              {/* Profile */}
               <div ref={profileRef} style={{ position: "relative" }}>
-                <Avatar
-                  alt="User"
-                  src="/logoedu.png"
-                  sx={{ width: 36, height: 36, cursor: "pointer" }}
+                <div
                   onClick={() => setProfileOpen((o) => !o)}
-                />
+                  style={{
+                    width: 36, height: 36, borderRadius: 12,
+                    background: "#7c3aed", color: "#fff",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontWeight: 700, fontSize: 13, cursor: "pointer"
+                  }}
+                >
+                  A
+                </div>
                 {profileOpen && (
                   <div
                     style={{
@@ -448,35 +503,28 @@ export default function DashboardLayout() {
                       right: 0,
                       minWidth: 160,
                       background: "#fff",
-                      borderRadius: 10,
-                      boxShadow: "0 8px 24px rgba(0,0,0,0.14)",
-                      border: "1px solid #eee",
-                      padding: 6,
+                      borderRadius: 16,
+                      boxShadow: "0 10px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04)",
+                      border: "1px solid #f3f4f6",
+                      padding: 4,
                       zIndex: 1000,
                     }}
                   >
+                    <div style={{ padding: "10px 12px", fontSize: 14.5, fontWeight: 700, color: "#1f2937", borderBottom: "1px solid #f9fafb", marginBottom: 4 }}>Admin</div>
                     <button
                       onClick={handleLogout}
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        width: "100%",
-                        padding: "10px 12px",
-                        border: "none",
-                        background: "transparent",
-                        borderRadius: 8,
-                        cursor: "pointer",
-                        fontSize: 14,
-                        fontWeight: 600,
-                        color: "#e53935",
-                        textAlign: "left",
+                        display: "flex", alignItems: "center", gap: 10,
+                        width: "100%", padding: "10px 12px",
+                        border: "none", background: "transparent",
+                        borderRadius: 10, cursor: "pointer",
+                        fontSize: 12, fontWeight: 600, color: "#ef4444", textAlign: "left",
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "#fdecea")}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#fef2f2")}
                       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                     >
                       <i className="fa-solid fa-right-from-bracket"></i>
-                      Log out
+                      Chiqish
                     </button>
                   </div>
                 )}
