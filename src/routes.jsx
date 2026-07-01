@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
-import Login from "./layouts/Login";
+import Login from "./layouts/login";
 import Dashboard from "./layouts/DashboardLayout";
 import Asosiy from "./layouts/Dashboard";
 import Oqituvchilar from "./layouts/Teachers";
