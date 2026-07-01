@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
-import { useLang } from "../i18n/LanguageContext";
 import CustomSelect from "../components/CustomSelect";
 
 export default function ExamCreate() {
-  const { t } = useLang();
-  const navigate = useNavigate();
+const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
   const backPath = location.pathname.startsWith("/teacher")
@@ -60,7 +58,7 @@ export default function ExamCreate() {
   const createExam = async () => {
     const cleanDesc = description.replace(/<[^>]*>/g, "").trim();
     if (!topic || !cleanDesc || !deadlineDate || !deadlineTime) {
-      alert(t("Iltimos, barcha majburiy maydonlarni to'ldiring!"));
+      alert("Iltimos, barcha majburiy maydonlarni to'ldiring!");
       return;
     }
 
@@ -78,12 +76,12 @@ export default function ExamCreate() {
 
       const res = await fetchApi.post("exams", formData);
       if (res.status === 200 || res.status === 201) {
-        alert(t("Imtihon muvaffaqiyatli e'lon qilindi!"));
+        alert("Imtihon muvaffaqiyatli e'lon qilindi!");
         navigate(backPath);
       }
     } catch (err) {
       console.error(err);
-      const msg = err.response?.data?.message || err.response?.data?.error || t("Xatolik yuz berdi.");
+      const msg = err.response?.data?.message || err.response?.data?.error || "Xatolik yuz berdi.";
       alert(msg);
     } finally {
       setLoading(false);
@@ -414,13 +412,13 @@ export default function ExamCreate() {
           <button className="ec-back-btn" onClick={() => navigate(backPath)}>
             <i className="fa-solid fa-chevron-left"></i>
           </button>
-          <h1 className="ec-title">{t("Imtihon yaratish")}</h1>
+          <h1 className="ec-title">{"Imtihon yaratish"}</h1>
         </div>
 
         {/* Info box */}
         <div className="ec-info-box">
           <i className="fa-solid fa-circle-info"></i>
-          <span>{t("Oxirgi 7 kundagi uyga vazifa berilmagan mavzularni tanlay olasiz!")}</span>
+          <span>{"Oxirgi 7 kundagi uyga vazifa berilmagan mavzularni tanlay olasiz!"}</span>
         </div>
 
         {/* Form */}
@@ -428,21 +426,21 @@ export default function ExamCreate() {
           {/* Mavzu dropdown */}
           <div className="ec-field">
             <label className="ec-label">
-              <span>*</span>{t("Mavzu")}
+              <span>*</span>{"Mavzu"}
             </label>
             <CustomSelect
               className="ec-select-custom"
               value={topic}
               onChange={(val) => setTopic(val)}
               options={topics.map(item => ({ value: item.id, label: item.topic }))}
-              placeholder={t("Mavzulardan birini tanlang")}
+              placeholder={"Mavzulardan birini tanlang"}
             />
           </div>
 
           {/* Izoh Rich text editor */}
           <div className="ec-field">
             <label className="ec-label">
-              <span>*</span>{t("Izoh")}
+              <span>*</span>{"Izoh"}
             </label>
             <div className="ec-editor-container">
               {/* Toolbar */}
@@ -508,7 +506,7 @@ export default function ExamCreate() {
                   type="button" 
                   className="ec-tb-btn" 
                   onClick={() => {
-                    const url = prompt(t("Link manzilini kiriting:"));
+                    const url = prompt("Link manzilini kiriting:");
                     if (url) execCmd("createLink", url);
                   }}
                 >
@@ -522,7 +520,7 @@ export default function ExamCreate() {
                 className="ec-editor-area"
                 contentEditable={true}
                 onInput={handleEditorInput}
-                placeholder={t("Izoh kiriting...")}
+                placeholder={"Izoh kiriting..."}
                 style={{ minHeight: "150px" }}
               />
             </div>
@@ -543,7 +541,7 @@ export default function ExamCreate() {
             <div className="ec-upload-box" onClick={() => document.getElementById("ec-file-input").click()}>
               <div className="ec-upload-btn-text">
                 <i className="fa-solid fa-arrow-down-to-bracket"></i>
-                {t("Yuklash")}
+                {"Yuklash"}
               </div>
               {file && (
                 <div className="ec-file-info">
@@ -559,7 +557,7 @@ export default function ExamCreate() {
             {/* Tugash sanasi */}
             <div className="ec-field">
               <label className="ec-label">
-                <span>*</span>{t("Tugash sanasi")}
+                <span>*</span>{"Tugash sanasi"}
               </label>
               <div className="ec-input-wrapper">
                 <input
@@ -575,7 +573,7 @@ export default function ExamCreate() {
             {/* Tugash vaqti */}
             <div className="ec-field">
               <label className="ec-label">
-                <span>*</span>{t("Tugash vaqti")}
+                <span>*</span>{"Tugash vaqti"}
               </label>
               <div className="ec-input-wrapper">
                 <input
@@ -597,7 +595,7 @@ export default function ExamCreate() {
               onClick={() => navigate(backPath)}
               disabled={loading}
             >
-              {t("Bekor qilish")}
+              {"Bekor qilish"}
             </button>
             <button
               type="button"
@@ -605,7 +603,7 @@ export default function ExamCreate() {
               onClick={createExam}
               disabled={loading || !topic || !description.trim() || !deadlineDate || !deadlineTime}
             >
-              {loading ? t("Saqlanmoqda...") : t("E'lon qilish")}
+              {loading ? "Saqlanmoqda..." : "E'lon qilish"}
             </button>
           </div>
         </div>

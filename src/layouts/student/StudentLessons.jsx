@@ -1,8 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { fetchApi } from "../../api/user.api";
-import { useLang } from "../../i18n/LanguageContext";
-
 const UZ_MONTHS = [
   "Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun",
   "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr",
@@ -40,14 +38,26 @@ export default function StudentLessons() {
   const { groupId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useLang();
-
-  const groupName = location.state?.groupName || "";
+const groupName = location.state?.groupName || "";
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("Barchasi");
   const [sortBy, setSortBy] = useState("created_at"); // created_at | deadline
   const [sortDir, setSortDir] = useState("desc");
+
+  // Custom select uchun holat
+  const [selectOpen, setSelectOpen] = useState(false);
+  const selectRef = useRef(null);
+
+  useEffect(() => {
+    function onClickOutside(e) {
+      if (selectRef.current && !selectRef.current.contains(e.target)) {
+        setSelectOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -62,10 +72,11 @@ export default function StudentLessons() {
     return () => { alive = false; };
   }, [groupId]);
 
-  const statuses = useMemo(
-    () => ["Barchasi", ...Array.from(new Set(lessons.map((l) => l.status).filter(Boolean)))],
-    [lessons]
-  );
+  const statuses = useMemo(() => {
+    const fromData = Array.from(new Set(lessons.map((l) => l.status).filter(Boolean)));
+    const merged = Array.from(new Set([...fromData, "Bajarilmagan"]));
+    return ["Barchasi", ...merged];
+  }, [lessons]);
 
   // Tugash vaqti = dars yaratilgan vaqt + 20 soat
   const deadlineOf = (l) => {
@@ -112,14 +123,31 @@ export default function StudentLessons() {
 
         .sl-filter-wrap { margin-bottom:8px; }
         .sl-filter-label { font-size:14px; color:#888; margin:0 0 8px 2px; }
-        .sl-select {
-          appearance:none; width:230px; height:46px; padding:0 40px 0 16px;
-          border:1px solid #e3e6ea; border-radius:10px; background:#fff; cursor:pointer;
-          font-size:15px; color:#333; outline:none;
-          background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");
-          background-repeat:no-repeat; background-position:right 14px center;
+
+        .sl-select-wrap { position:relative; width:230px; }
+        .sl-select-btn {
+          width:100%; height:46px; padding:0 40px 0 16px; border:1px solid #e3e6ea; border-radius:10px;
+          background:#fff; cursor:pointer; font-size:15px; color:#333; outline:none;
+          display:flex; align-items:center; justify-content:space-between; transition:border-color .15s;
         }
-        .sl-select:focus { border-color:#7c3aed; }
+        .sl-select-btn:hover { border-color:#c9c2f0; }
+        .sl-select-btn:focus { border-color:#7c3aed; }
+        .sl-select-chevron { color:#888; font-size:12px; transition:transform .15s; }
+        .sl-select-chevron.open { transform:rotate(180deg); }
+        .sl-select-list {
+          position:absolute; top:calc(100% + 6px); left:0; width:100%; background:#fff;
+          border:1px solid #e3e6ea; border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.1);
+          z-index:20; overflow:hidden; padding:6px;
+          animation:sl-select-fade .12s ease;
+        }
+        @keyframes sl-select-fade { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+        .sl-select-option {
+          display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px;
+          font-size:14.5px; color:#333; cursor:pointer; transition:background .12s;
+        }
+        .sl-select-option:hover { background:#f5f3ff; }
+        .sl-select-option.selected { background:#ede9fe; font-weight:600; }
+        .sl-select-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 
         .sl-wrap { background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.05); margin-top:14px; }
         .sl-table { width:100%; border-collapse:collapse; }
@@ -145,39 +173,57 @@ export default function StudentLessons() {
       `}</style>
 
       <div className="sl-head">
-        <button className="sl-back" onClick={() => navigate(-1)} title={t("Orqaga")}>
+        <button className="sl-back" onClick={() => navigate(-1)} title={"Orqaga"}>
           <i className="fa-solid fa-arrow-left"></i>
         </button>
-        <h1 className="sl-title">{groupName || t("Darslar")}</h1>
+        <h1 className="sl-title">{groupName || "Darslar"}</h1>
       </div>
 
       <div className="sl-filter-wrap">
-        <p className="sl-filter-label">{t("Uy vazifa statusi")}</p>
-        <select className="sl-select" value={filter} onChange={(e) => setFilter(e.target.value)}>
-          {statuses.map((s) => (
-            <option key={s} value={s}>{s === "Barchasi" ? t("Barchasi") : s}</option>
-          ))}
-        </select>
+        <p className="sl-filter-label">{"Uy vazifa statusi"}</p>
+        <div className="sl-select-wrap" ref={selectRef}>
+          <button type="button" className="sl-select-btn" onClick={() => setSelectOpen((o) => !o)}>
+            <span>{filter}</span>
+            <i className={`fa-solid fa-chevron-down sl-select-chevron${selectOpen ? " open" : ""}`}></i>
+          </button>
+          {selectOpen && (
+            <div className="sl-select-list">
+              {statuses.map((s) => {
+                const dotColor = s === "Barchasi" ? "#9ca3af" : statusStyle(s).bg;
+                return (
+                  <div
+                    key={s}
+                    className={`sl-select-option${filter === s ? " selected" : ""}`}
+                    onClick={() => { setFilter(s); setSelectOpen(false); }}
+                  >
+                    <span className="sl-select-dot" style={{ background: dotColor }}></span>
+                    {s}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="sl-wrap">
         {loading ? (
-          <div className="sl-empty">{t("Yuklanmoqda...")}</div>
+          <div className="sl-empty">{"Yuklanmoqda..."}</div>
         ) : view.length === 0 ? (
-          <div className="sl-empty">{t("Darslar topilmadi")}</div>
+          <div className="sl-empty">{"Darslar topilmadi"}</div>
         ) : (
           <table className="sl-table">
             <thead>
               <tr>
-                <th>{t("Mavzular")}</th>
-                <th>{t("Video")}</th>
-                <th>{t("Uyga vazifa Holati")}</th>
+                <th>{"Mavzular"}</th>
+                <th>{"Video"}</th>
+                <th>{"Uyga vazifa Holati"}</th>
                 <th className="sortable" onClick={() => toggleSort("deadline")}>
-                  {t("Uyga vazifa tugash vaqti")}
+                  {"Uyga vazifa tugash vaqti"}
                   <i className={`fa-solid ${sortIcon("deadline")}`}></i>
                 </th>
                 <th className="sortable" onClick={() => toggleSort("created_at")}>
-                  {t("Dars sanasi")}
+                  {"Dars sanasi"}
                   <i className={`fa-solid ${sortIcon("created_at")}`}></i>
                 </th>
               </tr>
@@ -210,7 +256,7 @@ export default function StudentLessons() {
                     </td>
                     <td>
                       {isExam ? (
-                        <span className="sl-exam">{t("Imtihon")}</span>
+                        <span className="sl-exam">{"Imtihon"}</span>
                       ) : (
                         <span className="sl-video">{l.videoCount ?? 0}</span>
                       )}

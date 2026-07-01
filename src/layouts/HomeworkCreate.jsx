@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
-import { useLang } from "../i18n/LanguageContext";
 import CustomSelect from "../components/CustomSelect";
 
 export default function HomeworkCreate() {
-  const { t } = useLang();
-  const navigate = useNavigate();
+const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
   const backPath = location.pathname.startsWith("/teacher")
@@ -22,7 +20,7 @@ export default function HomeworkCreate() {
 
   const create = async () => {
      if (!topic.trim() || !description.trim()) {
-        alert(t("Mavzu va izoh majburiy maydonlar"));
+        alert("Mavzu va izoh majburiy maydonlar");
         return;
       }
 
@@ -43,7 +41,7 @@ export default function HomeworkCreate() {
         navigate(backPath);
       }
     } catch (error) {
-      alert(t("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring."));
+      alert("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring.");
       console.log(error);
     }
   };
@@ -124,19 +122,19 @@ export default function HomeworkCreate() {
           >
             <i className="fa-solid fa-chevron-left"></i>
           </button>
-          <h1 className="hw-title">{t("Yangi uyga vazifa yaratish")}</h1>
+          <h1 className="hw-title">{"Yangi uyga vazifa yaratish"}</h1>
         </div>
 
         {/* Form */}
         <div className="hw-field">
           <label className="hw-label">
-            {t("Mavzu")} <span>*</span>
+            {"Mavzu"} <span>*</span>
           </label>
           <CustomSelect
             options={topics.map(item => ({ value: item.id, label: item.topic }))}
             value={topic}
             onChange={(val) => setTopic(val)}
-            placeholder={t("Mavzulardan birini tanlang")}
+            placeholder={"Mavzulardan birini tanlang"}
             className="hw-input-select"
             style={{ marginBottom: "14px", height: "auto" }}
           />
@@ -144,11 +142,11 @@ export default function HomeworkCreate() {
 
         <div className="hw-field">
           <label className="hw-label">
-            {t("Izoh")} <span>*</span>
+            {"Izoh"} <span>*</span>
           </label>
           <textarea
             className="hw-textarea"
-            placeholder={t("Vazifa haqida qo'shimcha ma'lumot kiriting...")}
+            placeholder={"Vazifa haqida qo'shimcha ma'lumot kiriting..."}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -166,7 +164,7 @@ export default function HomeworkCreate() {
               <i className="fa-solid fa-cloud-arrow-up"></i>
             </div>
             <div className="hw-upload-text">
-              {t("Faylni tanlash yoki shu yerga tashlang")}
+              {"Faylni tanlash yoki shu yerga tashlang"}
             </div>
             {file && <div className="hw-file-name">{file.name}</div>}
             <input
@@ -184,14 +182,14 @@ export default function HomeworkCreate() {
             className="hw-btn hw-btn-cancel"
             onClick={() => navigate(backPath)}
           >
-            {t("Bekor qilish")}
+            {"Bekor qilish"}
           </button>
           <button
             className="hw-btn hw-btn-submit"
             onClick={create}
             disabled={loading}
           >
-            {loading ? t("Saqlashyapti...") : t("E'lon qilish")}
+            {loading ? "Saqlashyapti..." : "E'lon qilish"}
           </button>
         </div>
       </div>

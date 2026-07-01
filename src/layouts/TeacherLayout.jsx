@@ -1,20 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useLang } from "../i18n/LanguageContext";
 
 export default function TeacherLayout() {
   const navigate = useNavigate();
-  const { lang, changeLang, t } = useLang();
   const [collapsed, setCollapsed] = useState(false);
   const [groupOpen, setGroupOpen] = useState(true);
-  const [isDark, setIsDark] = useState(() => localStorage.getItem("theme") === "dark");
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
-
-  useEffect(() => {
-    document.body.classList.toggle("dark", isDark);
-    localStorage.setItem("theme", isDark ? "dark" : "light");
-  }, [isDark]);
 
   useEffect(() => {
     if (!profileOpen) return;
@@ -102,22 +94,22 @@ export default function TeacherLayout() {
           <div className="tl-sidebar-inner">
             <div className="tl-group-head" onClick={() => setGroupOpen((o) => !o)}>
               <i className="fa-regular fa-user"></i>
-              <span>{t("Guruhlar")}</span>
+              <span>{"Guruhlar"}</span>
               <i className={`fa-solid fa-chevron-${groupOpen ? "up" : "down"} tl-chev`}></i>
             </div>
             {groupOpen && (
               <div className="tl-sub">
                 <NavLink to="/teacher/guruhlar" className={({ isActive }) => `tl-subitem${isActive ? " active" : ""}`}>
-                  {t("Guruhlar")}
+                  {"Guruhlar"}
                 </NavLink>
                 <NavLink to="/teacher/planned-groups" className={({ isActive }) => `tl-subitem${isActive ? " active" : ""}`}>
-                  {t("Yig'ilayotgan guruhlar")}
+                  {"Yig'ilayotgan guruhlar"}
                 </NavLink>
               </div>
             )}
             <NavLink to="/teacher/profil" className={({ isActive }) => `tl-item${isActive ? " active" : ""}`}>
               <i className="fa-regular fa-circle-user"></i>
-              <span>{t("Profil")}</span>
+              <span>{"Profil"}</span>
             </NavLink>
           </div>
         </aside>
@@ -129,40 +121,36 @@ export default function TeacherLayout() {
             </button>
             <button className="tl-iconbtn"><i className="fa-regular fa-calendar"></i></button>
             <button className="tl-add">
-              <i className="fa-solid fa-plus"></i> {t("Qo'shish")}
+              <i className="fa-solid fa-plus"></i> {"Qo'shish"}
               <i className="fa-solid fa-chevron-down" style={{ fontSize: 11 }}></i>
             </button>
             <div className="tl-search">
               <i className="fa-solid fa-magnifying-glass"></i>
-              <input placeholder={t("Qidirish...")} />
+              <input placeholder={"Qidirish..."} />
             </div>
 
             <div className="tl-spacer" />
 
             <div className="tl-right">
-              <div className="tl-lang-wrap">
-                <i className="fa-solid fa-globe globe"></i>
-                <select className="tl-lang" value={lang} onChange={(e) => changeLang(e.target.value)}>
-                  <option value="uz">O'zbekcha</option>
-                  <option value="ru">Ruscha</option>
-                  <option value="en">Inglizcha</option>
-                </select>
-                <i className="fa-solid fa-chevron-down chev"></i>
-              </div>
+              {/* Til icon (dekorativ) */}
+              <button className="tl-ghost" style={{ cursor: "default" }} disabled>
+                <i className="fa-solid fa-globe"></i>
+              </button>
               <button className="tl-ghost">
                 <i className="fa-regular fa-bell"></i>
                 <span className="tl-badge"></span>
               </button>
-              <button className="tl-ghost" onClick={() => setIsDark((d) => !d)}>
-                <i className={`fa-${isDark ? "solid fa-sun" : "regular fa-moon"}`}></i>
+              {/* Dark mode icon (dekorativ) */}
+              <button className="tl-ghost" style={{ cursor: "default" }} disabled>
+                <i className="fa-regular fa-moon"></i>
               </button>
               <div className="tl-profile" ref={profileRef}>
                 <div className="tl-avatar" onClick={() => setProfileOpen((o) => !o)}>O</div>
                 {profileOpen && (
                   <div className="tl-menu">
-                    <div className="tl-role">{t("O'qituvchi")}</div>
+                    <div className="tl-role">{"O'qituvchi"}</div>
                     <button className="tl-logout" onClick={handleLogout}>
-                      {t("Chiqish")}
+                      {"Chiqish"}
                     </button>
                   </div>
                 )}

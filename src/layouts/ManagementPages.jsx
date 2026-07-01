@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchApi } from "../api/user.api";
-import { useLang } from "../i18n/LanguageContext";
-
 export function Xonalar() {
-  const { t } = useLang();
-  const [users, setUsers] = useState([]);
+const [users, setUsers] = useState([]);
   const [view, setView] = useState("active"); // "active" | "archive"
   const [archived, setArchived] = useState([]);
   const [archiveLoading, setArchiveLoading] = useState(false);
@@ -83,7 +80,7 @@ export function Xonalar() {
         }
       }
     } catch (error) {
-      alert(t("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring."));
+      alert("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring.");
       console.log(error);
     }
   };
@@ -125,7 +122,7 @@ export function Xonalar() {
         setDeleteId(null);
       }
     } catch (error) {
-      alert(t("Xatolik yuz berdi."));
+      alert("Xatolik yuz berdi.");
       console.log(error);
     }
   };
@@ -312,16 +309,16 @@ export function Xonalar() {
       {deleteModal && (
         <div className="del-overlay" onClick={cancelDelete}>
           <div className="del-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="del-modal-title">{t("Xonani o'chirish")}</h3>
+            <h3 className="del-modal-title">{"Xonani o'chirish"}</h3>
             <p className="del-modal-text">
-              {t("Rostdan ham o'chirishni hohlaysizmi?")}
+              {"Rostdan ham o'chirishni hohlaysizmi?"}
             </p>
             <div className="del-modal-btns">
               <button className="del-btn-cancel" onClick={cancelDelete}>
-                {t("Bekor qilish")}
+                {"Bekor qilish"}
               </button>
               <button className="del-btn-confirm" onClick={handleDelete}>
-                {t("Ha")}
+                {"Ha"}
               </button>
             </div>
           </div>
@@ -338,7 +335,7 @@ export function Xonalar() {
       <div className={`xona-drawer${drawerOpen ? " open" : ""}`}>
         <div className="xona-drawer-header">
           <span className="xona-drawer-title">
-            {editRoom ? t("Xonani tahrirlash") : t("Xonani qo'shish")}
+            {editRoom ? "Xonani tahrirlash" : "Xonani qo'shish"}
           </span>
           <button className="xona-drawer-close" onClick={closeDrawer}>
             <i className="fa-solid fa-xmark"></i>
@@ -347,23 +344,23 @@ export function Xonalar() {
         <div className="xona-drawer-body">
           <div className="xona-field">
             <label className="xona-label">
-              {t("Nomi")} <span>*</span>
+              {"Nomi"} <span>*</span>
             </label>
             <input
               className="xona-input"
-              placeholder={t("Xona nomi")}
+              placeholder={"Xona nomi"}
               value={nom}
               onChange={(e) => setNom(e.target.value)}
             />
           </div>
           <div className="xona-field">
             <label className="xona-label">
-              {t("Sig'imi")} <span>*</span>
+              {"Sig'imi"} <span>*</span>
             </label>
             <input
               className="xona-input"
               type="number"
-              placeholder={t("Masalan: 20")}
+              placeholder={"Masalan: 20"}
               value={sigim}
               onChange={(e) => setSigim(e.target.value)}
             />
@@ -371,10 +368,10 @@ export function Xonalar() {
         </div>
         <div className="xona-drawer-footer">
           <button className="btn-cancel" onClick={closeDrawer}>
-            {t("Bekor qilish")}
+            {"Bekor qilish"}
           </button>
           <button className="btn-save" onClick={handleRoom}>
-            {editRoom ? t("Yangilash") : t("Saqlash")}
+            {editRoom ? "Yangilash" : "Saqlash"}
           </button>
         </div>
       </div>
@@ -406,7 +403,7 @@ export function Xonalar() {
                 margin: 0,
               }}
             >
-              {t("Xonalar")}
+              {"Xonalar"}
             </h2>
             <div
               style={{
@@ -418,8 +415,8 @@ export function Xonalar() {
               }}
             >
               {[
-                { key: "active", label: t("Xonalar") },
-                { key: "archive", label: t("Arxiv") },
+                { key: "active", label: "Xonalar" },
+                { key: "archive", label: "Arxiv" },
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -463,7 +460,7 @@ export function Xonalar() {
               }}
             >
               <i className="fa-solid fa-plus" style={{ fontSize: 13 }}></i>
-              {t("Xonani qo'shish")}
+              {"Xonani qo'shish"}
             </button>
           )}
         </div>
@@ -478,7 +475,7 @@ export function Xonalar() {
                 className="fa-solid fa-door-open"
                 style={{ fontSize: 40, marginBottom: 10 }}
               ></i>
-              <p style={{ fontWeight: 500 }}>{t("Hozircha xona yo'q")}</p>
+              <p style={{ fontWeight: 500 }}>{"Hozircha xona yo'q"}</p>
             </div>
           ) : (
             <div className="rooms-grid">
@@ -488,7 +485,7 @@ export function Xonalar() {
                     <div className="room-name">
                       {room.name === "genious room" ? "Autodesk" : room.name}
                     </div>
-                    <div className="room-sigim">{t("Sig'imi:")} {room.capacity}</div>
+                    <div className="room-sigim">{"Sig'imi:"} {room.capacity}</div>
                   </div>
                   <div className="room-actions">
                     <button
@@ -509,7 +506,7 @@ export function Xonalar() {
             </div>
           )
         ) : archiveLoading ? (
-          <p style={{ color: "#888" }}>{t("Arxiv yuklanmoqda...")}</p>
+          <p style={{ color: "#888" }}>{"Arxiv yuklanmoqda..."}</p>
         ) : archived.length > 0 ? (
           <div className="rooms-grid">
             {archived.map((room) => (
@@ -528,10 +525,10 @@ export function Xonalar() {
                         borderRadius: 4,
                       }}
                     >
-                      {t("Arxiv")}
+                      {"Arxiv"}
                     </span>
                   </div>
-                  <div className="room-sigim">{t("Sig'imi:")} {room.capacity}</div>
+                  <div className="room-sigim">{"Sig'imi:"} {room.capacity}</div>
                 </div>
               </div>
             ))}
@@ -544,7 +541,7 @@ export function Xonalar() {
               className="fa-solid fa-box-archive"
               style={{ fontSize: 40, marginBottom: 10 }}
             ></i>
-            <p style={{ fontWeight: 500 }}>{t("Arxivda xona yo'q")}</p>
+            <p style={{ fontWeight: 500 }}>{"Arxivda xona yo'q"}</p>
           </div>
         )}
       </div>
@@ -558,8 +555,7 @@ const pages = {
 };
 
 function SubPage({ pageKey }) {
-  const { t } = useLang();
-  const p = pages[pageKey];
+const p = pages[pageKey];
   return (
     <div style={{ padding: "0 0 24px" }}>
       <div
@@ -603,10 +599,10 @@ function SubPage({ pageKey }) {
                 margin: 0,
               }}
             >
-              {t(p.title)}
+              {p.title}
             </h1>
             <p style={{ fontSize: 14, color: "#94a3b8", marginTop: 4 }}>
-              {t(p.title)} {t("bo'limi")}
+              {p.title} {"bo'limi"}
             </p>
           </div>
         </div>
@@ -616,7 +612,7 @@ function SubPage({ pageKey }) {
             style={{ fontSize: 44, color: p.color + "55" }}
           ></i>
           <p style={{ fontWeight: 500, fontSize: 14, marginTop: 10 }}>
-            {t("Hozircha ma'lumot yo'q")}
+            {"Hozircha ma'lumot yo'q"}
           </p>
         </div>
       </div>
@@ -625,8 +621,7 @@ function SubPage({ pageKey }) {
 }
 
 export function Kurslar() {
-  const { t } = useLang();
-  const [users, setUsers] = useState([]);
+const [users, setUsers] = useState([]);
   const [view, setView] = useState("active"); // "active" | "archive"
   const [archived, setArchived] = useState([]);
   const [archiveLoading, setArchiveLoading] = useState(false);
@@ -773,7 +768,7 @@ export function Kurslar() {
       if (!users?.data) return;
       setUsers({ ...users, data: users.data.filter((x) => x.id !== deleteId) });
     } catch (error) {
-      alert(t("Xatolik yuz berdi."));
+      alert("Xatolik yuz berdi.");
       console.log(error);
     }
   };
@@ -945,16 +940,16 @@ export function Kurslar() {
       {deleteModal && (
         <div className="del-overlay" onClick={cancelDelete}>
           <div className="del-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="del-modal-title">{t("Kursni o'chirish")}</h3>
+            <h3 className="del-modal-title">{"Kursni o'chirish"}</h3>
             <p className="del-modal-text">
-              {t("Rostdan ham o'chirishni hohlaysizmi?")}
+              {"Rostdan ham o'chirishni hohlaysizmi?"}
             </p>
             <div className="del-modal-btns">
               <button className="del-btn-cancel" onClick={cancelDelete}>
-                {t("Bekor qilish")}
+                {"Bekor qilish"}
               </button>
               <button className="del-btn-confirm" onClick={CourseDelete}>
-                {t("Ha")}
+                {"Ha"}
               </button>
             </div>
           </div>
@@ -972,12 +967,12 @@ export function Kurslar() {
         <div className="kurs-drawer-header">
           <div>
             <h2 className="kurs-drawer-title">
-              {editKurs ? t("Kursni tahrirlash") : t("Kurs qoshish")}
+              {editKurs ? "Kursni tahrirlash" : "Kurs qoshish"}
             </h2>
             <p className="kurs-drawer-subtitle">
               {editKurs
-                ? t("Bu yerda mavjud kursni tahrirlashingiz mumkin.")
-                : t("Bu yerda siz yangi kurs qo'shishingiz mumkin.")}
+                ? "Bu yerda mavjud kursni tahrirlashingiz mumkin."
+                : "Bu yerda siz yangi kurs qo'shishingiz mumkin."}
             </p>
           </div>
           <button className="kurs-drawer-close" onClick={closeDrawer}>
@@ -986,7 +981,7 @@ export function Kurslar() {
         </div>
         <div className="kurs-drawer-body">
           <div className="kurs-field">
-            <label className="kurs-label">{t("Nomi")}</label>
+            <label className="kurs-label">{"Nomi"}</label>
             <input
               className="kurs-input"
               placeholder="HR Manager..."
@@ -996,34 +991,34 @@ export function Kurslar() {
           </div>
 
           <div className="kurs-field">
-            <label className="kurs-label">{t("Dars davomiyligi")}</label>
+            <label className="kurs-label">{"Dars davomiyligi"}</label>
             <select
               className="kurs-select"
               value={darsDavomiyligi}
               onChange={(e) => setDarsDavomiyligi(e.target.value)}
             >
-              <option value="" disabled hidden>{t("Tanlang")}</option>
+              <option value="" disabled hidden>{"Tanlang"}</option>
               <option value="60">60 min</option>
               <option value="90">90 min</option>
             </select>
           </div>
 
           <div className="kurs-field">
-            <label className="kurs-label">{t("Kurs davomiyligi (oylarda)")}</label>
+            <label className="kurs-label">{"Kurs davomiyligi (oylarda)"}</label>
             <select
               className="kurs-select"
               value={oyDavomiyligi}
               onChange={(e) => setOyDavomiyligi(e.target.value)}
             >
-              <option value="" disabled hidden>{t("Tanlang")}</option>
-              <option value="1">{t("1 oy")}</option>
-              <option value="3">{t("3 oy")}</option>
-              <option value="6">{t("6 oy")}</option>
+              <option value="" disabled hidden>{"Tanlang"}</option>
+              <option value="1">{"1 oy"}</option>
+              <option value="3">{"3 oy"}</option>
+              <option value="6">{"6 oy"}</option>
             </select>
           </div>
 
           <div className="kurs-field">
-            <label className="kurs-label">{t("Narx")}</label>
+            <label className="kurs-label">{"Narx"}</label>
             <div style={{ position: "relative" }}>
               <i
                 className="fa-solid fa-money-bill-1-wave"
@@ -1038,7 +1033,7 @@ export function Kurslar() {
               <input
                 className="kurs-input"
                 style={{ paddingLeft: 40 }}
-                placeholder={t("Narxini kiriting")}
+                placeholder={"Narxini kiriting"}
                 value={narx}
                 onChange={(e) => setNarx(e.target.value)}
               />
@@ -1046,10 +1041,10 @@ export function Kurslar() {
           </div>
 
           <div className="kurs-field">
-            <label className="kurs-label">{t("Tavsif")}</label>
+            <label className="kurs-label">{"Tavsif"}</label>
             <textarea
               className="kurs-textarea"
-              placeholder={t("Kurs haqida qisqacha...")}
+              placeholder={"Kurs haqida qisqacha..."}
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
             ></textarea>
@@ -1057,10 +1052,10 @@ export function Kurslar() {
         </div>
         <div className="kurs-drawer-footer">
           <button className="k-btn-cancel" onClick={closeDrawer}>
-            {t("Bekor qilish")}
+            {"Bekor qilish"}
           </button>
           <button className="k-btn-save" onClick={handleLogin}>
-            {editKurs ? t("Yangilash") : t("Saqlash")}
+            {editKurs ? "Yangilash" : "Saqlash"}
           </button>
         </div>
       </div>
@@ -1086,7 +1081,7 @@ export function Kurslar() {
             <h2
               style={{ fontSize: 26, fontWeight: 700, color: "#1e293b", margin: 0 }}
             >
-              {t("Kurslar")}
+              {"Kurslar"}
             </h2>
             <div
               style={{
@@ -1098,8 +1093,8 @@ export function Kurslar() {
               }}
             >
               {[
-                { key: "active", label: t("Kurslar") },
-                { key: "archive", label: t("Arxiv") },
+                { key: "active", label: "Kurslar" },
+                { key: "archive", label: "Arxiv" },
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -1143,7 +1138,7 @@ export function Kurslar() {
               }}
             >
               <i className="fa-solid fa-plus" style={{ fontSize: 13 }}></i>
-              {t("Kurs qo'shish")}
+              {"Kurs qo'shish"}
             </button>
           )}
         </div>
@@ -1176,15 +1171,15 @@ export function Kurslar() {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <span className="k-badge">{row.duration_hours} {t("min")}</span>
-                  <span className="k-badge">{row.duration_month} {t("oy")}</span>
-                  <span className="k-badge">{row.price} {t("so'm")}</span>
+                  <span className="k-badge">{row.duration_hours} {"min"}</span>
+                  <span className="k-badge">{row.duration_month} {"oy"}</span>
+                  <span className="k-badge">{row.price} {"so'm"}</span>
                 </div>
               </div>
             ))}
           </div>
         ) : archiveLoading ? (
-          <p style={{ color: "#888" }}>{t("Arxiv yuklanmoqda...")}</p>
+          <p style={{ color: "#888" }}>{"Arxiv yuklanmoqda..."}</p>
         ) : archived.length > 0 ? (
           <div className="kurslar-grid">
             {archived.map((row) => (
@@ -1202,29 +1197,28 @@ export function Kurslar() {
                       borderRadius: 4,
                     }}
                   >
-                    {t("Arxiv")}
+                    {"Arxiv"}
                   </span>
                 </h3>
                 <div style={{ marginBottom: 18 }}>
                   <span className="k-card-status">{row.description}</span>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <span className="k-badge">{row.duration_hours} {t("min")}</span>
-                  <span className="k-badge">{row.duration_month} {t("oy")}</span>
-                  <span className="k-badge">{row.price} {t("so'm")}</span>
+                  <span className="k-badge">{row.duration_hours} {"min"}</span>
+                  <span className="k-badge">{row.duration_month} {"oy"}</span>
+                  <span className="k-badge">{row.price} {"so'm"}</span>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <p style={{ color: "#888" }}>{t("Arxivda kurslar yo'q")}</p>
+          <p style={{ color: "#888" }}>{"Arxivda kurslar yo'q"}</p>
         )}
       </div>
     </>
   );
 }
 export function Hodimlar() {
-  const { t } = useLang();
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -1270,7 +1264,7 @@ export function Hodimlar() {
           closeDrawer();
         }
       }
-    } catch (e) { alert(t("Xatolik yuz berdi.")); console.log(e); }
+    } catch (e) { alert("Xatolik yuz berdi."); console.log(e); }
   };
 
   const confirmDelete = (id) => { setDeleteId(id); setDeleteModal(true); };
@@ -1282,15 +1276,15 @@ export function Hodimlar() {
         setList(prev => prev.filter(x => x.id !== deleteId));
         cancelDelete();
       }
-    } catch (e) { alert(t("Xatolik yuz berdi.")); console.log(e); }
+    } catch (e) { alert("Xatolik yuz berdi."); console.log(e); }
   };
 
   return <ManagePage
-    title={t("Xodimlar")}
-    subtitle={t("Xodimlar ro'yxatini boshqarish.")}
-    addLabel={t("Xodim qo'shish")}
+    title={"Xodimlar"}
+    subtitle={"Xodimlar ro'yxatini boshqarish."}
+    addLabel={"Xodim qo'shish"}
     emptyIcon="fa-users"
-    emptyText={t("Hozircha xodim yo'q")}
+    emptyText={"Hozircha xodim yo'q"}
     list={list}
     loading={loading}
     getItemName={item => item.name || item.full_name || item.role}
@@ -1299,22 +1293,21 @@ export function Hodimlar() {
     onEdit={openEdit}
     onDelete={confirmDelete}
     drawerOpen={drawerOpen}
-    drawerTitle={editItem ? t("Xodimni tahrirlash") : t("Xodim qo'shish")}
+    drawerTitle={editItem ? "Xodimni tahrirlash" : "Xodim qo'shish"}
     onDrawerClose={closeDrawer}
     onDrawerSave={handleSave}
     deleteModal={deleteModal}
-    deleteTitle={t("Xodimni o'chirish")}
+    deleteTitle={"Xodimni o'chirish"}
     onDeleteCancel={cancelDelete}
     onDeleteConfirm={handleDelete}
-    t={t}
     drawerFields={<>
       <div className="mp-field">
-        <label className="mp-label">{t("Ismi/Roli")} <span>*</span></label>
-        <input className="mp-input" placeholder={t("Masalan: Manager")} value={nom} onChange={e => setNom(e.target.value)} />
+        <label className="mp-label">{"Ismi/Roli"} <span>*</span></label>
+        <input className="mp-input" placeholder={"Masalan: Manager"} value={nom} onChange={e => setNom(e.target.value)} />
       </div>
       <div className="mp-field">
-        <label className="mp-label">{t("Tavsifi")}</label>
-        <input className="mp-input" placeholder={t("Masalan: Operator")} value={lavozim} onChange={e => setLavozim(e.target.value)} />
+        <label className="mp-label">{"Tavsifi"}</label>
+        <input className="mp-input" placeholder={"Masalan: Operator"} value={lavozim} onChange={e => setLavozim(e.target.value)} />
       </div>
     </>}
   />;
@@ -1324,7 +1317,6 @@ export function Hodimlar() {
    FILIALLAR
 ───────────────────────────────────────────── */
 export function Filiallar() {
-  const { t } = useLang();
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -1370,7 +1362,7 @@ export function Filiallar() {
           closeDrawer();
         }
       }
-    } catch (e) { alert(t("Xatolik yuz berdi.")); console.log(e); }
+    } catch (e) { alert("Xatolik yuz berdi."); console.log(e); }
   };
 
   const confirmDelete = (id) => { setDeleteId(id); setDeleteModal(true); };
@@ -1382,42 +1374,41 @@ export function Filiallar() {
         setList(prev => prev.filter(x => x.id !== deleteId));
         cancelDelete();
       }
-    } catch (e) { alert(t("Xatolik yuz berdi.")); console.log(e); }
+    } catch (e) { alert("Xatolik yuz berdi."); console.log(e); }
   };
 
   return <ManagePage
-    title={t("Filiallar")}
-    subtitle={t("Markaz filiallarini boshqarish.")}
-    addLabel={t("Filial qo'shish")}
+    title={"Filiallar"}
+    subtitle={"Markaz filiallarini boshqarish."}
+    addLabel={"Filial qo'shish"}
     emptyIcon="fa-building"
-    emptyText={t("Hozircha filial yo'q")}
+    emptyText={"Hozircha filial yo'q"}
     list={list}
     loading={loading}
     getItemName={item => item.name}
-    getItemSub={item => item.type || t("Asosiy filial")}
+    getItemSub={item => item.type || "Asosiy filial"}
     onAdd={openAdd}
     onEdit={openEdit}
     onDelete={confirmDelete}
     drawerOpen={drawerOpen}
-    drawerTitle={editItem ? t("Filialni tahrirlash") : t("Filial qo'shish")}
+    drawerTitle={editItem ? "Filialni tahrirlash" : "Filial qo'shish"}
     onDrawerClose={closeDrawer}
     onDrawerSave={handleSave}
     deleteModal={deleteModal}
-    deleteTitle={t("Filialni o'chirish")}
+    deleteTitle={"Filialni o'chirish"}
     onDeleteCancel={cancelDelete}
     onDeleteConfirm={handleDelete}
-    t={t}
     drawerFields={<>
       <div className="mp-field">
-        <label className="mp-label">{t("Nomi")} <span>*</span></label>
-        <input className="mp-input" placeholder={t("Filial nomi")} value={nom} onChange={e => setNom(e.target.value)} />
+        <label className="mp-label">{"Nomi"} <span>*</span></label>
+        <input className="mp-input" placeholder={"Filial nomi"} value={nom} onChange={e => setNom(e.target.value)} />
       </div>
       <div className="mp-field">
-        <label className="mp-label">{t("Turi")} <span>*</span></label>
+        <label className="mp-label">{"Turi"} <span>*</span></label>
         <select className="mp-select" value={tur} onChange={e => setTur(e.target.value)}>
-          <option value="Asosiy filial">{t("Asosiy filial")}</option>
-          <option value="Faol filial">{t("Faol filial")}</option>
-          <option value="Yopilgan filial">{t("Yopilgan filial")}</option>
+          <option value="Asosiy filial">{"Asosiy filial"}</option>
+          <option value="Faol filial">{"Faol filial"}</option>
+          <option value="Yopilgan filial">{"Yopilgan filial"}</option>
         </select>
       </div>
     </>}
@@ -1428,7 +1419,6 @@ export function Filiallar() {
    SABABLAR
 ───────────────────────────────────────────── */
 export function Sabablar() {
-  const { t } = useLang();
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -1474,7 +1464,7 @@ export function Sabablar() {
           closeDrawer();
         }
       }
-    } catch (e) { alert(t("Xatolik yuz berdi.")); console.log(e); }
+    } catch (e) { alert("Xatolik yuz berdi."); console.log(e); }
   };
 
   const confirmDelete = (id) => { setDeleteId(id); setDeleteModal(true); };
@@ -1486,15 +1476,15 @@ export function Sabablar() {
         setList(prev => prev.filter(x => x.id !== deleteId));
         cancelDelete();
       }
-    } catch (e) { alert(t("Xatolik yuz berdi.")); console.log(e); }
+    } catch (e) { alert("Xatolik yuz berdi."); console.log(e); }
   };
 
   return <ManagePage
-    title={t("Sabablar")}
-    subtitle={t("Davomat va boshqa holatlar uchun sabablar.")}
-    addLabel={t("Sabab qo'shish")}
+    title={"Sabablar"}
+    subtitle={"Davomat va boshqa holatlar uchun sabablar."}
+    addLabel={"Sabab qo'shish"}
     emptyIcon="fa-circle-exclamation"
-    emptyText={t("Hozircha sabab yo'q")}
+    emptyText={"Hozircha sabab yo'q"}
     list={list}
     loading={loading}
     getItemName={item => item.name || item.title}
@@ -1503,22 +1493,21 @@ export function Sabablar() {
     onEdit={openEdit}
     onDelete={confirmDelete}
     drawerOpen={drawerOpen}
-    drawerTitle={editItem ? t("Sababni tahrirlash") : t("Sabab qo'shish")}
+    drawerTitle={editItem ? "Sababni tahrirlash" : "Sabab qo'shish"}
     onDrawerClose={closeDrawer}
     onDrawerSave={handleSave}
     deleteModal={deleteModal}
-    deleteTitle={t("Sababni o'chirish")}
+    deleteTitle={"Sababni o'chirish"}
     onDeleteCancel={cancelDelete}
     onDeleteConfirm={handleDelete}
-    t={t}
     drawerFields={<>
       <div className="mp-field">
-        <label className="mp-label">{t("Nomi")} <span>*</span></label>
-        <input className="mp-input" placeholder={t("Sabab nomi")} value={nom} onChange={e => setNom(e.target.value)} />
+        <label className="mp-label">{"Nomi"} <span>*</span></label>
+        <input className="mp-input" placeholder={"Sabab nomi"} value={nom} onChange={e => setNom(e.target.value)} />
       </div>
       <div className="mp-field">
-        <label className="mp-label">{t("Tavsifi")}</label>
-        <textarea className="mp-textarea" placeholder={t("Sabab tavsifi")} value={tavsif} onChange={e => setTavsif(e.target.value)} />
+        <label className="mp-label">{"Tavsifi"}</label>
+        <textarea className="mp-textarea" placeholder={"Sabab tavsifi"} value={tavsif} onChange={e => setTavsif(e.target.value)} />
       </div>
     </>}
   />;
@@ -1583,10 +1572,10 @@ function ManagePage({
         <div className="del-overlay" onClick={onDeleteCancel}>
           <div className="del-modal" onClick={e => e.stopPropagation()}>
             <h3 className="del-modal-title">{deleteTitle}</h3>
-            <p className="del-modal-text">{t("Rostdan ham o'chirishni hohlaysizmi?")}</p>
+            <p className="del-modal-text">{"Rostdan ham o'chirishni hohlaysizmi?"}</p>
             <div className="del-modal-btns">
-              <button className="del-btn-cancel" onClick={onDeleteCancel}>{t("Bekor qilish")}</button>
-              <button className="del-btn-confirm" onClick={onDeleteConfirm}>{t("Ha")}</button>
+              <button className="del-btn-cancel" onClick={onDeleteCancel}>{"Bekor qilish"}</button>
+              <button className="del-btn-confirm" onClick={onDeleteConfirm}>{"Ha"}</button>
             </div>
           </div>
         </div>
@@ -1600,8 +1589,8 @@ function ManagePage({
         </div>
         <div className="mp-drawer-body">{drawerFields}</div>
         <div className="mp-drawer-footer">
-          <button className="btn-cancel" onClick={onDrawerClose}>{t("Bekor qilish")}</button>
-          <button className="btn-save" onClick={onDrawerSave}>{t("Saqlash")}</button>
+          <button className="btn-cancel" onClick={onDrawerClose}>{"Bekor qilish"}</button>
+          <button className="btn-save" onClick={onDrawerSave}>{"Saqlash"}</button>
         </div>
       </div>
 
@@ -1618,7 +1607,7 @@ function ManagePage({
         </div>
 
         {loading ? (
-          <p style={{ color:"#888", textAlign:"center", padding:"40px 0" }}>{t("Yuklanmoqda...")}</p>
+          <p style={{ color:"#888", textAlign:"center", padding:"40px 0" }}>{"Yuklanmoqda..."}</p>
         ) : list.length === 0 ? (
           <div style={{ textAlign:"center", color:"#bbb", padding:"60px 0" }}>
             <i className={`fa-solid ${emptyIcon}`} style={{ fontSize:44, marginBottom:16 }} />

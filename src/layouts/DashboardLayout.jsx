@@ -1,26 +1,26 @@
 import Avatar from "@mui/material/Avatar";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
 import { useState, useEffect, useRef } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useLang } from "../i18n/LanguageContext";
+import {
+  Home, UserSquare2, Users, GraduationCap, Gift,
+  BookOpen, LayoutGrid, Building2, ListTodo,
+  LayoutDashboard, ChevronRight, ChevronLeft, X, Zap,ClipboardList
+} from "lucide-react";
 
 const boshqarishMenuItems = [
-  { icon: "fa-graduation-cap", label: "Kurslar", to: "/dashboard/boshqarish/kurslar" },
-  { icon: "fa-door-open", label: "Xonalar", to: "/dashboard/boshqarish/xonalar" },
-  { icon: "fa-building", label: "Filiallar", to: "/dashboard/boshqarish/filiallar" },
-  { icon: "fa-users", label: "Xodimlar", to: "/dashboard/boshqarish/hodimlar" },
-  { icon: "fa-circle-exclamation", label: "Sabablar", to: "/dashboard/boshqarish/sabablar" },
+  { icon: BookOpen, label: "Kurslar", to: "/dashboard/boshqarish/kurslar" },
+  { icon: LayoutGrid, label: "Xonalar", to: "/dashboard/boshqarish/xonalar" },
+  { icon: Building2, label: "Filiallar", to: "/dashboard/boshqarish/filiallar" },
+  { icon: UserSquare2, label: "Xodimlar", to: "/dashboard/boshqarish/hodimlar" },
+  { icon: ListTodo, label: "Sabablar", to: "/dashboard/boshqarish/sabablar" },
 ];
 
 const navItems = [
-  { icon: "fa-solid fa-house",          label: "Asosiy",        to: "/dashboard", end: true },
-  { icon: "fa-solid fa-id-card",        label: "O'qituvchilar", to: "/dashboard/o'qituvcilar" },
-  { icon: "fa-solid fa-users",          label: "Guruhlar",      to: "/dashboard/sinflar" },
-  { icon: "fa-solid fa-graduation-cap", label: "Talabalar",     to: "/dashboard/talabalar" },
-  { icon: "fa-solid fa-gift",           label: "Sov'g'alar",    to: "/dashboard/sovg'alar" },
+  { icon: Home,          label: "Asosiy",        to: "/dashboard", end: true },
+  { icon: UserSquare2,   label: "O'qituvchilar", to: "/dashboard/o'qituvcilar" },
+  { icon: Users,         label: "Guruhlar",      to: "/dashboard/sinflar" },
+  { icon: GraduationCap, label: "Talabalar",     to: "/dashboard/talabalar" },
+  { icon: Gift,          label: "Sov'g'alar",    to: "/dashboard/sovg'alar" },
 ];
 
 export default function DashboardLayout() {
@@ -32,7 +32,6 @@ export default function DashboardLayout() {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const { lang, changeLang, t } = useLang();
   const isBoshqarish = location.pathname.startsWith("/dashboard/boshqarish");
 
   const handleLogout = () => {
@@ -126,7 +125,7 @@ export default function DashboardLayout() {
           display: flex;
           align-items: center;
           gap: 14px;
-          font-size: 16px;
+          font-size: 14px;
           font-weight: 600;
           color: #6b7280;
           text-decoration: none;
@@ -148,7 +147,7 @@ export default function DashboardLayout() {
         .nav-item.active .nav-icon,
         .nav-item.bq-active .nav-icon { color: #fff; transform: none; }
 
-        .nav-icon { width: 20px; text-align: center; flex-shrink: 0; font-size: 20px; color: #6b7280; transition: color 0.2s, transform 0.2s; }
+        .nav-icon { width: 20px; height: 20px; flex-shrink: 0; color: #6b7280; transition: color 0.2s, transform 0.2s; }
         .nav-item:hover .nav-icon { color: #7c3aed; transform: scale(1.1); }
 
         .nav-label {
@@ -160,7 +159,8 @@ export default function DashboardLayout() {
         }
         .chevron {
           margin-left: auto;
-          font-size: 11px;
+          width: 15px;
+          height: 15px;
           color: #aaa;
           flex-shrink: 0;
           transition: transform 0.28s, opacity 0.2s;
@@ -319,7 +319,7 @@ export default function DashboardLayout() {
               {/* Logo */}
               <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "28px 20px 20px", overflow: "hidden" }}>
                 <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 16, background: "#ede9fe", display: "flex", alignItems: "center", justifyContent: "center", color: "#7c3aed", fontSize: 24, boxShadow: "0 2px 8px rgba(124,58,237,0.15)" }}>
-                  <i className="fa-solid fa-graduation-cap"></i>
+                  <GraduationCap size={24} />
                 </div>
                 <span style={{
                   fontWeight: 800, fontSize: 22, color: "#1f2d5a", whiteSpace: "nowrap", letterSpacing: "-0.5px",
@@ -337,9 +337,9 @@ export default function DashboardLayout() {
                   end={item.end}
                   className={({ isActive }) => `nav-item${isActive && !isBoshqarish ? " active" : ""}`}
                 >
-                  <i className={`${item.icon} nav-icon`}></i>
-                  <span className="nav-label">{t(item.label)}</span>
-                  <span className="nav-tip">{t(item.label)}</span>
+                  <item.icon className="nav-icon" />
+                  <span className="nav-label">{item.label}</span>
+                  <span className="nav-tip">{item.label}</span>
                 </NavLink>
               ))}
 
@@ -348,10 +348,10 @@ export default function DashboardLayout() {
                 onClick={() => setBoshqarishOpen(o => !o)}
                 className={`nav-item${isBoshqarish ? " bq-active" : ""}`}
               >
-                <i className="fa-solid fa-table-columns nav-icon"></i>
-                <span className="nav-label">{t("Boshqarish")}</span>
-                <span className="nav-tip">{t("Boshqarish")}</span>
-                <i className={`fa-solid fa-chevron-right chevron${boshqarishOpen ? " open" : ""}`}></i>
+                <LayoutDashboard className="nav-icon" />
+                <span className="nav-label">Boshqarish</span>
+                <span className="nav-tip">Boshqarish</span>
+                <ChevronRight size={15} className={`chevron${boshqarishOpen ? " open" : ""}`} />
               </button>
             </div>
             </div>
@@ -361,11 +361,11 @@ export default function DashboardLayout() {
               <div className="obuna-box">
                 <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                   <div style={{ width: 48, height: 48, borderRadius: 16, background: "#fed7aa", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#f97316", boxShadow: "0 2px 8px rgba(249,115,22,0.15)" }}>
-                    <i className="fa-solid fa-clipboard-list" style={{ fontSize: 22 }}></i>
+                    <ClipboardList size={22} />
                   </div>
                   <div>
-                    <p style={{ fontWeight: 700, fontSize: 15.5, margin: "0 0 2px", color: "#1e293b", lineHeight: 1.2 }}>{t("Obuna")}</p>
-                    <p style={{ fontSize: 13.5, margin: 0, color: "#f97316", fontWeight: 600 }}>{t("Obunangiz tugagan")}</p>
+                    <p style={{ fontWeight: 700, fontSize: 15.5, margin: "0 0 2px", color: "#1e293b", lineHeight: 1.2 }}>Obuna</p>
+                    <p style={{ fontSize: 13.5, margin: 0, color: "#f97316", fontWeight: 600 }}>Obunangiz tugagan</p>
                   </div>
                 </div>
                 <button style={{
@@ -377,8 +377,8 @@ export default function DashboardLayout() {
                   onMouseEnter={e => e.currentTarget.style.background = "#ea580c"}
                   onMouseLeave={e => e.currentTarget.style.background = "#f97316"}
                 >
-                  <i className="fa-solid fa-bolt"></i>
-                  {t("Obunani yangilash")}
+                  <Zap size={15} />
+                  Obunani yangilash
                 </button>
               </div>
             )}
@@ -386,7 +386,7 @@ export default function DashboardLayout() {
 
           {/* Toggle button — sidebar o'ng chegarasida */}
           <button className="toggle-btn" onClick={() => setCollapsed(c => !c)}>
-            <i className={`fa-solid fa-chevron-${collapsed ? "right" : "left"}`}></i>
+            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
 
           {/* Boshqarish yon panel */}
@@ -395,9 +395,9 @@ export default function DashboardLayout() {
           )}
           <div className={`side-panel${boshqarishOpen ? " open" : ""}`}>
             <div className="panel-header">
-              <span className="panel-title">{t("Boshqarish")}</span>
+              <span className="panel-title">Boshqarish</span>
               <button className="panel-close-btn" onClick={() => setBoshqarishOpen(false)}>
-                <i className="fa-solid fa-xmark"></i>
+                <X size={15} />
               </button>
             </div>
             <div className="panel-items">
@@ -409,9 +409,9 @@ export default function DashboardLayout() {
                   className={({ isActive }) => `panel-link${isActive ? " active" : ""}`}
                 >
                   <span className="panel-icon-wrap">
-                    <i className={`fa-solid ${item.icon}`} style={{ fontSize: 12, color: "#765bcf" }}></i>
+                    <item.icon size={12} color="#765bcf" />
                   </span>
-                  {t(item.label)}
+                  {item.label}
                 </NavLink>
               ))}
             </div>
@@ -429,39 +429,23 @@ export default function DashboardLayout() {
 
               <button className="tb-add-btn">
                 <i className="fa-solid fa-plus"></i>
-                {t("Qo'shish")}
+                Qo'shish
                 <i className="fa-solid fa-chevron-down" style={{ fontSize: 11 }}></i>
               </button>
 
               <div className="tb-search-wrap">
                 <i className="fa-solid fa-magnifying-glass tb-search-icon"></i>
-                <input className="tb-search" placeholder={t("Qidirish...")} />
+                <input className="tb-search" placeholder="Qidirish..." />
               </div>
             </div>
 
             {/* Right side */}
             <div className="topbar-right">
-              {/* Til tanlash */}
-              <div style={{ position: "relative" }}>
-                <i className="fa-solid fa-globe" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#6b7280", zIndex: 1, pointerEvents: "none", fontSize: 14 }}></i>
-                <FormControl>
-                  <Select
-                    value={lang}
-                    onChange={(e) => changeLang(e.target.value)}
-                    IconComponent={() => <i className="fa-solid fa-chevron-down" style={{ position: "absolute", right: 12, color: "#9ca3af", fontSize: 11, pointerEvents: "none" }}></i>}
-                    sx={{
-                      width: 155, height: 36, bgcolor: "#f9fafb", borderRadius: "12px", border: "1px solid #e5e7eb",
-                      '& .MuiSelect-select': { paddingLeft: "36px !important", fontSize: "13px", fontWeight: 600, color: "#4b5563", paddingRight: "32px !important" },
-                      '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                      '&:hover': { bgcolor: "#f3f4f6" }
-                    }}
-                  >
-                    <MenuItem value="uz" sx={{ fontSize: 13, fontWeight: 600 }}>O'zbekcha</MenuItem>
-                    <MenuItem value="ru" sx={{ fontSize: 13, fontWeight: 600 }}>Ruscha</MenuItem>
-                    <MenuItem value="en" sx={{ fontSize: 13, fontWeight: 600 }}>Inglizcha</MenuItem>
-                  </Select>
-                </FormControl>
-              </div>
+
+              {/* Til icon (dekorativ) */}
+              <button className="tb-icon-btn-sm" style={{ cursor: "default" }} disabled>
+                <i className="fa-solid fa-globe" style={{ color: "#6b7280" }}></i>
+              </button>
 
               {/* Bell */}
               <button className="tb-icon-btn-sm" style={{ position: "relative" }}>
@@ -469,20 +453,12 @@ export default function DashboardLayout() {
                 <span style={{ position: "absolute", top: 9, right: 9, width: 7, height: 7, background: "#ef4444", borderRadius: "50%", border: "1.5px solid #fff" }}></span>
               </button>
 
-              {/* Dark mode */}
-              <button
-                className="tb-icon-btn-sm"
-                onClick={() => setIsDark(!isDark)}
-                style={{
-                  background: isDark ? "#0f172a" : "#f9fafb",
-                  borderColor: isDark ? "#0f172a" : "#e5e7eb",
-                  color: isDark ? "#fff" : "#6b7280"
-                }}
-              >
-                <i className={`fa-regular ${isDark ? "fa-sun" : "fa-moon"}`} style={{ color: isDark ? "#fbbf24" : "#6b7280" }}></i>
+              {/* Dark mode icon (dekorativ) */}
+              <button className="tb-icon-btn-sm" style={{ cursor: "default" }} disabled>
+                <i className="fa-regular fa-moon" style={{ color: "#6b7280" }}></i>
               </button>
 
-              {/* Profile */}
+
               <div ref={profileRef} style={{ position: "relative" }}>
                 <div
                   onClick={() => setProfileOpen((o) => !o)}

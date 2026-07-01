@@ -1,9 +1,6 @@
 import { useState } from "react";
-import { useLang } from "../../i18n/LanguageContext";
-
 export default function TeacherPlannedGroups() {
-  const { t } = useLang();
-  const [tab, setTab] = useState("guruhlar");
+const [tab, setTab] = useState("guruhlar");
 
   return (
     <>
@@ -81,7 +78,7 @@ export default function TeacherPlannedGroups() {
       `}</style>
 
       <div className="tpg-page">
-        <h1 className="tpg-title">{t("Yig'ilayotgan guruhlar")}</h1>
+        <h1 className="tpg-title">{"Yig'ilayotgan guruhlar"}</h1>
 
         <div className="tpg-tabs">
           <button
@@ -89,7 +86,7 @@ export default function TeacherPlannedGroups() {
             onClick={() => setTab("guruhlar")}
             type="button"
           >
-            {t("Guruhlar")}
+            {"Guruhlar"}
           </button>
           <button
             className={`tpg-tab${tab === "arxiv" ? " active" : ""}`}
@@ -97,7 +94,7 @@ export default function TeacherPlannedGroups() {
             type="button"
           >
             <i className="fa-solid fa-box-archive"></i>
-            {t("Arxiv")}
+            {"Arxiv"}
           </button>
         </div>
 
@@ -105,19 +102,19 @@ export default function TeacherPlannedGroups() {
           <table className="tpg-table">
             <thead>
               <tr>
-                <th>{t("STATUS")}</th>
-                <th>{t("GURUH NOMI")}</th>
-                <th>{t("KURS")}</th>
-                <th>{t("DAVOMIYLIGI")}</th>
-                <th>{t("DARS VAQTI")}</th>
-                <th>{t("XONA")}</th>
-                <th>{t("O'QITUVCHI")}</th>
-                <th>{t("TALABALAR")}</th>
+                <th>{"STATUS"}</th>
+                <th>{"GURUH NOMI"}</th>
+                <th>{"KURS"}</th>
+                <th>{"DAVOMIYLIGI"}</th>
+                <th>{"DARS VAQTI"}</th>
+                <th>{"XONA"}</th>
+                <th>{"O'QITUVCHI"}</th>
+                <th>{"TALABALAR"}</th>
                 <th><i className="fa-solid fa-rotate-right"></i></th>
               </tr>
             </thead>
           </table>
-          <div className="tpg-empty">{t("Hozircha guruhlar yo'q")}</div>
+          <div className="tpg-empty">{"Hozircha guruhlar yo'q"}</div>
         </div>
       </div>
     </>

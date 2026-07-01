@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { fetchApi } from "../api/user.api";
-import { useLang } from "../i18n/LanguageContext";
-
 const PER_PAGE = 10;
 
 // Javob obyektidan jami son maydonini (total/count) ichma-ich qidiradi
@@ -31,10 +29,7 @@ function getPageNumbers(current, total) {
 }
 
 export default function Talabalar() {
-
-  const { t } = useLang();
-
-  const [users, setUsers] = useState([]);
+const [users, setUsers] = useState([]);
   const [allGroups, setAllGroups] = useState([]);
   const [groupsLoaded, setGroupsLoaded] = useState(false);
   const [view, setView] = useState("active"); // "active" | "archive"
@@ -211,7 +206,7 @@ export default function Talabalar() {
         loadStudents(page);
       }
     } catch (error) {
-      alert(t("O'chirishda xatolik yuz berdi."));
+      alert("O'chirishda xatolik yuz berdi.");
       console.log(error);
     }
   };
@@ -268,7 +263,7 @@ export default function Talabalar() {
       const displayPhone = normalizePhone(tel);
       const cleanedPhone = phoneForApi(displayPhone);
       if (!/^\d{9}$/.test(cleanedPhone)) {
-        alert(t("Telefon raqam +998XXXXXXXXX formatida bo'lishi kerak."));
+        alert("Telefon raqam +998XXXXXXXXX formatida bo'lishi kerak.");
         return;
       }
       const formData = new FormData();
@@ -347,7 +342,7 @@ export default function Talabalar() {
         }
       }
     } catch (error) {
-      const xato = error.response?.data?.message || error.response?.data?.error || t("Xatolik yuz berdi. Barcha maydonlarni tekshiring.");
+      const xato = error.response?.data?.message || error.response?.data?.error || "Xatolik yuz berdi. Barcha maydonlarni tekshiring.";
       alert(xato);
       console.log(error.response?.data || error);
     }
@@ -461,14 +456,14 @@ export default function Talabalar() {
         <div className="oq-modal bg-white">
           <div className="modal-header">
             <div>
-              <h2 className="modal-title">{t("Guruhga biriktirish")}</h2>
-              <p className="modal-subtitle">{t("Bir yoki bir nechta guruhni tanlang")}</p>
+              <h2 className="modal-title">{"Guruhga biriktirish"}</h2>
+              <p className="modal-subtitle">{"Bir yoki bir nechta guruhni tanlang"}</p>
             </div>
             <button className="modal-close" onClick={() => setModalOpen(false)}><i className="fa-solid fa-xmark"></i></button>
           </div>
           <input
             className="oq-input"
-            placeholder={t("Guruh qidirish...")}
+            placeholder={"Guruh qidirish..."}
             value={guruhQidiruv}
             onChange={e => setGuruhQidiruv(e.target.value)}
             style={{ marginBottom: 12, height: 40 }}
@@ -490,13 +485,13 @@ export default function Talabalar() {
               </div>
             ))}
             {filteredGuruhlar.length === 0 && (
-              <div style={{ padding: 8, fontSize: 13, color: "#999", textAlign: "center" }}>{t("Guruh topilmadi")}</div>
+              <div style={{ padding: 8, fontSize: 13, color: "#999", textAlign: "center" }}>{"Guruh topilmadi"}</div>
             )}
           </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
-            <button className="top-btn btn-outline" onClick={() => setModalOpen(false)}>{t("Bekor qilish")}</button>
-            <button className="top-btn btn-primary" onClick={saveGuruhlar}>{t("Qo'shish")}</button>
+            <button className="top-btn btn-outline" onClick={() => setModalOpen(false)}>{"Bekor qilish"}</button>
+            <button className="top-btn btn-primary" onClick={saveGuruhlar}>{"Qo'shish"}</button>
           </div>
         </div>
       </div>
@@ -504,11 +499,11 @@ export default function Talabalar() {
       {deleteModal && (
         <div className="delete-overlay" onClick={cancelDelete}>
           <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
-            <h2 className="delete-title">{t("Talabani o'chirish")}</h2>
-            <p className="delete-text">{t("Siz ushbu talabani o'chirishga ishonchingiz komilmi? Bu amal qaytarib bo'lmaydi.")}</p>
+            <h2 className="delete-title">{"Talabani o'chirish"}</h2>
+            <p className="delete-text">{"Siz ushbu talabani o'chirishga ishonchingiz komilmi? Bu amal qaytarib bo'lmaydi."}</p>
             <div className="delete-actions">
-              <button className="delete-btn cancel" onClick={cancelDelete}>{t("Bekor qilish")}</button>
-              <button className="delete-btn confirm" onClick={handleDelete}>{t("O'chirish")}</button>
+              <button className="delete-btn cancel" onClick={cancelDelete}>{"Bekor qilish"}</button>
+              <button className="delete-btn confirm" onClick={handleDelete}>{"O'chirish"}</button>
             </div>
           </div>
         </div>
@@ -521,13 +516,13 @@ export default function Talabalar() {
       <div className={`oqit-drawer ${drawerOpen ? "open" : ""}`}>
         <div className="oq-header">
           <div>
-            <h2 className="oq-title">{editingStudent ? t("Talaba tahrirlash") : t("Talaba qo'shish")}</h2>
-            <p className="oq-subtitle">{editingStudent ? t("Talaba ma'lumotlarini o'zgartiring va saqlang.") : t("Bu yerda siz yangi Talaba qo'shishingiz mumkin.")}</p>
+            <h2 className="oq-title">{editingStudent ? "Talaba tahrirlash" : "Talaba qo'shish"}</h2>
+            <p className="oq-subtitle">{editingStudent ? "Talaba ma'lumotlarini o'zgartiring va saqlang." : "Bu yerda siz yangi Talaba qo'shishingiz mumkin."}</p>
           </div>
           <button className="oq-close" onClick={() => setDrawer(false)}><i className="fa-solid fa-xmark"></i></button>
         </div>
         <div className="oq-body">
-          <label className="oq-label">{t("Telefon raqam")}</label>
+          <label className="oq-label">{"Telefon raqam"}</label>
           <input
             className="oq-input"
             type="tel"
@@ -536,38 +531,38 @@ export default function Talabalar() {
             onChange={(e) => setTel(normalizePhone(e.target.value))}
           />
 
-          <label className="oq-label">{t("Mail")}</label>
-          <input className="oq-input" type="email" placeholder={t("Elektron pochtani kiriting")} value={email} onChange={e => setEmail(e.target.value)} />
+          <label className="oq-label">{"Mail"}</label>
+          <input className="oq-input" type="email" placeholder={"Elektron pochtani kiriting"} value={email} onChange={e => setEmail(e.target.value)} />
 
-          <label className="oq-label">{t("Talaba FIO")}</label>
-          <input className="oq-input" placeholder={t("Ma'lumotni kiriting")} value={fio} onChange={e => setFio(e.target.value)} />
+          <label className="oq-label">{"Talaba FIO"}</label>
+          <input className="oq-input" placeholder={"Ma'lumotni kiriting"} value={fio} onChange={e => setFio(e.target.value)} />
 
-          <label className="oq-label">{t("Tug'ilgan sanasi")}</label>
+          <label className="oq-label">{"Tug'ilgan sanasi"}</label>
           <div style={{ position: "relative" }}>
             <input type="date" className="oq-input" value={sana} onChange={e => setSana(e.target.value)} />
           </div>
 
-          <label className="oq-label">{t("Manzil")}</label>
-          <input className="oq-input" placeholder={t("Manzilni kiriting")} value={manzil} onChange={e => setManzil(e.target.value)} />
+          <label className="oq-label">{"Manzil"}</label>
+          <input className="oq-input" placeholder={"Manzilni kiriting"} value={manzil} onChange={e => setManzil(e.target.value)} />
 
           <label className="oq-label">
-            {editingStudent ? t("Parol (ixtiyoriy, faqat o'zgartirish uchun)") : t("Parol")}
+            {editingStudent ? "Parol (ixtiyoriy, faqat o'zgartirish uchun)" : "Parol"}
           </label>
           <input
             className="oq-input"
             type="password"
-            placeholder={editingStudent ? t("Yangi parol kiriting (ixtiyoriy)") : t("Parolni kiriting")}
+            placeholder={editingStudent ? "Yangi parol kiriting (ixtiyoriy)" : "Parolni kiriting"}
             value={parol}
             onChange={e => setParol(e.target.value)}
           />
 
-          <label className="oq-label">{t("Guruh")}</label>
+          <label className="oq-label">{"Guruh"}</label>
           <button
             className={`guruh-btn ${selectedGuruhlar.length > 0 ? "has-selection" : ""}`}
             onClick={openGuruhModal}
           >
             <i className="fa-solid fa-plus"></i>
-            {selectedGuruhlar.length > 0 ? `${selectedGuruhlar.length} ${t("ta guruh tanlandi")}` : t("Guruh qo'shish")}
+            {selectedGuruhlar.length > 0 ? `${selectedGuruhlar.length} ${"ta guruh tanlandi"}` : "Guruh qo'shish"}
           </button>
           {selectedGuruhlar.length > 0 && (
             <div className="guruh-chips">
@@ -588,7 +583,7 @@ export default function Talabalar() {
             </div>
           )}
 
-          <label className="oq-label">{t("Surati")}</label>
+          <label className="oq-label">{"Surati"}</label>
           <label className="drag-drop" style={{ display: "block" }}>
             <input
               type="file"
@@ -604,16 +599,16 @@ export default function Talabalar() {
             ) : (
               <>
                 <i className="fa-solid fa-cloud-arrow-up" style={{ fontSize: 28, color: "#aaa", marginBottom: 10 }}></i>
-                <div style={{ fontSize: 13, color: "#7c3aed", fontWeight: 600 }}>{t("Click to upload")} <span style={{ color: "#888", fontWeight: 400 }}>{t("or drag and drop")}</span></div>
+                <div style={{ fontSize: 13, color: "#7c3aed", fontWeight: 600 }}>{"Click to upload"} <span style={{ color: "#888", fontWeight: 400 }}>{"or drag and drop"}</span></div>
                 <div style={{ fontSize: 12, color: "#aaa", marginTop: 4 }}>JPG, PNG (max. 5MB)</div>
               </>
             )}
           </label>
         </div>
         <div className="oq-footer">
-          <button className="top-btn btn-outline" onClick={() => setDrawer(false)} style={{ flex: 1, justifyContent: "center" }}>{t("Bekor qilish")}</button>
+          <button className="top-btn btn-outline" onClick={() => setDrawer(false)} style={{ flex: 1, justifyContent: "center" }}>{"Bekor qilish"}</button>
           <button className="top-btn btn-primary" onClick={create} style={{ flex: 1, justifyContent: "center", background: "#7c3aed", color: "#fff", border: "none" }}>
-            {editingStudent ? t("Yangilash") : t("Saqlash")}
+            {editingStudent ? "Yangilash" : "Saqlash"}
           </button>
         </div>
       </div>
@@ -621,13 +616,13 @@ export default function Talabalar() {
       {/* Page Header */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1e293b", margin: 0 }}>{t("Talabalar")}</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1e293b", margin: 0 }}>{"Talabalar"}</h1>
           <button className="top-btn btn-primary" onClick={openAddStudent} style={{ height: 44, borderRadius: 12, padding: "0 20px", fontSize: 14, fontWeight: 700 }}>
-            <i className="fa-solid fa-plus"></i> {t("Talaba qo'shish")}
+            <i className="fa-solid fa-plus"></i> {"Talaba qo'shish"}
           </button>
         </div>
         <p style={{ fontSize: 14, color: "#94a3b8", margin: 0 }}>
-          {t("Ushbu sahifada siz Talabalar ro'yxatini va ularning ma'lumotlarini topasiz. Har bir Talaba ismi, fanlari va aloqa ma'lumotlari keltirilgan.")}
+          {"Ushbu sahifada siz Talabalar ro'yxatini va ularning ma'lumotlarini topasiz. Har bir Talaba ismi, fanlari va aloqa ma'lumotlari keltirilgan."}
         </p>
       </div>
 
@@ -636,18 +631,18 @@ export default function Talabalar() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ position: "relative" }}>
             <i className="fa-solid fa-magnifying-glass" style={{ position: "absolute", left: 12, top: 12, color: "#999" }}></i>
-            <input placeholder={t("Search")} style={{ height: 40, width: 280, borderRadius: 8, border: "1px solid #eee", paddingLeft: 36, outline: "none", fontSize: 14 }} />
+            <input placeholder={"Search"} style={{ height: 40, width: 280, borderRadius: 8, border: "1px solid #eee", paddingLeft: 36, outline: "none", fontSize: 14 }} />
           </div>
           <div style={{ display: "flex", gap: 12 }}>
             <button className="top-btn btn-outline">
-              <i className="fa-solid fa-filter"></i> {t("Filters")}
+              <i className="fa-solid fa-filter"></i> {"Filters"}
             </button>
             <button
               className="top-btn btn-outline"
               onClick={() => { setView(view === "archive" ? "active" : "archive"); setPage(1); }}
               style={view === "archive" ? { background: "#7c3aed", color: "#fff", borderColor: "#7c3aed" } : { color: "#666" }}
             >
-              <i className="fa-solid fa-box-archive"></i> {t("Arxiv")}
+              <i className="fa-solid fa-box-archive"></i> {"Arxiv"}
             </button>
           </div>
         </div>
@@ -662,28 +657,28 @@ export default function Talabalar() {
                     {users?.data?.length > 0 && users.data.every(d => d.selected) && <i className="fa-solid fa-check"></i>}
                   </div>
                 </th>
-                <th className="oq-th" style={{ width: "16%", borderTop: "none" }}>{t("Nomi")} <i className="fa-solid fa-arrow-down" style={{ fontSize: 10, marginLeft: 4 }}></i></th>
-                <th className="oq-th" style={{ width: "12%", borderTop: "none" }}>{t("Guruh")}</th>
-                <th className="oq-th" style={{ width: "12%", borderTop: "none" }}>{t("Telefon raqamlari")}</th>
-                <th className="oq-th" style={{ width: "16%", borderTop: "none" }}>{t("Email")}</th>
-                <th className="oq-th" style={{ width: "10%", borderTop: "none" }}>{t("Tug'ilgan sanasi")}</th>
-                <th className="oq-th" style={{ width: "14%", borderTop: "none" }}>{t("Manzil")}</th>
-                <th className="oq-th" style={{ width: "10%", borderTop: "none" }}>{t("Yaratilgan sana")}</th>
-                <th className="oq-th" style={{ width: "6%", borderTop: "none", textAlign: "right" }}>{t("Amallar")}</th>
+                <th className="oq-th" style={{ width: "16%", borderTop: "none" }}>{"Nomi"} <i className="fa-solid fa-arrow-down" style={{ fontSize: 10, marginLeft: 4 }}></i></th>
+                <th className="oq-th" style={{ width: "12%", borderTop: "none" }}>{"Guruh"}</th>
+                <th className="oq-th" style={{ width: "12%", borderTop: "none" }}>{"Telefon raqamlari"}</th>
+                <th className="oq-th" style={{ width: "16%", borderTop: "none" }}>{"Email"}</th>
+                <th className="oq-th" style={{ width: "10%", borderTop: "none" }}>{"Tug'ilgan sanasi"}</th>
+                <th className="oq-th" style={{ width: "14%", borderTop: "none" }}>{"Manzil"}</th>
+                <th className="oq-th" style={{ width: "10%", borderTop: "none" }}>{"Yaratilgan sana"}</th>
+                <th className="oq-th" style={{ width: "6%", borderTop: "none", textAlign: "right" }}>{"Amallar"}</th>
               </tr>
             </thead>
             <tbody>
               {view === "archive" && archiveLoading && (
                 <tr>
                   <td className="oq-td" colSpan={9} style={{ textAlign: "center", color: "#888" }}>
-                    {t("Arxiv yuklanmoqda...")}
+                    {"Arxiv yuklanmoqda..."}
                   </td>
                 </tr>
               )}
               {view === "archive" && !archiveLoading && archived.length === 0 && (
                 <tr>
                   <td className="oq-td" colSpan={9} style={{ textAlign: "center", color: "#888" }}>
-                    {t("Arxivda talaba yo'q")}
+                    {"Arxivda talaba yo'q"}
                   </td>
                 </tr>
               )}
@@ -692,7 +687,7 @@ export default function Talabalar() {
                   <td className="oq-td">
                     {view === "archive" ? (
                       <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: "rgba(150,150,150,0.15)", color: "#888" }}>
-                        {t("ARXIV")}
+                        {"ARXIV"}
                       </span>
                     ) : (
                       <div className={`custom-cb ${row.selected ? "checked" : ""}`} onClick={() => toggleSelect(row.id)}>
@@ -749,7 +744,7 @@ export default function Talabalar() {
             style={{ color: "#666", border: "none", cursor: safePage > 1 ? "pointer" : "not-allowed", opacity: safePage > 1 ? 1 : 0.5 }}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={safePage <= 1}
-          ><i className="fa-solid fa-arrow-left"></i> {t("Previous")}</button>
+          ><i className="fa-solid fa-arrow-left"></i> {"Previous"}</button>
           <div style={{ display: "flex", gap: 8 }}>
             {getPageNumbers(safePage, totalPages).map((p, i) => (
               <button
@@ -766,7 +761,7 @@ export default function Talabalar() {
             style={{ color: "#666", border: "none", cursor: safePage < totalPages ? "pointer" : "not-allowed", opacity: safePage < totalPages ? 1 : 0.5 }}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={safePage >= totalPages}
-          >{t("Next")} <i className="fa-solid fa-arrow-right"></i></button>
+          >{"Next"} <i className="fa-solid fa-arrow-right"></i></button>
         </div>
       </div>
     </div>

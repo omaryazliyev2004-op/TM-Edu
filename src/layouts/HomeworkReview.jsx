@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
-import { useLang } from "../i18n/LanguageContext";
-
 const FILE_BASE = "https://najot-edu.softwareengineer.uz/files/";
 const IMAGE_EXT = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"];
 
@@ -33,8 +31,7 @@ function deepFindByKeys(obj, keys, depth = 0) {
 }
 
 export default function HomeworkReview() {
-  const { t } = useLang();
-  const navigate = useNavigate();
+const navigate = useNavigate();
   const location = useLocation();
   const { groupId, homeworkId, studentId } = useParams();
 
@@ -110,7 +107,7 @@ export default function HomeworkReview() {
           if (passed.grade != null) setScore(Number(passed.grade));
           return;
         }
-        setError(t("Talaba topshirig'i topilmadi"));
+        setError("Talaba topshirig'i topilmadi");
       } catch (err) {
         console.error("Natijani yuklashda xatolik:", err);
         // Endpoint xato bersa ham, state'dagi natija bo'lsa ko'rsatamiz.
@@ -120,7 +117,7 @@ export default function HomeworkReview() {
           if (passed.grade != null) setScore(Number(passed.grade));
         } else {
           setError(
-            err.response?.data?.message || t("Ma'lumotni yuklashda xatolik yuz berdi")
+            err.response?.data?.message || "Ma'lumotni yuklashda xatolik yuz berdi"
           );
         }
       } finally {
@@ -137,7 +134,7 @@ export default function HomeworkReview() {
     data?.full_name ||
     data?.student_name ||
     data?.name ||
-    t("Noma'lum");
+    "Noma'lum";
   const studentComment =
     data?.title || data?.text || data?.comment || data?.answer || "";
   // Uy vazifasining mavzusi va izohi (API: data.homework.{title,file})
@@ -185,8 +182,8 @@ export default function HomeworkReview() {
     PENDING: "Kutayabti",
   };
   const statusText = statusValue
-    ? t(STATUS_LABELS[statusValue] || statusValue)
-    : t("Kutayabti");
+    ? STATUS_LABELS[statusValue] || statusValue
+    : "Kutayabti";
 
   // Theme colors driven by passing score (>=60 accepted, else rejected)
   const isPassed = score >= 60;
@@ -211,7 +208,7 @@ export default function HomeworkReview() {
 
   const handleSubmit = async () => {
     if (!answerId) {
-      alert(t("Homework answer ID topilmadi — baholab bo'lmaydi."));
+      alert("Homework answer ID topilmadi — baholab bo'lmaydi.");
       return;
     }
     setSubmitting(true);
@@ -223,14 +220,14 @@ export default function HomeworkReview() {
       });
       alert(
         isPassed
-          ? t("Vazifa qabul qilindi!")
-          : t("Vazifa qaytarildi!")
+          ? "Vazifa qabul qilindi!"
+          : "Vazifa qaytarildi!"
       );
       backToList();
     } catch (err) {
       console.error("Baholashda xatolik:", err);
       alert(
-        err.response?.data?.message || t("Baholashda xatolik yuz berdi.")
+        err.response?.data?.message || "Baholashda xatolik yuz berdi."
       );
     } finally {
       setSubmitting(false);
@@ -277,7 +274,7 @@ export default function HomeworkReview() {
   if (loading) {
     return (
       <div style={{ padding: "24px" }}>
-        <p>{t("Ma'lumot yuklanmoqda...")}</p>
+        <p>{"Ma'lumot yuklanmoqda..."}</p>
       </div>
     );
   }
@@ -289,7 +286,7 @@ export default function HomeworkReview() {
           onClick={backToList}
           style={{ cursor: "pointer", color: "#64748b", fontWeight: 600 }}
         >
-          <i className="fa-solid fa-chevron-left"></i> {t("Orqaga")}
+          <i className="fa-solid fa-chevron-left"></i> {"Orqaga"}
         </span>
         <div style={{ color: "#e53935", marginTop: 16 }}>{error}</div>
       </div>
@@ -424,7 +421,7 @@ export default function HomeworkReview() {
         {/* Breadcrumbs */}
         <div className="hr-breadcrumbs">
           <span className="hr-bc-link" onClick={backToList}>
-            {t(statusLabel)}
+            {statusLabel}
           </span>
           <span className="hr-bc-sep">&gt;</span>
           <span className="hr-bc-current">{homeworkTitle}</span>
@@ -432,12 +429,12 @@ export default function HomeworkReview() {
 
         {/* Homework task */}
         <div className="hr-card muted">
-          <h2 className="hr-card-title">{t("Uy vazifasi")}</h2>
+          <h2 className="hr-card-title">{"Uy vazifasi"}</h2>
           <div
             className="hr-inner"
             style={{ marginBottom: homeworkDesc || homeworkFiles.length ? 12 : 0 }}
           >
-            <span className="hr-label">{t("Mavzu:")}</span>
+            <span className="hr-label">{"Mavzu:"}</span>
             <div className="hr-text">{homeworkTitle}</div>
           </div>
           {homeworkDesc && (
@@ -445,13 +442,13 @@ export default function HomeworkReview() {
               className="hr-inner"
               style={{ marginBottom: homeworkFiles.length ? 12 : 0 }}
             >
-              <span className="hr-label">{t("Izoh:")}</span>
+              <span className="hr-label">{"Izoh:"}</span>
               <div className="hr-text">{homeworkDesc}</div>
             </div>
           )}
           {homeworkFiles.length > 0 && (
             <div className="hr-inner">
-              <span className="hr-label">{t("Vazifa fayli:")}</span>
+              <span className="hr-label">{"Vazifa fayli:"}</span>
               {renderThumbs(homeworkFiles)}
             </div>
           )}
@@ -463,23 +460,23 @@ export default function HomeworkReview() {
 
           <div className="hr-meta-card">
             <div>
-              <div className="hr-meta-label">{t("Fayllar soni:")}</div>
+              <div className="hr-meta-label">{"Fayllar soni:"}</div>
               <div className="hr-meta-val">{submissionFiles.length}</div>
             </div>
             <div>
-              <div className="hr-meta-label">{t("Status:")}</div>
+              <div className="hr-meta-label">{"Status:"}</div>
               <span className="hr-badge">{statusText}</span>
             </div>
           </div>
 
           <div className="hr-files-card">
             <div className="hr-label" style={{ marginBottom: 0 }}>
-              {t("Fayl:")} <strong style={{ color: "#1e293b" }}>{submissionFiles.length}</strong>
+              {"Fayl:"} <strong style={{ color: "#1e293b" }}>{submissionFiles.length}</strong>
             </div>
             {submissionFiles.length > 0 && renderThumbs(submissionFiles)}
             {studentComment && (
               <div className="hr-comment-box">
-                <span className="hr-label">{t("Uyga vazifa izohi:")}</span>
+                <span className="hr-label">{"Uyga vazifa izohi:"}</span>
                 <div className="hr-text" style={{ fontSize: 15 }}>
                   {/\bhttps?:\/\//.test(studentComment) ? (
                     <a href={studentComment.match(/https?:\/\/\S+/)?.[0]} target="_blank" rel="noreferrer">
@@ -499,13 +496,13 @@ export default function HomeworkReview() {
           <div className="hr-info-box">
             <i className="fa-solid fa-circle-info"></i>
             <span>
-              {t("60-100 oralig'ida ball qo'yilgan vazifa 'Qabul qilingan', 0-59 oralig'ida ball qo'yilgan vazifa 'Qaytarilgan' hisoblanadi.")}
+              {"60-100 oralig'ida ball qo'yilgan vazifa 'Qabul qilingan', 0-59 oralig'ida ball qo'yilgan vazifa 'Qaytarilgan' hisoblanadi."}
             </span>
           </div>
 
           {/* Score slider */}
           <div className="hr-slider-header">
-            <span className="hr-slider-label">{t("Ball")}</span>
+            <span className="hr-slider-label">{"Ball"}</span>
             <div
               className="hr-value-box"
               style={{ backgroundColor: valBg, color: valText, border: `1.5px solid ${valBorder}` }}
@@ -524,12 +521,12 @@ export default function HomeworkReview() {
               disabled={submitting}
             />
             <div className={`hr-pass-badge ${isPassed ? "active" : ""}`}>
-              {t("O'tish bali: 60")}
+              {"O'tish bali: 60"}
             </div>
           </div>
 
           {/* Files dropzone */}
-          <div className="hr-section-label">{t("Fayllar")}</div>
+          <div className="hr-section-label">{"Fayllar"}</div>
           <label
             className="hr-dropzone"
             style={{ display: "block" }}
@@ -538,10 +535,10 @@ export default function HomeworkReview() {
           >
             <i className="fa-solid fa-cloud-arrow-up"></i>
             <p className="hr-dz-title">
-              {t("Faylni yuklash uchun ushbu hudud ustiga bosing yoki faylni shu yerga olib keling")}
+              {"Faylni yuklash uchun ushbu hudud ustiga bosing yoki faylni shu yerga olib keling"}
             </p>
             <p className="hr-dz-sub">
-              {t(".jpg, .png, .pdf, .mp4, .docs formatlaridan birida bo'lishi mumkin")}
+              {".jpg, .png, .pdf, .mp4, .docs formatlaridan birida bo'lishi mumkin"}
             </p>
             {files.length > 0 && (
               <div className="hr-dz-files">{files.map((f) => f.name).join(", ")}</div>
@@ -553,12 +550,12 @@ export default function HomeworkReview() {
           <div className="hr-comment-wrapper">
             <textarea
               className="hr-textarea"
-              placeholder={t("Izohingiz")}
+              placeholder={"Izohingiz"}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               disabled={submitting}
             />
-            <button className="hr-mic-btn" type="button" title={t("Ovoz yozish")}>
+            <button className="hr-mic-btn" type="button" title={"Ovoz yozish"}>
               <i className="fa-solid fa-microphone"></i>
             </button>
           </div>
@@ -566,10 +563,10 @@ export default function HomeworkReview() {
           {/* Actions */}
           <div className="hr-footer">
             <button className="hr-btn hr-btn-cancel" onClick={backToList} disabled={submitting}>
-              {t("Bekor qilish")}
+              {"Bekor qilish"}
             </button>
             <button className="hr-btn hr-btn-submit" onClick={handleSubmit} disabled={submitting}>
-              {submitting ? t("Yuborilmoqda...") : t("Yuborish")}
+              {submitting ? "Yuborilmoqda..." : "Yuborish"}
             </button>
           </div>
         </div>

@@ -1,9 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
-import Login from "./layouts/login";
+import Login from "./layouts/Login";
 import Dashboard from "./layouts/DashboardLayout";
 import Asosiy from "./layouts/Dashboard";
-import Oqituvchilar from "./layouts/oqituvchilar";
-import Sinflar from "./layouts/Sinflar";
+import Oqituvchilar from "./layouts/Teachers";
+import Sinflar from "./layouts/Groups";
 import GroupDetails from "./layouts/GroupDetails";
 import HomeworkCreate from "./layouts/HomeworkCreate";
 import HomeworkDetails from "./layouts/HomeworkDetails";
@@ -11,9 +11,9 @@ import HomeworkReview from "./layouts/HomeworkReview";
 import ExamCreate from "./layouts/ExamCreate";
 import ExamDetails from "./layouts/ExamDetails";
 import ExamReview from "./layouts/ExamReview";
-import Sovgalar from "./layouts/Sovg'alar";
-import Boshqarish from "./layouts/Boshqarish";
-import Talabalar from "./layouts/Talabalar";
+import Sovgalar from "./layouts/Gifts";
+import Boshqarish from "./layouts/Management";
+import Talabalar from "./layouts/Students";
 import ProtectRoute from "./components/ProtectRoute";
 import StudentLayout from "./layouts/StudentLayout";
 import StudentGroups from "./layouts/student/StudentGroups";
@@ -30,7 +30,7 @@ import {
   Hodimlar,
   Filiallar,
   Sabablar,
-} from "./layouts/BoshqarishPages";
+} from "./layouts/ManagementPages";
 
 export const route = createBrowserRouter([
   {
@@ -118,7 +118,8 @@ export const route = createBrowserRouter([
       </ProtectRoute>
     ),
     children: [
-      { index: true, element: <StudentPlaceholder title="Bosh sahifa" /> },
+      { index: true, element: <StudentGroups /> },
+      { path: "bosh-sahifa", element: <StudentPlaceholder title="Bosh sahifa" /> },
       { path: "tolovlarim", element: <StudentPlaceholder title="To'lovlarim" /> },
       { path: "guruhlarim", element: <StudentGroups /> },
       { path: "guruhlarim/:groupId", element: <StudentLessons /> },

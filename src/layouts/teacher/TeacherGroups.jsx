@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchApi, getName } from "../../api/user.api";
-import { useLang } from "../../i18n/LanguageContext";
-
 const UZ_DAYS = {
   MONDAY: "Du",
   TUESDAY: "Se",
@@ -30,8 +28,7 @@ function groupKey(g) {
 }
 
 export default function TeacherGroups() {
-  const { t } = useLang();
-  const navigate = useNavigate();
+const navigate = useNavigate();
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("guruhlar");
@@ -131,14 +128,14 @@ export default function TeacherGroups() {
         }
       `}</style>
 
-      <h1 className="tg-title">{t("Guruhlar")}</h1>
+      <h1 className="tg-title">{"Guruhlar"}</h1>
 
       <div className="tg-tabs">
         <button className={`tg-tab${tab === "guruhlar" ? " active" : ""}`} onClick={() => setTab("guruhlar")}>
-          {t("Guruhlar")}
+          {"Guruhlar"}
         </button>
         <button className={`tg-tab${tab === "arxiv" ? " active" : ""}`} onClick={() => setTab("arxiv")}>
-          <i className="fa-solid fa-box-archive"></i> {t("Arxiv")}
+          <i className="fa-solid fa-box-archive"></i> {"Arxiv"}
         </button>
       </div>
 
@@ -146,13 +143,13 @@ export default function TeacherGroups() {
         <div className="tg-stat-card">
           <button className="tg-stat-menu"><i className="fa-solid fa-ellipsis-vertical"></i></button>
           <div className="tg-stat-icon"><i className="fa-regular fa-user"></i></div>
-          <p className="tg-stat-label">{t("Mening guruhlarim")}</p>
+          <p className="tg-stat-label">{"Mening guruhlarim"}</p>
           <p className="tg-stat-value">{activeGroups.length}</p>
         </div>
         <div className="tg-stat-card">
           <button className="tg-stat-menu"><i className="fa-solid fa-ellipsis-vertical"></i></button>
           <div className="tg-stat-icon"><i className="fa-solid fa-graduation-cap"></i></div>
-          <p className="tg-stat-label">{t("Jami o'quvchilar")}</p>
+          <p className="tg-stat-label">{"Jami o'quvchilar"}</p>
           <p className="tg-stat-value">{studentsTotal}</p>
           <div className="tg-mini-avatars">
             <span className="tg-mini-avatar">I</span>
@@ -164,21 +161,21 @@ export default function TeacherGroups() {
 
       <div className="tg-wrap">
         {loading ? (
-          <div className="tg-empty">{t("Yuklanmoqda...")}</div>
+          <div className="tg-empty">{"Yuklanmoqda..."}</div>
         ) : view.length === 0 ? (
-          <div className="tg-empty">{t("Guruhlar topilmadi")}</div>
+          <div className="tg-empty">{"Guruhlar topilmadi"}</div>
         ) : (
           <table className="tg-table">
             <thead>
               <tr>
-                <th>{t("Status")}</th>
-                <th>{t("Guruh nomi")}</th>
-                <th>{t("Kurs")}</th>
-                <th>{t("Davomiyligi")}</th>
-                <th>{t("Dars vaqti")}</th>
-                <th>{t("Xona")}</th>
-                <th>{t("O'qituvchi")}</th>
-                <th>{t("Talabalar")}</th>
+                <th>{"Status"}</th>
+                <th>{"Guruh nomi"}</th>
+                <th>{"Kurs"}</th>
+                <th>{"Davomiyligi"}</th>
+                <th>{"Dars vaqti"}</th>
+                <th>{"Xona"}</th>
+                <th>{"O'qituvchi"}</th>
+                <th>{"Talabalar"}</th>
                 <th><button className="tg-refresh"><i className="fa-solid fa-rotate-right"></i></button></th>
               </tr>
             </thead>
@@ -201,7 +198,7 @@ export default function TeacherGroups() {
                           <span />
                         </button>
                         <span className={active ? "tg-faol" : "tg-arxiv-lbl"}>
-                          {active ? t("FAOL") : t("ARXIV")}
+                          {active ? "FAOL" : "ARXIV"}
                         </span>
                       </div>
                     </td>
@@ -214,13 +211,13 @@ export default function TeacherGroups() {
                       </button>
                     </td>
                     <td><span className="tg-kurs">{g.courseName || g.course?.name || "—"}</span></td>
-                    <td><span className="tg-duration">{duration ? `${duration} ${t("oy")}` : "—"}</span></td>
+                    <td><span className="tg-duration">{duration ? `${duration} ${"oy"}` : "—"}</span></td>
                     <td>
                       <div className="tg-time">{g.start_time || g.startTime || "—"}</div>
                       <div className="tg-days">{formatDays(g.week_day || g.weekDay)}</div>
                     </td>
                     <td>{room}</td>
-                    <td><span className="tg-teacher">{teacher || t("Noma'lum")}</span></td>
+                    <td><span className="tg-teacher">{teacher || "Noma'lum"}</span></td>
                     <td className="tg-students">{studentsCount}</td>
                     <td><span className="tg-arrow"><i className="fa-solid fa-chevron-right"></i></span></td>
                   </tr>

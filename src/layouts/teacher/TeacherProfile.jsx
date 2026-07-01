@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { fetchApi, fileUrl } from "../../api/user.api";
-import { useLang } from "../../i18n/LanguageContext";
-
 function formatDate(value) {
   if (!value) return "—";
   const d = new Date(value);
@@ -12,8 +10,7 @@ function formatDate(value) {
 }
 
 export default function TeacherProfile() {
-  const { t } = useLang();
-  const [data, setData] = useState(null);
+const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -77,12 +74,12 @@ export default function TeacherProfile() {
         }
       `}</style>
 
-      <h1 className="tp-title">{t("Profil")}</h1>
+      <h1 className="tp-title">{"Profil"}</h1>
 
       {loading ? (
-        <div className="tp-card tp-empty">{t("Yuklanmoqda...")}</div>
+        <div className="tp-card tp-empty">{"Yuklanmoqda..."}</div>
       ) : !data ? (
-        <div className="tp-card tp-empty">{t("Ma'lumot topilmadi")}</div>
+        <div className="tp-card tp-empty">{"Ma'lumot topilmadi"}</div>
       ) : (
         <div className="tp-card tp-panel">
           {/* LEFT */}
@@ -98,12 +95,12 @@ export default function TeacherProfile() {
               )}
             </div>
             <h2 className="tp-name">{data.full_name || "—"}</h2>
-            <p className="tp-role">{t("O'qituvchi")}</p>
+            <p className="tp-role">{"O'qituvchi"}</p>
           </div>
 
           {/* RIGHT */}
           <div className="tp-right">
-            <h3 className="tp-section">{t("Shaxsiy ma'lumotlar")}</h3>
+            <h3 className="tp-section">{"Shaxsiy ma'lumotlar"}</h3>
             <div className="tp-info">
               {infoItems.map((it) => (
                 <div className="tp-item" key={it.label}>
@@ -111,7 +108,7 @@ export default function TeacherProfile() {
                     <i className={`fa-solid ${it.icon} tp-ic`}></i>
                   </span>
                   <div>
-                    <p className="tp-lbl">{t(it.label)}</p>
+                    <p className="tp-lbl">{it.label}</p>
                     <p className="tp-val">{it.value || "—"}</p>
                   </div>
                 </div>
@@ -120,9 +117,9 @@ export default function TeacherProfile() {
 
             <div className="tp-divider" />
 
-            <h3 className="tp-section groups">{t("Guruhlar")}</h3>
+            <h3 className="tp-section groups">{"Guruhlar"}</h3>
             {groups.length === 0 ? (
-              <p className="tp-role" style={{ textAlign: "left" }}>{t("Guruhlar yo'q")}</p>
+              <p className="tp-role" style={{ textAlign: "left" }}>{"Guruhlar yo'q"}</p>
             ) : (
               <div className="tp-pills">
                 {groups.map((g, i) => (

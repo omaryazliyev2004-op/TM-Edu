@@ -1,23 +1,25 @@
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useLang } from "../i18n/LanguageContext";
+import {
+  Home, CreditCard, Users, BarChart2, Award,
+  ShoppingCart, PlayCircle, Settings, ChevronLeft,
+  Calendar, Plus, ChevronDown, Search, Globe, Bell, Moon
+} from "lucide-react";
 
 const navItems = [
-  { icon: "fa-house", label: "Bosh sahifa", to: "/student", end: true },
-  { icon: "fa-credit-card", label: "To'lovlarim", to: "/student/tolovlarim" },
-  { icon: "fa-users", label: "Guruhlarim", to: "/student/guruhlarim" },
-  { icon: "fa-chart-column", label: "Ko'rsatgichlarim", to: "/student/korsatgichlarim" },
-  { icon: "fa-chart-simple", label: "Reyting", to: "/student/reyting" },
-  { icon: "fa-cart-shopping", label: "Do`kon", to: "/student/dokon" },
-  { icon: "fa-tower-broadcast", label: "Qo'shimcha darslar", to: "/student/qoshimcha-darslar" },
-  { icon: "fa-gear", label: "Sozlamalar", to: "/student/sozlamalar" },
+  { icon: <Home size={20} />, label: "Bosh sahifa", to: "/student/bosh-sahifa" },
+  { icon: <CreditCard size={20} />, label: "To'lovlarim", to: "/student/tolovlarim" },
+  { icon: <Users size={20} />, label: "Guruhlarim", to: "/student/guruhlarim" },
+  { icon: <BarChart2 size={20} />, label: "Ko'rsatgichlarim", to: "/student/korsatgichlarim" },
+  { icon: <Award size={20} />, label: "Reyting", to: "/student/reyting" },
+  { icon: <ShoppingCart size={20} />, label: "Do`kon", to: "/student/dokon" },
+  { icon: <PlayCircle size={20} />, label: "Qo'shimcha darslar", to: "/student/qoshimcha-darslar" },
+  { icon: <Settings size={20} />, label: "Sozlamalar", to: "/student/sozlamalar" },
 ];
 
 export default function StudentLayout() {
   const navigate = useNavigate();
-  const { t } = useLang();
   const [collapsed, setCollapsed] = useState(false);
-  const [isDark, setIsDark] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
   const handleLogout = () => {
@@ -122,7 +124,7 @@ export default function StudentLayout() {
           background:#f97316;
           display:${collapsed ? "none" : "block"};
         }
-        .st-nav-icon { width:20px; font-size:20px; }
+        .st-nav-icon { width:20px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .st-nav-label { display:${collapsed ? "none" : "inline"}; flex:1; }
         .st-side-logo {
           height:78px;
@@ -153,7 +155,7 @@ export default function StudentLayout() {
           z-index:300;
         }
         .st-collapse:hover { background:#ea580c; }
-        .st-collapse i { transform:${collapsed ? "rotate(180deg)" : "rotate(0deg)"}; transition:transform .30s; }
+        .st-collapse svg { transform:${collapsed ? "rotate(180deg)" : "rotate(0deg)"}; transition:transform .30s; }
 
         .st-header {
           height:64px;
@@ -208,7 +210,7 @@ export default function StudentLayout() {
           box-shadow:0 1px 3px rgba(15,23,42,.08);
         }
         .st-search input::placeholder { color:#9ca3af; }
-        .st-search i { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#9ca3af; font-size:14px; }
+        .st-search svg { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#9ca3af; }
         .st-lang { height:36px; min-width:150px; border:1px solid #e5e7eb; border-radius:12px; background:#f9fafb; color:#4b5563; padding:0 32px 0 36px; font-size:13px; font-weight:700; appearance:none; outline:none; cursor:pointer; }
         .st-lang-wrap { position:relative; display:flex; align-items:center; }
         .st-lang-wrap .globe { position:absolute; left:12px; color:#6b7280; pointer-events:none; }
@@ -237,14 +239,14 @@ export default function StudentLayout() {
                   end={item.end}
                   className={({ isActive }) => `st-nav-item${isActive ? " active" : ""}`}
                 >
-                  <i className={`fa-solid ${item.icon} st-nav-icon`}></i>
-                  <span className="st-nav-label">{t(item.label)}</span>
+                  <span className="st-nav-icon">{item.icon}</span>
+                  <span className="st-nav-label">{item.label}</span>
                 </NavLink>
               ))}
             </nav>
           </div>
           <button className="st-collapse" onClick={() => setCollapsed((c) => !c)}>
-            <i className="fa-solid fa-chevron-left"></i>
+            <ChevronLeft size={18} />
           </button>
         </aside>
 
@@ -257,44 +259,40 @@ export default function StudentLayout() {
               <span className="st-logo-text">EduCoin</span>
             </div>
             <button className="st-burger" onClick={() => setCollapsed((c) => !c)}>
-              <i className="fa-solid fa-bars"></i>
+              <ChevronLeft size={18} />
             </button>
-            <button className="st-top-btn"><i className="fa-regular fa-calendar"></i></button>
+            <button className="st-top-btn"><Calendar size={18} /></button>
             <button className="st-add-btn">
-              <i className="fa-solid fa-plus"></i>
-              {t("Qo'shish")}
-              <i className="fa-solid fa-chevron-down" style={{ fontSize: 11 }}></i>
+              <Plus size={16} />
+              Qo'shish
+              <ChevronDown size={14} />
             </button>
             <div className="st-search">
-              <i className="fa-solid fa-magnifying-glass"></i>
-              <input placeholder={t("Qidirish...")} />
+              <Search size={16} />
+              <input placeholder="Qidirish..." />
             </div>
           </div>
 
           <div className="st-header-right">
-            <div className="st-lang-wrap">
-              <i className="fa-solid fa-globe globe"></i>
-              <select className="st-lang" defaultValue="uz">
-                <option value="uz">O'zbekcha</option>
-                <option value="ru">Ruscha</option>
-                <option value="en">English</option>
-              </select>
-              <i className="fa-solid fa-chevron-down chev"></i>
-            </div>
+            {/* Til icon (dekorativ) */}
+            <button className="st-icon-btn" style={{ cursor: "default" }} disabled>
+              <Globe size={18} />
+            </button>
             <button className="st-icon-btn">
-              <i className="fa-regular fa-bell"></i>
+              <Bell size={18} />
               <span className="st-badge"></span>
             </button>
-            <button className="st-icon-btn" onClick={() => setIsDark((d) => !d)}>
-              <i className={`fa-${isDark ? "solid fa-sun" : "regular fa-moon"}`}></i>
+            {/* Dark mode icon (dekorativ) */}
+            <button className="st-icon-btn" style={{ cursor: "default" }} disabled>
+              <Moon size={18} />
             </button>
             <div className="st-profile">
               <button className="st-avatar" onClick={() => setProfileOpen((o) => !o)}>S</button>
               {profileOpen && (
                 <div className="st-menu">
-                  <div className="st-role">{t("Talaba")}</div>
+                  <div className="st-role">Talaba</div>
                   <button className="st-logout" onClick={handleLogout}>
-                    {t("Chiqish")}
+                    Chiqish
                   </button>
                 </div>
               )}

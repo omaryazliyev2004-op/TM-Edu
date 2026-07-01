@@ -6,12 +6,8 @@ import Alert from "@mui/material/Alert";
 import ErrorIcon from "@mui/icons-material/Error"
 import { useState, useEffect } from "react";
 import { fetchApi, getRole, roleHome } from "../api/user.api";
-import { useLang } from "../i18n/LanguageContext";
-
 export default function Login() {
-
-  const { t } = useLang();
-  const navigate = useNavigate();
+const navigate = useNavigate();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [showAlert, setShowAlert] = useState(false);
@@ -55,7 +51,7 @@ export default function Login() {
       setForgotStep("otp");
     } catch (error) {
       setForgotError(
-        error.response?.data?.message || t("Kod yuborishda xatolik yuz berdi")
+        error.response?.data?.message || "Kod yuborishda xatolik yuz berdi"
       );
       console.log(error);
     } finally {
@@ -89,7 +85,7 @@ export default function Login() {
       setForgotStep("password");
     } catch (error) {
       setForgotError(
-        error.response?.data?.message || t("Kod noto'g'ri yoki muddati o'tgan")
+        error.response?.data?.message || "Kod noto'g'ri yoki muddati o'tgan"
       );
       console.log(error);
     } finally {
@@ -102,7 +98,7 @@ export default function Login() {
     e.preventDefault();
     setForgotError("");
     if (forgotPassword !== forgotPassword2) {
-      setForgotError(t("Parollar mos kelmadi"));
+      setForgotError("Parollar mos kelmadi");
       return;
     }
     setForgotLoading(true);
@@ -117,7 +113,7 @@ export default function Login() {
       setTimeout(() => setSuccessToastOpen(false), 3000);
     } catch (error) {
       setForgotError(
-        error.response?.data?.message || t("Parolni o'zgartirishda xatolik yuz berdi")
+        error.response?.data?.message || "Parolni o'zgartirishda xatolik yuz berdi"
       );
       console.log(error);
     } finally {
@@ -160,14 +156,14 @@ export default function Login() {
       {showAlert && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[999] flex items-center gap-3 bg-[#fef2f2] border border-[#fecaca] text-[#b91c1c] rounded-2xl px-6 py-4 shadow-xl text-[16px] font-semibold min-w-[300px] justify-center">
           <i className="fa-solid fa-circle-exclamation text-[20px]"></i>
-          {t("Login yoki Parol hato")}
+          {"Login yoki Parol hato"}
         </div>
       )}
 
       {successToastOpen && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[999] flex items-center gap-3 bg-[#2E8738] text-white rounded-2xl px-6 py-4 shadow-[0_12px_30px_rgba(46,135,56,0.35)] text-[16px] font-semibold min-w-[360px]">
           <i className="fa-solid fa-circle-check text-[20px]"></i>
-          <span className="flex-1">{t("Parolingiz muvaffaqiyatli o'zgartirildi!")}</span>
+          <span className="flex-1">{"Parolingiz muvaffaqiyatli o'zgartirildi!"}</span>
           <button
             type="button"
             onClick={() => setSuccessToastOpen(false)}
@@ -202,7 +198,7 @@ export default function Login() {
           </h2>
 
           <form onSubmit={handleLogin} className="flex flex-col w-full">
-            <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-2 text-left">{t("Login")}</label>
+            <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-2 text-left">{"Login"}</label>
             <div className="relative mb-6">
               <input
                 onChange={(e) => setLogin(e.target.value)}
@@ -212,7 +208,7 @@ export default function Login() {
               />
             </div>
 
-            <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-2 text-left">{t("Parol")}</label>
+            <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-2 text-left">{"Parol"}</label>
             <div className="relative mb-3">
               <input
                 onChange={(e) => setPassword(e.target.value)}
@@ -231,7 +227,7 @@ export default function Login() {
                 onClick={() => setForgotOpen(true)}
                 className="text-[#243464] text-[12px] font-bold hover:underline bg-transparent border-0 p-0 cursor-pointer"
               >
-                {t("Parolni unutdingizmi?")}
+                {"Parolni unutdingizmi?"}
               </button>
             </div>
 
@@ -239,7 +235,7 @@ export default function Login() {
               type="submit"
               className="outline-0 w-full h-[52px] text-white bg-[#243464] hover:bg-[#1a254a] transition-colors rounded-[12px] text-[15px] font-medium cursor-pointer shadow-[0_10px_15px_-3px_rgba(36,52,100,0.2)]"
             >
-              {t("Kirish")}
+              {"Kirish"}
             </button>
           </form>
         </div>
@@ -263,7 +259,7 @@ export default function Login() {
               onClick={(e) => e.stopPropagation()}
             >
               <i className="fa-solid fa-check text-[20px]"></i>
-              <span className="flex-1">{t("SMS kod yuborildi!")}</span>
+              <span className="flex-1">{"SMS kod yuborildi!"}</span>
               <button
                 type="button"
                 onClick={() => setSmsToastOpen(false)}
@@ -281,7 +277,7 @@ export default function Login() {
               type="button"
               onClick={closeForgot}
               className="absolute top-6 right-6 w-7 h-7 rounded-lg text-[#98A1B2] hover:bg-[#F4F6FA] hover:text-[#243464] cursor-pointer flex items-center justify-center bg-transparent border-0 text-[18px]"
-              aria-label={t("Yopish")}
+              aria-label={"Yopish"}
             >
               <i className="fa-solid fa-xmark"></i>
             </button>
@@ -299,13 +295,13 @@ export default function Login() {
               </div>
               <div>
                 <h2 className="text-[20px] leading-tight font-extrabold text-[#243464] m-0">
-                  {forgotStep === "otp" ? t("Kodni tasdiqlash") : t("Parolni tiklash")}
+                  {forgotStep === "otp" ? "Kodni tasdiqlash" : "Parolni tiklash"}
                 </h2>
                 <p className="text-[13px] font-semibold text-[#9AA3B2] mt-1 mb-0">
-                  {forgotStep === "phone" && t("Telefon raqamingizni kiriting")}
-                  {forgotStep === "otp" && t("SMS orqali kelgan kodni kiriting")}
-                  {forgotStep === "password" && t("Yangi parolingizni kiriting")}
-                  {forgotStep === "done" && t("Muvaffaqiyatli")}
+                  {forgotStep === "phone" && "Telefon raqamingizni kiriting"}
+                  {forgotStep === "otp" && "SMS orqali kelgan kodni kiriting"}
+                  {forgotStep === "password" && "Yangi parolingizni kiriting"}
+                  {forgotStep === "done" && "Muvaffaqiyatli"}
                 </p>
               </div>
             </div>
@@ -314,10 +310,10 @@ export default function Login() {
             {forgotStep === "phone" && (
               <form onSubmit={handleSendOtp} className="flex flex-col">
                 <p className="hidden">
-                  {t("Telefon raqamingizni kiriting — tasdiqlash kodi yuboriladi.")}
+                  {"Telefon raqamingizni kiriting — tasdiqlash kodi yuboriladi."}
                 </p>
                 <label className="text-[12px] font-extrabold text-[#6F7788] uppercase tracking-wide mb-2">
-                  {t("Telefon raqam")}
+                  {"Telefon raqam"}
                 </label>
                 <div className="relative mb-5">
                   <input
@@ -338,7 +334,7 @@ export default function Login() {
                   disabled={forgotLoading || !forgotPhone.trim()}
                   className="outline-0 w-full h-[48px] text-white bg-[#243464] hover:bg-[#1c2a53] transition-colors rounded-[12px] text-[15px] font-extrabold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {forgotLoading ? t("Yuborilmoqda...") : t("Kodni yuborish")}
+                  {forgotLoading ? "Yuborilmoqda..." : "Kodni yuborish"}
                 </button>
               </form>
             )}
@@ -347,13 +343,13 @@ export default function Login() {
             {forgotStep === "otp" && (
               <form onSubmit={handleVerifyOtp} className="flex flex-col">
                 <p className="hidden">
-                  {t("Raqamga yuborilgan tasdiqlash kodini kiriting")}
+                  {"Raqamga yuborilgan tasdiqlash kodini kiriting"}
                   <span className="block font-semibold text-[#1a1a2e] mt-1">
                     {forgotPhone}
                   </span>
                 </p>
                 <label className="text-[12px] font-extrabold text-[#6F7788] uppercase tracking-wide mb-2">
-                  {t("SMS kod")}
+                  {"SMS kod"}
                 </label>
                 <div className="relative mb-5">
                   <input
@@ -377,12 +373,12 @@ export default function Login() {
                   disabled={forgotLoading || !forgotOtp.trim()}
                   className="outline-0 w-full h-[48px] text-white bg-[#243464] hover:bg-[#1c2a53] transition-colors rounded-[12px] text-[15px] font-extrabold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {forgotLoading ? t("Tekshirilmoqda...") : t("Tasdiqlash")}
+                  {forgotLoading ? "Tekshirilmoqda..." : "Tasdiqlash"}
                 </button>
                 <div className="text-center text-[13px] font-semibold text-[#717B90] mt-4 mb-0">
                   {otpTimer > 0 ? (
                     <span>
-                      {t("Qayta yuborish")}: <span className="text-[#243464] font-extrabold">
+                      {"Qayta yuborish"}: <span className="text-[#243464] font-extrabold">
                         {String(Math.floor(otpTimer / 60)).padStart(2, "0")}:{String(otpTimer % 60).padStart(2, "0")}
                       </span>
                     </span>
@@ -396,12 +392,12 @@ export default function Login() {
                           setOtpTimer(60);
                           setTimeout(() => setSmsToastOpen(false), 2000);
                         } catch (e) {
-                          setForgotError(e.response?.data?.message || t("Kod yuborishda xatolik yuz berdi"));
+                          setForgotError(e.response?.data?.message || "Kod yuborishda xatolik yuz berdi");
                         }
                       }}
                       className="text-[#243464] font-extrabold underline bg-transparent border-0 cursor-pointer text-[13px] hover:text-[#1c2a53]"
                     >
-                      {t("Qayta yuborish")}
+                      {"Qayta yuborish"}
                     </button>
                   )}
                 </div>
@@ -412,27 +408,27 @@ export default function Login() {
             {forgotStep === "password" && (
               <form onSubmit={handleChangePassword} className="flex flex-col mt-2">
                 <label className="text-[12px] font-extrabold text-[#6F7788] uppercase tracking-wide mb-2 mt-4">
-                  {t("YANGI PAROL")}
+                  {"YANGI PAROL"}
                 </label>
                 <div className="relative mb-5">
                   <input
                     value={forgotPassword}
                     onChange={(e) => setForgotPassword(e.target.value)}
                     type="password"
-                    placeholder={t("Yangi parol")}
+                    placeholder={"Yangi parol"}
                     className="outline-0 w-full h-[48px] border border-[#DDE2EA] focus:border-[#243464] rounded-[12px] px-4 text-[15px] font-medium text-[#1F2D5A] placeholder-[#9AA3B2]"
                   />
                 </div>
                 
                 <label className="text-[12px] font-extrabold text-[#6F7788] uppercase tracking-wide mb-2">
-                  {t("PAROLNI TASDIQLANG")}
+                  {"PAROLNI TASDIQLANG"}
                 </label>
                 <div className="relative mb-7">
                   <input
                     value={forgotPassword2}
                     onChange={(e) => setForgotPassword2(e.target.value)}
                     type="password"
-                    placeholder={t("Yangi parolni takrorlang")}
+                    placeholder={"Yangi parolni takrorlang"}
                     className="outline-0 w-full h-[48px] border border-[#DDE2EA] focus:border-[#243464] rounded-[12px] px-4 text-[15px] font-medium text-[#1F2D5A] placeholder-[#9AA3B2]"
                   />
                 </div>
@@ -448,7 +444,7 @@ export default function Login() {
                   }
                   className="outline-0 w-full h-[54px] text-white bg-[#243464] hover:bg-[#1c2a53] transition-colors rounded-[16px] text-[16px] font-bold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed mt-2"
                 >
-                  {forgotLoading ? t("Saqlanmoqda...") : t("Saqlash va Kirish")}
+                  {forgotLoading ? "Saqlanmoqda..." : "Saqlash va Kirish"}
                 </button>
               </form>
             )}

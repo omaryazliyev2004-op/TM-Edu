@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { fetchApi } from "../api/user.api";
-import { useLang } from "../i18n/LanguageContext";
-
 const PER_PAGE = 10;
 
 // Pagination raqamlarini hosil qiladi: [1, ..., 4, 5, 6, ..., 10]
@@ -16,10 +14,7 @@ function getPageNumbers(current, total) {
 }
 
 export default function Oqituvchilar() {
-
-  const { t } = useLang();
-
-  const [users, setUsers] = useState([]);
+const [users, setUsers] = useState([]);
   const [allGroups, setAllGroups] = useState([]);
   const [view, setView] = useState("active"); // "active" | "archive"
   const [archived, setArchived] = useState([]);
@@ -169,7 +164,7 @@ export default function Oqituvchilar() {
           const finalGroups = (updatedTeacher.groups || validGroupIds).map((g) => {
             const gid = g && typeof g === "object" ? g.id : g;
             const found = allGroups.find((ag) => ag.id === Number(gid));
-            return found || (g && typeof g === "object" ? g : { id: Number(gid), name: `${t("Guruh")} #${gid}` });
+            return found || (g && typeof g === "object" ? g : { id: Number(gid), name: `${"Guruh"} #${gid}` });
           });
           
           updatedTeacher = {
@@ -203,7 +198,7 @@ export default function Oqituvchilar() {
         }
       }
     } catch (error) {
-      const xato = error.response?.data?.message || error.response?.data?.error || t("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring.");
+      const xato = error.response?.data?.message || error.response?.data?.error || "Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring.";
       alert(xato);
       console.log(error);
     }
@@ -249,7 +244,7 @@ export default function Oqituvchilar() {
         setDeleteId(null);
       }
     } catch (error) {
-      alert(t("Xatolik yuz berdi. O'qituvchini o'chirib bo'lmadi."));
+      alert("Xatolik yuz berdi. O'qituvchini o'chirib bo'lmadi.");
       console.log(error);
     }
   };
@@ -426,15 +421,15 @@ export default function Oqituvchilar() {
         <div className="oq-modal">
           <div className="oq-modal-header">
             <div>
-              <p className="oq-modal-title">{t("Guruhga biriktirish")}</p>
-              <p className="oq-modal-sub">{t("Bir yoki bir nechta guruhni tanlang")}</p>
+              <p className="oq-modal-title">{"Guruhga biriktirish"}</p>
+              <p className="oq-modal-sub">{"Bir yoki bir nechta guruhni tanlang"}</p>
             </div>
             <button className="oq-close" onClick={() => setModalOpen(false)}><i className="fa-solid fa-xmark"></i></button>
           </div>
           <div className="oq-modal-body">
             <input
               className="oq-input"
-              placeholder={t("Guruh qidirish...")}
+              placeholder={"Guruh qidirish..."}
               value={guruhQidiruv}
               onChange={e => setGuruhQidiruv(e.target.value)}
               style={{ marginBottom: 8 }}
@@ -449,8 +444,8 @@ export default function Oqituvchilar() {
             ))}
           </div>
           <div className="oq-modal-footer">
-            <button className="top-btn btn-outline" style={{ padding: "0 20px" }} onClick={() => setModalOpen(false)}>{t("Bekor qilish")}</button>
-            <button className="top-btn btn-primary" style={{ padding: "0 20px" }} onClick={saveGuruhlar}>{t("Qo'shish")}</button>
+            <button className="top-btn btn-outline" style={{ padding: "0 20px" }} onClick={() => setModalOpen(false)}>{"Bekor qilish"}</button>
+            <button className="top-btn btn-primary" style={{ padding: "0 20px" }} onClick={saveGuruhlar}>{"Qo'shish"}</button>
           </div>
         </div>
       </div>
@@ -458,16 +453,16 @@ export default function Oqituvchilar() {
       {/* ── O'qituvchini o'chirish tasdiqlash modali ── */}
       <div className={`teacher-del-overlay ${deleteModalOpen ? "open" : ""}`} onClick={cancelDelete}>
         <div className="teacher-del-modal" onClick={(e) => e.stopPropagation()}>
-          <h3 className="teacher-del-title">{t("O'qituvchini o'chirish")}</h3>
+          <h3 className="teacher-del-title">{"O'qituvchini o'chirish"}</h3>
           <p className="teacher-del-text">
-            {t("Siz ushbu o'qituvchini o'chirishga ishonchingiz komilmi? Bu amal qaytarib bo'lmaydi.")}
+            {"Siz ushbu o'qituvchini o'chirishga ishonchingiz komilmi? Bu amal qaytarib bo'lmaydi."}
           </p>
           <div className="teacher-del-btns">
             <button className="teacher-del-btn-cancel" onClick={cancelDelete}>
-              {t("Bekor qilish")}
+              {"Bekor qilish"}
             </button>
             <button className="teacher-del-btn-confirm" onClick={handleDelete}>
-              {t("O'chirish")}
+              {"O'chirish"}
             </button>
           </div>
         </div>
@@ -480,36 +475,36 @@ export default function Oqituvchilar() {
       <div className={`oqit-drawer ${drawerOpen ? "open" : ""}`}>
         <div className="oq-header">
           <div>
-            <h2 className="oq-title">{editingTeacher ? t("O'qituvchi tahrirlash") : t("O'qituvchi qo'shish")}</h2>
-            <p className="oq-subtitle">{editingTeacher ? t("O'qituvchi ma'lumotlarini o'zgartiring va saqlang.") : t("Bu yerda siz yangi o'qituvchi qo'shishingiz mumkin.")}</p>
+            <h2 className="oq-title">{editingTeacher ? "O'qituvchi tahrirlash" : "O'qituvchi qo'shish"}</h2>
+            <p className="oq-subtitle">{editingTeacher ? "O'qituvchi ma'lumotlarini o'zgartiring va saqlang." : "Bu yerda siz yangi o'qituvchi qo'shishingiz mumkin."}</p>
           </div>
           <button className="oq-close" onClick={() => setDrawer(false)}><i className="fa-solid fa-xmark"></i></button>
         </div>
         <div className="oq-body">
-          <label className="oq-label">{t("Telefon raqam")}</label>
+          <label className="oq-label">{"Telefon raqam"}</label>
           <input className="oq-input" value={tel} onChange={e => setTel(e.target.value)} />
 
-          <label className="oq-label">{t("Mail")}</label>
-          <input className="oq-input" placeholder={t("Elektron pochtani kiriting")} value={email} onChange={e => setEmail(e.target.value)} />
+          <label className="oq-label">{"Mail"}</label>
+          <input className="oq-input" placeholder={"Elektron pochtani kiriting"} value={email} onChange={e => setEmail(e.target.value)} />
 
-          <label className="oq-label">{t("O'qituvchi FIO")}</label>
-          <input className="oq-input" placeholder={t("Ma'lumotni kiriting")} value={fio} onChange={e => setFio(e.target.value)} />
+          <label className="oq-label">{"O'qituvchi FIO"}</label>
+          <input className="oq-input" placeholder={"Ma'lumotni kiriting"} value={fio} onChange={e => setFio(e.target.value)} />
 
-          <label className="oq-label">{t("Manzil")}</label>
-          <input className="oq-input" placeholder={t("Manzilni kiriting")} value={manzil} onChange={e => setManzil(e.target.value)} />
+          <label className="oq-label">{"Manzil"}</label>
+          <input className="oq-input" placeholder={"Manzilni kiriting"} value={manzil} onChange={e => setManzil(e.target.value)} />
 
           <label className="oq-label">
-            {editingTeacher ? t("Parol (ixtiyoriy, faqat o'zgartirish uchun)") : t("Parol")}
+            {editingTeacher ? "Parol (ixtiyoriy, faqat o'zgartirish uchun)" : "Parol"}
           </label>
           <input
             className="oq-input"
-            placeholder={editingTeacher ? t("Yangi parol kiriting (ixtiyoriy)") : t("Parolni kiriting")}
+            placeholder={editingTeacher ? "Yangi parol kiriting (ixtiyoriy)" : "Parolni kiriting"}
             type="password"
             value={parol}
             onChange={(e) => setParol(e.target.value)}
           />
 
-          <label className="oq-label">{t("Guruh")}</label>
+          <label className="oq-label">{"Guruh"}</label>
           {selectedGuruhlar.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
               {selectedGuruhlar.map(id => {
@@ -532,10 +527,10 @@ export default function Oqituvchilar() {
               color: "#7c3aed", fontWeight: 600, fontSize: 15
             }}
           >
-            <i className="fa-solid fa-plus"></i> {selectedGuruhlar.length > 0 ? `${selectedGuruhlar.length} ${t("ta guruh tanlandi")}` : t("Qo'shish")}
+            <i className="fa-solid fa-plus"></i> {selectedGuruhlar.length > 0 ? `${selectedGuruhlar.length} ${"ta guruh tanlandi"}` : "Qo'shish"}
           </button>
 
-          <label className="oq-label">{t("Surati")}</label>
+          <label className="oq-label">{"Surati"}</label>
           <label className="drag-drop" style={{ display: "block" }}>
             <input
               type="file"
@@ -569,7 +564,7 @@ export default function Oqituvchilar() {
               color: "#444", fontSize: 14, fontWeight: 600, cursor: "pointer"
             }}
           >
-            {t("Bekor qilish")}
+            {"Bekor qilish"}
           </button>
           <button
             onClick={create}
@@ -579,7 +574,7 @@ export default function Oqituvchilar() {
               color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer"
             }}
           >
-            {editingTeacher ? t("Yangilash") : t("Saqlash")}
+            {editingTeacher ? "Yangilash" : "Saqlash"}
           </button>
         </div>
       </div>
@@ -587,16 +582,16 @@ export default function Oqituvchilar() {
       {/* Page Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1e293b", margin: "0 0 8px 0" }}>{t("O'qituvchilar")}</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1e293b", margin: "0 0 8px 0" }}>{"O'qituvchilar"}</h1>
           <p style={{ fontSize: 14, color: "#94a3b8", margin: 0 }}>
-            {t("Ushbu sahifada siz o'qituvchilar ro'yxatini va ularning ma'lumotlarini topasiz. Har bir o'qituvchining ismi, fanlari va aloqa ma'lumotlari keltirilgan.")}
+            {"Ushbu sahifada siz o'qituvchilar ro'yxatini va ularning ma'lumotlarini topasiz. Har bir o'qituvchining ismi, fanlari va aloqa ma'lumotlari keltirilgan."}
           </p>
         </div>
         <button
           className="top-btn btn-primary"
           onClick={openAddTeacher}
         >
-          <i className="fa-solid fa-plus" style={{ fontSize: 14 }}></i> {t("O'qituvchi qo'shish")}
+          <i className="fa-solid fa-plus" style={{ fontSize: 14 }}></i> {"O'qituvchi qo'shish"}
         </button>
       </div>
 
@@ -606,19 +601,19 @@ export default function Oqituvchilar() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", borderBottom: "1px solid #f1f5f9" }}>
           <div style={{ display: "flex", gap: 12 }}>
             <button className="top-btn btn-outline">
-              <i className="fa-solid fa-filter" style={{ fontSize: 14 }}></i> {t("Filters")}
+              <i className="fa-solid fa-filter" style={{ fontSize: 14 }}></i> {"Filters"}
             </button>
             <button
               className="top-btn btn-outline"
               onClick={() => { setView(view === "archive" ? "active" : "archive"); setPage(1); }}
               style={view === "archive" ? { background: "#7c3aed", color: "#fff", borderColor: "#7c3aed" } : undefined}
             >
-              {t("Arxiv")}
+              {"Arxiv"}
             </button>
           </div>
           <div style={{ position: "relative" }}>
             <input
-              placeholder={t("Search")}
+              placeholder={"Search"}
               style={{
                 height: 40, width: 240, borderRadius: 10, border: "1px solid #e5e7eb",
                 paddingLeft: 16, outline: "none", fontSize: 14, background: "#fff", color: "#1e293b"
@@ -637,27 +632,27 @@ export default function Oqituvchilar() {
                     {users?.data?.length > 0 && users.data.every(d => d.selected) && <i className="fa-solid fa-check"></i>}
                   </div>
                 </th>
-                <th className="oq-th">{t("Nomi")} <i className="fa-solid fa-arrow-down" style={{ fontSize: 11, marginLeft: 6, color: "#94a3b8" }}></i></th>
-                <th className="oq-th">{t("Guruh")}</th>
-                <th className="oq-th">{t("Telefon raqamlari")}</th>
-                <th className="oq-th">{t("Email")}</th>
-                <th className="oq-th">{t("Manzil")}</th>
-                <th className="oq-th">{t("Yaratilgan sana")}</th>
-                <th className="oq-th" style={{ textAlign: "right" }}>{t("Amallar")}</th>
+                <th className="oq-th">{"Nomi"} <i className="fa-solid fa-arrow-down" style={{ fontSize: 11, marginLeft: 6, color: "#94a3b8" }}></i></th>
+                <th className="oq-th">{"Guruh"}</th>
+                <th className="oq-th">{"Telefon raqamlari"}</th>
+                <th className="oq-th">{"Email"}</th>
+                <th className="oq-th">{"Manzil"}</th>
+                <th className="oq-th">{"Yaratilgan sana"}</th>
+                <th className="oq-th" style={{ textAlign: "right" }}>{"Amallar"}</th>
               </tr>
             </thead>
             <tbody>
               {view === "archive" && archiveLoading && (
                 <tr>
                   <td className="oq-td" colSpan={8} style={{ textAlign: "center", color: "#888" }}>
-                    {t("Arxiv yuklanmoqda...")}
+                    {"Arxiv yuklanmoqda..."}
                   </td>
                 </tr>
               )}
               {view === "archive" && !archiveLoading && archived.length === 0 && (
                 <tr>
                   <td className="oq-td" colSpan={8} style={{ textAlign: "center", color: "#888" }}>
-                    {t("Arxivda o'qituvchi yo'q")}
+                    {"Arxivda o'qituvchi yo'q"}
                   </td>
                 </tr>
               )}
@@ -666,7 +661,7 @@ export default function Oqituvchilar() {
                   <td className="oq-td">
                     {view === "archive" ? (
                       <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: "rgba(150,150,150,0.15)", color: "#888" }}>
-                        {t("ARXIV")}
+                        {"ARXIV"}
                       </span>
                     ) : (
                       <div className={`custom-cb ${row.selected ? "checked" : ""}`} onClick={() => toggleSelect(row.id)}>
@@ -687,7 +682,7 @@ export default function Oqituvchilar() {
                           />
                         )}
                       </div>
-                      <span style={{ fontWeight: 600, color: "#222" }}>{row.full_name || t("Ism yo'q")}</span>
+                      <span style={{ fontWeight: 600, color: "#222" }}>{row.full_name || "Ism yo'q"}</span>
                     </div>
                   </td>
                   <td className="oq-td group-cell">
@@ -695,10 +690,10 @@ export default function Oqituvchilar() {
                       {(row.groups || []).map((g, i) => <span key={i} className="badge">{g.name || g.nomi || g}</span>)}
                     </div>
                   </td>
-                  <td className="oq-td">{row.phone || t("Yo'q")}</td>
-                  <td className="oq-td">{row.email || t("Yo'q")}</td>
-                  <td className="oq-td">{row.address || t("Yo'q")}</td>
-                  <td className="oq-td">{row.created_at ? new Date(row.created_at).toLocaleDateString("ru-RU") : t("Yo'q")}</td>
+                  <td className="oq-td">{row.phone || "Yo'q"}</td>
+                  <td className="oq-td">{row.email || "Yo'q"}</td>
+                  <td className="oq-td">{row.address || "Yo'q"}</td>
+                  <td className="oq-td">{row.created_at ? new Date(row.created_at).toLocaleDateString("ru-RU") : "Yo'q"}</td>
                   <td className="oq-td">
                     {view === "archive" ? (
                       <div style={{ textAlign: "right", color: "#bbb" }}>—</div>
@@ -724,7 +719,7 @@ export default function Oqituvchilar() {
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={safePage <= 1}
           >
-            <i className="fa-solid fa-arrow-left"></i> {t("Previous")}
+            <i className="fa-solid fa-arrow-left"></i> {"Previous"}
           </button>
           <div style={{ display: "flex", gap: 6 }}>
             {getPageNumbers(safePage, totalPages).map((p, i) => (
@@ -748,7 +743,7 @@ export default function Oqituvchilar() {
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={safePage >= totalPages}
           >
-            {t("Next")} <i className="fa-solid fa-arrow-right"></i>
+            {"Next"} <i className="fa-solid fa-arrow-right"></i>
           </button>
         </div>
       </div>

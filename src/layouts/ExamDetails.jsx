@@ -1,11 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
-import { useLang } from "../i18n/LanguageContext";
-
 export default function ExamDetails() {
-  const { t } = useLang();
-  const navigate = useNavigate();
+const navigate = useNavigate();
   const location = useLocation();
   const { groupId, examId } = useParams();
   const isTeacherPath = location.pathname.startsWith("/teacher");
@@ -505,16 +502,16 @@ export default function ExamDetails() {
           <div className="ed-detail-block">
             <div className="ed-info-group">
               <div className="ed-info-item">
-                <span className="ed-info-label">{t("Mavzu")}</span>
+                <span className="ed-info-label">{"Mavzu"}</span>
                 <span className="ed-info-value">{exam.topic}</span>
               </div>
               <div className="ed-info-item">
-                <span className="ed-info-label">{t("Imtihon vaqti")}</span>
+                <span className="ed-info-label">{"Imtihon vaqti"}</span>
                 <span className="ed-info-value">{exam.startTime} - {exam.endTime}</span>
               </div>
             </div>
             <button className="ed-publish-btn" disabled>
-              {t("E'lon qilish")}
+              {"E'lon qilish"}
             </button>
           </div>
 
@@ -524,28 +521,28 @@ export default function ExamDetails() {
               className={`ed-tab-btn ${activeTab === "waiting" ? "active" : ""}`}
               onClick={() => setActiveTab("waiting")}
             >
-              {t("Kutayotganlar")}
+              {"Kutayotganlar"}
               {waitingStudents.length > 0 && <span className="ed-badge waiting">{waitingStudents.length}</span>}
             </button>
             <button
               className={`ed-tab-btn ${activeTab === "returned" ? "active" : ""}`}
               onClick={() => setActiveTab("returned")}
             >
-              {t("Qaytarilganlar")}
+              {"Qaytarilganlar"}
               {returnedStudents.length > 0 && <span className="ed-badge returned">{returnedStudents.length}</span>}
             </button>
             <button
               className={`ed-tab-btn ${activeTab === "accepted" ? "active" : ""}`}
               onClick={() => setActiveTab("accepted")}
             >
-              {t("Qabul qilinganlar")} 
+              {"Qabul qilinganlar"} 
               {acceptedStudents.length > 0 && <span className="ed-badge accepted">{acceptedStudents.length}</span>}
             </button>
             <button
               className={`ed-tab-btn ${activeTab === "notSubmitted" ? "active" : ""}`}
               onClick={() => setActiveTab("notSubmitted")}
             >
-              {t("Bajarilmagan")}
+              {"Bajarilmagan"}
               {notSubmittedStudents.length > 0 && <span className="ed-badge not-submitted">{notSubmittedStudents.length}</span>}
             </button>
           </div>
@@ -553,15 +550,15 @@ export default function ExamDetails() {
           {/* Table Area */}
           <div className="ed-table-wrapper">
             {getActiveList().length === 0 ? (
-              <div className="ed-empty">{t("Ma'lumotlar mavjud emas")}</div>
+              <div className="ed-empty">{"Ma'lumotlar mavjud emas"}</div>
             ) : (
               <table className="ed-table">
                 <thead>
                   <tr>
-                    <th style={{ width: "40%" }}>{t("O'quvchi ismi")}</th>
-                    <th style={{ width: "22%" }}>{t("Topshirilgan vaqti")}</th>
-                    <th style={{ width: "22%" }}>{t("Tekshirilgan vaqti")}</th>
-                    <th style={{ width: "12%" }}>{t("Ball")}</th>
+                    <th style={{ width: "40%" }}>{"O'quvchi ismi"}</th>
+                    <th style={{ width: "22%" }}>{"Topshirilgan vaqti"}</th>
+                    <th style={{ width: "22%" }}>{"Tekshirilgan vaqti"}</th>
+                    <th style={{ width: "12%" }}>{"Ball"}</th>
                     <th style={{ width: "4%" }}></th>
                   </tr>
                 </thead>
@@ -592,7 +589,7 @@ export default function ExamDetails() {
                         <button
                           className="ed-edit-icon"
                           onClick={() => handleEditScore(student)}
-                          title={t("Ballni tahrirlash")}
+                          title={"Ballni tahrirlash"}
                         >
                           <i className="fa-solid fa-pencil"></i>
                         </button>
@@ -610,13 +607,13 @@ export default function ExamDetails() {
       {editingStudent && (
         <div className="ed-modal-overlay">
           <div className="ed-modal">
-            <h3 className="ed-modal-title">{editingStudent.name} {t("uchun ball kiritish")}</h3>
+            <h3 className="ed-modal-title">{editingStudent.name} {"uchun ball kiritish"}</h3>
             <input
               type="number"
               className="ed-modal-input"
               value={editScore}
               onChange={(e) => setEditScore(e.target.value)}
-              placeholder={t("Ballni kiriting")}
+              placeholder={"Ballni kiriting"}
               min="0"
               max="100"
               autoFocus
@@ -626,13 +623,13 @@ export default function ExamDetails() {
                 className="ed-modal-btn ed-modal-btn-cancel"
                 onClick={() => setEditingStudent(null)}
               >
-                {t("Bekor qilish")}
+                {"Bekor qilish"}
               </button>
               <button
                 className="ed-modal-btn ed-modal-btn-save"
                 onClick={handleSaveScore}
               >
-                {t("Saqlash")}
+                {"Saqlash"}
               </button>
             </div>
           </div>

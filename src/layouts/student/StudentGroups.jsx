@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchApi } from "../../api/user.api";
-import { useLang } from "../../i18n/LanguageContext";
-
 const UZ_MONTHS = ["Yan", "Fev", "Mar", "Apr", "May", "Iyn", "Iyl", "Avg", "Sen", "Okt", "Noy", "Dek"];
 
 const UZ_DAYS = {
@@ -39,7 +37,6 @@ function formatLessonTime(start, duration) {
 }
 
 export default function StudentGroups() {
-  const { t } = useLang();
   const navigate = useNavigate();
   const [tab, setTab] = useState("faol");
   const [groups, setGroups] = useState([]);
@@ -75,7 +72,7 @@ export default function StudentGroups() {
         .sg-wrap { background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.05); }
         .sg-tabs { display:flex; gap:34px; padding:18px 26px 0; border-bottom:1px solid #eee; }
         .sg-tab { padding-bottom:14px; font-size:16px; font-weight:500; color:#888; cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; transition:all .15s; }
-        .sg-tab.active { color:#7c3aed; border-bottom-color:#7c3aed; font-weight:600; }
+        .sg-tab.active { color:#f97316; border-bottom-color:#f97316; font-weight:600; }
         .sg-table { width:100%; border-collapse:collapse; }
         .sg-table th { text-align:left; font-size:15px; font-weight:700; color:#222; padding:18px 20px; }
         .sg-table th:first-child, .sg-table td:first-child { padding-left:26px; }
@@ -87,11 +84,11 @@ export default function StudentGroups() {
         }
         .sg-group-link:hover { color:#7c3aed; text-decoration:underline; }
         .sg-count {
-          min-width:34px; height:34px; padding:0 9px; border-radius:50px; background:#7c3aed; color:#fff;
+          min-width:34px; height:34px; padding:0 9px; border-radius:50px; background:#f97316; color:#fff;
           font-size:13px; font-weight:700; display:inline-flex; align-items:center; justify-content:center;
           gap:5px; cursor:pointer; border:none; transition:background .15s, transform .1s;
-        }
-        .sg-count:hover { background:#6d28d9; transform:translateY(-1px); }
+          }
+        .sg-count:hover { background:#ea580c; transform:translateY(-1px); }
         .sg-empty { padding:48px; text-align:center; color:#999; font-size:15px; }
 
         /* ── MODAL ── */
@@ -127,26 +124,26 @@ export default function StudentGroups() {
         <div className="sg-wrap">
           <div className="sg-tabs">
             <button className={`sg-tab${tab === "faol" ? " active" : ""}`} onClick={() => setTab("faol")}>
-              {t("Faol")}
+              {"Faol"}
             </button>
             <button className={`sg-tab${tab === "tugagan" ? " active" : ""}`} onClick={() => setTab("tugagan")}>
-              {t("Tugagan")}
+              {"Tugagan"}
             </button>
           </div>
 
           {loading ? (
-            <div className="sg-empty">{t("Yuklanmoqda...")}</div>
+            <div className="sg-empty">{"Yuklanmoqda..."}</div>
           ) : filtered.length === 0 ? (
-            <div className="sg-empty">{t("Guruhlar topilmadi")}</div>
+            <div className="sg-empty">{"Guruhlar topilmadi"}</div>
           ) : (
             <table className="sg-table">
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>{t("Guruh nomi")}</th>
-                  <th>{t("Yo'nalishi")}</th>
-                  <th>{t("O'qituvchi")}</th>
-                  <th>{t("Boshlash vaqti")}</th>
+                  <th>{"Guruh nomi"}</th>
+                  <th>{"Yo'nalishi"}</th>
+                  <th>{"O'qituvchi"}</th>
+                  <th>{"Boshlash vaqti"}</th>
                 </tr>
               </thead>
               <tbody>
@@ -170,7 +167,7 @@ export default function StudentGroups() {
                       <button
                         className="sg-count"
                         onClick={() => setModalGroup(g)}
-                        title={t("O'qituvchilarni ko'rish")}
+                        title={"O'qituvchilarni ko'rish"}
                       >
                         {g.teachersCount ?? g.teachers?.length ?? 0}
                       </button>
@@ -190,7 +187,7 @@ export default function StudentGroups() {
             <div className="sg-modal-head">
               <div>
                 <h2 className="sg-modal-title">{modalGroup.groupName || "—"}</h2>
-                <p className="sg-modal-status">{tab === "faol" ? t("Faol") : t("Tugagan")}</p>
+                <p className="sg-modal-status">{tab === "faol" ? "Faol" : "Tugagan"}</p>
               </div>
               <button className="sg-close" onClick={() => setModalGroup(null)}>
                 <i className="fa-solid fa-xmark"></i>
@@ -200,10 +197,10 @@ export default function StudentGroups() {
               <table className="sg-mtable">
                 <thead>
                   <tr>
-                    <th>{t("O'qituvchi")}</th>
-                    <th>{t("Roli")}</th>
-                    <th>{t("Dars kunlari")}</th>
-                    <th>{t("Dars vaqti")}</th>
+                    <th>{"O'qituvchi"}</th>
+                    <th>{"Roli"}</th>
+                    <th>{"Dars kunlari"}</th>
+                    <th>{"Dars vaqti"}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -218,7 +215,7 @@ export default function StudentGroups() {
                   {(!modalGroup.teachers || modalGroup.teachers.length === 0) && (
                     <tr>
                       <td colSpan={4} style={{ textAlign: "center", color: "#999" }}>
-                        {t("O'qituvchilar topilmadi")}
+                        {"O'qituvchilar topilmadi"}
                       </td>
                     </tr>
                   )}

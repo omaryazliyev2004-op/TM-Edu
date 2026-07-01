@@ -2,11 +2,8 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
-import { useLang } from "../i18n/LanguageContext";
-
 export default function ExamReview() {
-  const { t } = useLang();
-  const navigate = useNavigate();
+const navigate = useNavigate();
   const location = useLocation();
   const { groupId, examId, studentId } = useParams();
   const isTeacherPath = location.pathname.startsWith("/teacher");
@@ -112,7 +109,7 @@ export default function ExamReview() {
       navigate(examBackPath);
     } catch (err) {
       console.error(err);
-      alert(t("Xatolik yuz berdi."));
+      alert("Xatolik yuz berdi.");
     } finally {
       setLoading(false);
     }
@@ -518,17 +515,17 @@ export default function ExamReview() {
         {/* Breadcrumbs */}
         <div className="er-breadcrumbs">
           <span className="er-bc-link" onClick={() => navigate(examBackPath)}>
-            {t("Kutayotganlar")}
+            {"Kutayotganlar"}
           </span>
           <span className="er-bc-separator">&gt;</span>
-          <span className="er-bc-current">{t("Imtihon")}</span>
+          <span className="er-bc-current">{"Imtihon"}</span>
         </div>
 
         {/* Card 1: Imtihon vazifasi */}
         <div className="er-card">
-          <h2 className="er-card-title">{t("Imtihon vazifasi")}</h2>
+          <h2 className="er-card-title">{"Imtihon vazifasi"}</h2>
           <div className="er-inner-box">
-            <span className="er-sub-label">{t("Imtihon izohi:")}</span>
+            <span className="er-sub-label">{"Imtihon izohi:"}</span>
             <div className="er-sub-text">{examDesc}</div>
           </div>
         </div>
@@ -540,22 +537,22 @@ export default function ExamReview() {
           {/* Metadata Row */}
           <div className="er-meta-row">
             <div className="er-meta-item">
-              <span className="er-meta-label">{t("Vaqti:")}</span>
+              <span className="er-meta-label">{"Vaqti:"}</span>
               <span className="er-meta-val">{student.time}</span>
             </div>
             <div className="er-meta-item">
-              <span className="er-meta-label">{t("Fayllar soni:")}</span>
+              <span className="er-meta-label">{"Fayllar soni:"}</span>
               <span className="er-meta-val">{student.filesCount}</span>
             </div>
             <div className="er-meta-item">
-              <span className="er-meta-label">{t("Status:")}</span>
-              <span className="er-badge">{t(student.status)}</span>
+              <span className="er-meta-label">{"Status:"}</span>
+              <span className="er-badge">{student.status}</span>
             </div>
           </div>
 
           {/* Student comments */}
           <div className="er-inner-box" style={{ background: "#f8fafc", border: "none" }}>
-            <span className="er-sub-label">{t("Uyga vazifa izohi:")}</span>
+            <span className="er-sub-label">{"Uyga vazifa izohi:"}</span>
             <div className="er-sub-text" style={{ fontWeight: "500", color: "#334155" }}>
               {student.studentComment}
             </div>
@@ -568,14 +565,14 @@ export default function ExamReview() {
           <div className="er-info-box">
             <i className="fa-solid fa-circle-info"></i>
             <span>
-              {t("60-100 oralig'ida ball qo'yilgan vazifa 'Qabul qilingan', 0-59 oralig'ida ball qo'yilgan vazifa 'Qaytarilgan' hisoblanadi.")}
+              {"60-100 oralig'ida ball qo'yilgan vazifa 'Qabul qilingan', 0-59 oralig'ida ball qo'yilgan vazifa 'Qaytarilgan' hisoblanadi."}
             </span>
           </div>
 
           {/* Score Slider */}
           <div className="er-slider-group">
             <div className="er-slider-header">
-              <span className="er-slider-label">{t("Ball")}</span>
+              <span className="er-slider-label">{"Ball"}</span>
               <div 
                 className="er-value-box"
                 style={{
@@ -609,7 +606,7 @@ export default function ExamReview() {
               {/* Premium Passing Threshold Pill Badge */}
               <div className={`er-slider-passing-badge ${score >= 60 ? 'active' : ''}`}>
                 <span className="er-slider-passing-dot"></span>
-                {t("O'tish bali: 60")}
+                {"O'tish bali: 60"}
               </div>
             </div>
           </div>
@@ -618,12 +615,12 @@ export default function ExamReview() {
           <div className="er-comment-wrapper">
             <textarea
               className="er-textarea"
-              placeholder={t("Izohingiz")}
+              placeholder={"Izohingiz"}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               disabled={loading}
             />
-            <button className="er-mic-btn" type="button" title={t("Ovoz yozish")}>
+            <button className="er-mic-btn" type="button" title={"Ovoz yozish"}>
               <i className="fa-solid fa-microphone"></i>
             </button>
           </div>
@@ -636,7 +633,7 @@ export default function ExamReview() {
               disabled={loading}
               style={{ flex: 1, maxWidth: "180px" }}
             >
-              {t("Bekor qilish")}
+              {"Bekor qilish"}
             </button>
             <button
               className="er-btn er-btn-submit"
@@ -644,7 +641,7 @@ export default function ExamReview() {
               disabled={loading}
               style={{ flex: 1, maxWidth: "180px" }}
             >
-              {loading ? t("Yuborilmoqda...") : score >= 60 ? t("Qabul qilish") : t("Qaytarish")}
+              {loading ? "Yuborilmoqda..." : score >= 60 ? "Qabul qilish" : "Qaytarish"}
             </button>
           </div>
         </div>

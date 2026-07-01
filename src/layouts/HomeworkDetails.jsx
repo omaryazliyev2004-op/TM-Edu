@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
-import { useLang } from "../i18n/LanguageContext";
-
 // Tab -> backend status mapping (status values: ACCEPTED, REJECTED, PENDING, CHECKED)
 const TABS = [
   { key: "PENDING", label: "Kutayotganlar", badge: true },
@@ -21,8 +19,7 @@ function extractList(data) {
 }
 
 export default function HomeworkDetails() {
-  const { t } = useLang();
-  const { groupId, homeworkId } = useParams();
+const { groupId, homeworkId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const isTeacherPath = location.pathname.startsWith("/teacher");
@@ -47,9 +44,7 @@ export default function HomeworkDetails() {
         setLoading(true);
         setError(null);
 
-        // GET /api/v1/group/{groupId}/homework/{homeworkId}/results?status=...
-        // Bajarilmagan (CHECKED) uchun status yubormaymiz — backend status'siz so'rovda
-        // aynan bajarmaganlar ro'yxatini to'g'ri qaytaradi. Qolgan tablar aniq status bilan.
+  
         const base = `group/${groupId}/homework/${homeworkId}/results`;
         const responses = await Promise.all(
           TABS.map((tab) =>
@@ -86,8 +81,7 @@ export default function HomeworkDetails() {
 
         setResultsByStatus(byStatus);
 
-        // /results javobida mavzu/tugash vaqti bo'lmasligi mumkin — guruhning
-        // uyga vazifalar ro'yxatidan (homework/{groupId}) shu vazifani topib olamiz.
+        
         if (!hwInfo || !hwInfo.deadline || !hwInfo.topic || hwInfo.topic === "Uyga vazifa") {
           try {
             const hwRes = await fetchApi(`homework/${groupId}`);
@@ -119,7 +113,7 @@ export default function HomeworkDetails() {
       } catch (err) {
         console.error("Error loading homework details:", err);
         setError(
-          err.response?.data?.message || t("Ma'lumotlarni yuklashda xatolik yuz berdi")
+          err.response?.data?.message || "Ma'lumotlarni yuklashda xatolik yuz berdi"
         );
       } finally {
         setLoading(false);
@@ -129,7 +123,7 @@ export default function HomeworkDetails() {
     if (groupId && homeworkId) {
       loadHomeworkDetails();
     }
-  }, [groupId, homeworkId, t]);
+  }, [groupId, homeworkId]);
 
   const formatDate = (date) => {
     if (!date) return "-";
@@ -148,7 +142,7 @@ export default function HomeworkDetails() {
   if (loading) {
     return (
       <div className="p-5 text-center">
-        <p>{t("Ma'lumotlar yuklanmoqda...")}</p>
+        <p>{"Ma'lumotlar yuklanmoqda..."}</p>
       </div>
     );
   }
@@ -160,7 +154,7 @@ export default function HomeworkDetails() {
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-xl text-[#222] dark:text-slate-100 cursor-pointer mb-4"
         >
-          <i className="fa-solid fa-chevron-left"></i> {t("Orqaga")}
+          <i className="fa-solid fa-chevron-left"></i> {"Orqaga"}
         </button>
         <div className="text-[#e53935] mt-5">{error}</div>
       </div>
@@ -179,7 +173,7 @@ export default function HomeworkDetails() {
             <i className="fa-solid fa-chevron-left"></i>
           </button>
           <h1 className="text-[22px] font-bold text-[#1a1a2e] dark:text-slate-100 m-0">
-            {homework?.topic || t("Uyga vazifa")}
+            {homework?.topic || "Uyga vazifa"}
           </h1>
         </div>
 
@@ -188,11 +182,11 @@ export default function HomeworkDetails() {
           {/* Info Section */}
           <div className="bg-[#f7f8fa] dark:bg-[#141b27] rounded-[10px] px-6 py-[18px] mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex flex-col">
-              <span className="text-[13px] text-[#8a909c] dark:text-slate-400 mb-2">{t("Mavzu")}</span>
+              <span className="text-[13px] text-[#8a909c] dark:text-slate-400 mb-2">{"Mavzu"}</span>
               <span className="text-base font-bold text-[#1a1a2e] dark:text-slate-100">{homework?.topic || "-"}</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[13px] text-[#8a909c] dark:text-slate-400 mb-2">{t("Tugash vaqti")}</span>
+              <span className="text-[13px] text-[#8a909c] dark:text-slate-400 mb-2">{"Tugash vaqti"}</span>
               <span className="text-base font-bold text-[#1a1a2e] dark:text-slate-100">
                 {formatDate(homework?.deadline)}
               </span>
@@ -213,7 +207,7 @@ export default function HomeworkDetails() {
                       : "text-[#8a909c] dark:text-slate-400 border-transparent hover:text-[#1a1a2e] dark:hover:text-slate-100"
                   }`}
                 >
-                  {t(tab.label)}
+                  {tab.label}
                   {tab.badge && resultsByStatus[tab.key]?.length > 0 && (
                     <span 
                       className={`text-white rounded-full px-2 py-px text-xs font-bold min-w-5 text-center ${
@@ -238,10 +232,10 @@ export default function HomeworkDetails() {
               <thead>
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-medium text-[#8a909c] dark:text-slate-400 border-b border-[#eceef2] dark:border-[#28344a]">
-                    {t("O'quvchi ismi")}
+                    {"O'quvchi ismi"}
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-[#8a909c] dark:text-slate-400 border-b border-[#eceef2] dark:border-[#28344a]">
-                    {t("Uyga vazifa jo'natilgan vaqt")}
+                    {"Uyga vazifa jo'natilgan vaqt"}
                   </th>
                 </tr>
               </thead>
@@ -254,7 +248,7 @@ export default function HomeworkDetails() {
                     result.first_name ||
                     result.student?.full_name ||
                     result.student ||
-                    t("Noma'lum");
+                    "Noma'lum";
                   const submissionDate =
                     result.submitted_at ||
                     result.created_at ||
@@ -309,8 +303,8 @@ export default function HomeworkDetails() {
           ) : (
             <div className="text-center py-12 px-5 text-[#999] dark:text-slate-400 text-sm">
               {activeTab === "PENDING"
-                ? t("Hali hech kim uyga vazifani jo'natmagan")
-                : t("Bu kategoriyada ma'lumot yo'q")}
+                ? "Hali hech kim uyga vazifani jo'natmagan"
+                : "Bu kategoriyada ma'lumot yo'q"}
             </div>
           )}
         </div>
