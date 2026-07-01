@@ -4,7 +4,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Home, UserSquare2, Users, GraduationCap, Gift,
   BookOpen, LayoutGrid, Building2, ListTodo,
-  LayoutDashboard, ChevronRight, ChevronLeft, X, Zap,ClipboardList
+  LayoutDashboard, ChevronRight, ChevronLeft, X, Zap, ClipboardList, Globe, ChevronDown
 } from "lucide-react";
 
 const boshqarishMenuItems = [
@@ -16,11 +16,11 @@ const boshqarishMenuItems = [
 ];
 
 const navItems = [
-  { icon: Home,          label: "Asosiy",        to: "/dashboard", end: true },
-  { icon: UserSquare2,   label: "O'qituvchilar", to: "/dashboard/o'qituvcilar" },
-  { icon: Users,         label: "Guruhlar",      to: "/dashboard/sinflar" },
-  { icon: GraduationCap, label: "Talabalar",     to: "/dashboard/talabalar" },
-  { icon: Gift,          label: "Sov'g'alar",    to: "/dashboard/sovg'alar" },
+  { icon: Home, label: "Asosiy", to: "/dashboard", end: true },
+  { icon: UserSquare2, label: "O'qituvchilar", to: "/dashboard/o'qituvcilar" },
+  { icon: Users, label: "Guruhlar", to: "/dashboard/sinflar" },
+  { icon: GraduationCap, label: "Talabalar", to: "/dashboard/talabalar" },
+  { icon: Gift, label: "Sov'g'alar", to: "/dashboard/sovg'alar" },
 ];
 
 export default function DashboardLayout() {
@@ -120,11 +120,12 @@ export default function DashboardLayout() {
           position: relative;
           width: 100%;
           height: 54px;
-          padding: 0 16px;
+          padding: ${collapsed ? "0" : "0 16px"};
           border-radius: 16px;
           display: flex;
           align-items: center;
-          gap: 14px;
+          justify-content: ${collapsed ? "center" : "flex-start"};
+          gap: ${collapsed ? "0" : "14px"};
           font-size: 14px;
           font-weight: 600;
           color: #6b7280;
@@ -136,20 +137,19 @@ export default function DashboardLayout() {
           white-space: nowrap;
           overflow: hidden;
         }
-        .nav-item:hover { background: #f5f3ff; color: #7c3aed; transform: translateX(4px); }
+        .nav-item:hover { background: #f5f3ff; color: #7c3aed; transform: ${collapsed ? "none" : "translateX(4px)"}; }
         .nav-item.active,
         .nav-item.bq-active {
           background: #7c3aed;
           color: #fff;
           box-shadow: 0 20px 25px -5px rgba(167,139,250,0.35), 0 8px 10px -6px rgba(124,58,237,0.2);
-          transform: scale(1.02);
+          transform: ${collapsed ? "none" : "scale(1.02)"};
         }
         .nav-item.active .nav-icon,
         .nav-item.bq-active .nav-icon { color: #fff; transform: none; }
 
         .nav-icon { width: 20px; height: 20px; flex-shrink: 0; color: #6b7280; transition: color 0.2s, transform 0.2s; }
-        .nav-item:hover .nav-icon { color: #7c3aed; transform: scale(1.1); }
-
+        .nav-item:hover:not(.active):not(.bq-active) .nav-icon { color: #7c3aed; transform: scale(1.1); }
         .nav-label {
           overflow: hidden;
           white-space: nowrap;
@@ -204,13 +204,13 @@ export default function DashboardLayout() {
           display: flex;
           flex-direction: column;
         }
-        .side-panel.open { width: 280px; opacity: 1; }
+        .side-panel.open { width: 220px; opacity: 1; }
 
         .panel-header {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 16px 16px 12px 20px;
-          border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
-        }
+  display: flex; align-items: center;
+  padding: 16px 16px 12px 20px;
+  border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
+}
         .panel-title { font-weight: 700; font-size: 16px; color: #222; }
         .panel-close-btn {
           width: 28px; height: 28px; border-radius: 8px; border: none;
@@ -241,14 +241,14 @@ export default function DashboardLayout() {
 
         /* ── OBUNA ── */
         .obuna-box {
-          margin: 0 16px 8px;
-          border-radius: 24px;
-          background: rgba(255,247,237,0.6);
-          border: 1px solid rgba(254,215,170,0.5);
-          padding: 20px;
-          display: flex; flex-direction: column; gap: 14px;
-          overflow: hidden; flex-shrink: 0;
-        }
+           margin: 0 16px 8px;
+           border-radius: 18px;
+           background: rgba(255,247,237,0.6);
+           border: 1px solid rgba(254,215,170,0.5);
+           padding: 14px;
+           display: flex; flex-direction: column; gap: 10px;
+           overflow: hidden; flex-shrink: 0;
+          }  
 
         /* ── MAIN ── */
         .main-content {
@@ -317,7 +317,14 @@ export default function DashboardLayout() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               {/* Logo */}
-              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "28px 20px 20px", overflow: "hidden" }}>
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: collapsed ? "center" : "flex-start",
+                gap: 12,
+                padding: collapsed ? "28px 10px 20px" : "28px 20px 20px",
+                overflow: "hidden"
+              }}>
                 <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 16, background: "#ede9fe", display: "flex", alignItems: "center", justifyContent: "center", color: "#7c3aed", fontSize: 24, boxShadow: "0 2px 8px rgba(124,58,237,0.15)" }}>
                   <GraduationCap size={24} />
                 </div>
@@ -328,56 +335,56 @@ export default function DashboardLayout() {
                 }}>TM-Edu</span>
               </div>
 
-            <div style={{ flex: 1, padding: "0 12px", display: "flex", flexDirection: "column", gap: 6 }}>
-              {/* Nav items */}
-              {navItems.map((item, idx) => (
-                <NavLink
-                  key={idx}
-                  to={item.to}
-                  end={item.end}
-                  className={({ isActive }) => `nav-item${isActive && !isBoshqarish ? " active" : ""}`}
-                >
-                  <item.icon className="nav-icon" />
-                  <span className="nav-label">{item.label}</span>
-                  <span className="nav-tip">{item.label}</span>
-                </NavLink>
-              ))}
+              <div style={{ flex: 1, padding: "0 12px", display: "flex", flexDirection: "column", gap: 6 }}>
+                {/* Nav items */}
+                {navItems.map((item, idx) => (
+                  <NavLink
+                    key={idx}
+                    to={item.to}
+                    end={item.end}
+                    className={({ isActive }) => `nav-item${isActive && !isBoshqarish ? " active" : ""}`}
+                  >
+                    <item.icon className="nav-icon" />
+                    <span className="nav-label">{item.label}</span>
+                    <span className="nav-tip">{item.label}</span>
+                  </NavLink>
+                ))}
 
-              {/* Boshqarish */}
-              <button
-                onClick={() => setBoshqarishOpen(o => !o)}
-                className={`nav-item${isBoshqarish ? " bq-active" : ""}`}
-              >
-                <LayoutDashboard className="nav-icon" />
-                <span className="nav-label">Boshqarish</span>
-                <span className="nav-tip">Boshqarish</span>
-                <ChevronRight size={15} className={`chevron${boshqarishOpen ? " open" : ""}`} />
-              </button>
-            </div>
+                {/* Boshqarish */}
+                <button
+                  onClick={() => setBoshqarishOpen(o => !o)}
+                  className={`nav-item${isBoshqarish ? " bq-active" : ""}`}
+                >
+                  <LayoutDashboard className="nav-icon" />
+                  <span className="nav-label">Boshqarish</span>
+                  <span className="nav-tip">Boshqarish</span>
+                  <ChevronRight size={15} className={`chevron${boshqarishOpen ? " open" : ""}`} />
+                </button>
+              </div>
             </div>
 
             {/* Obuna box */}
             {!collapsed && (
               <div className="obuna-box">
-                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 16, background: "#fed7aa", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#f97316", boxShadow: "0 2px 8px rgba(249,115,22,0.15)" }}>
-                    <ClipboardList size={22} />
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 12, background: "#fed7aa", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#f97316", boxShadow: "0 2px 8px rgba(249,115,22,0.15)" }}>
+                    <ClipboardList size={17} />
                   </div>
                   <div>
-                    <p style={{ fontWeight: 700, fontSize: 15.5, margin: "0 0 2px", color: "#1e293b", lineHeight: 1.2 }}>Obuna</p>
-                    <p style={{ fontSize: 13.5, margin: 0, color: "#f97316", fontWeight: 600 }}>Obunangiz tugagan</p>
+                    <p style={{ fontWeight: 700, fontSize: 13, margin: "0 0 1px", color: "#1e293b", lineHeight: 1.2 }}>Obuna</p>
+                    <p style={{ fontSize: 11.5, margin: 0, color: "#f97316", fontWeight: 600 }}>Obunangiz tugagan</p>
                   </div>
                 </div>
                 <button style={{
-                  width: "100%", height: 48, borderRadius: 16, background: "#f97316",
+                  width: "100%", height: 38, borderRadius: 12, background: "#f97316",
                   color: "#fff", display: "flex", alignItems: "center", border: "none",
-                  justifyContent: "center", gap: 8, fontSize: 14.5, fontWeight: 700, cursor: "pointer",
+                  justifyContent: "center", gap: 6, fontSize: 12.5, fontWeight: 700, cursor: "pointer",
                   boxShadow: "0 4px 12px rgba(249,115,22,0.25)", transition: "background 0.15s, transform 0.15s"
                 }}
                   onMouseEnter={e => e.currentTarget.style.background = "#ea580c"}
                   onMouseLeave={e => e.currentTarget.style.background = "#f97316"}
                 >
-                  <Zap size={15} />
+                  <Zap size={13} />
                   Obunani yangilash
                 </button>
               </div>
@@ -396,9 +403,6 @@ export default function DashboardLayout() {
           <div className={`side-panel${boshqarishOpen ? " open" : ""}`}>
             <div className="panel-header">
               <span className="panel-title">Boshqarish</span>
-              <button className="panel-close-btn" onClick={() => setBoshqarishOpen(false)}>
-                <X size={15} />
-              </button>
             </div>
             <div className="panel-items">
               {boshqarishMenuItems.map((item, idx) => (
@@ -442,11 +446,22 @@ export default function DashboardLayout() {
             {/* Right side */}
             <div className="topbar-right">
 
-              {/* Til icon (dekorativ) */}
-              <button className="tb-icon-btn-sm" style={{ cursor: "default" }} disabled>
-                <i className="fa-solid fa-globe" style={{ color: "#6b7280" }}></i>
+              {/* Til tanlash (dekorativ) */}
+              <button
+                style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  height: 36, padding: "0 12px 0 10px",
+                  borderRadius: 999, border: "1px solid #e5e7eb",
+                  background: "#fff", color: "#374151",
+                  fontSize: 13.5, fontWeight: 600,
+                  cursor: "default"
+                }}
+                disabled
+              >
+                <Globe size={16} color="#6b7280" />
+                O'zbekcha
+                <ChevronDown size={14} color="#9ca3af" />
               </button>
-
               {/* Bell */}
               <button className="tb-icon-btn-sm" style={{ position: "relative" }}>
                 <i className="fa-regular fa-bell"></i>

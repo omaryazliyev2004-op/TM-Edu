@@ -7,7 +7,7 @@ import ErrorIcon from "@mui/icons-material/Error"
 import { useState, useEffect } from "react";
 import { fetchApi, getRole, roleHome } from "../api/user.api";
 export default function Login() {
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [showAlert, setShowAlert] = useState(false);
@@ -23,6 +23,8 @@ const navigate = useNavigate();
   const [smsToastOpen, setSmsToastOpen] = useState(false);
   const [successToastOpen, setSuccessToastOpen] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginSuccessOpen, setLoginSuccessOpen] = useState(false);
 
   const closeForgot = () => {
     setForgotOpen(false);
@@ -138,7 +140,10 @@ const navigate = useNavigate();
       const token = res.data?.data?.accessToken || res.data?.accessToken;
       if (token) {
         localStorage.setItem("token", token);
-        navigate(roleHome(getRole(token)));
+        setLoginSuccessOpen(true);
+        setTimeout(() => {
+          navigate(roleHome(getRole(token)));
+        }, 1200);
       } else {
         throw new Error("No token received");
       }
@@ -154,9 +159,16 @@ const navigate = useNavigate();
 
     <div className="min-h-screen flex w-full font-sans bg-white relative overflow-hidden">
       {showAlert && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[999] flex items-center gap-3 bg-[#fef2f2] border border-[#fecaca] text-[#b91c1c] rounded-2xl px-6 py-4 shadow-xl text-[16px] font-semibold min-w-[300px] justify-center">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[999] flex items-center gap-3 bg-[#dc2626] border border-[#b91c1c] text-white rounded-2xl px-6 py-4 shadow-xl text-[16px] font-semibold min-w-[300px] justify-center">
           <i className="fa-solid fa-circle-exclamation text-[20px]"></i>
           {"Login yoki Parol hato"}
+        </div>
+      )}
+
+      {loginSuccessOpen && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[999] flex items-center gap-3 bg-[#2E8738] text-white rounded-2xl px-6 py-4 shadow-[0_12px_30px_rgba(46,135,56,0.35)] text-[16px] font-semibold min-w-[300px] justify-center">
+          <i className="fa-solid fa-circle-check text-[20px]"></i>
+          {"Siz muvaffaqiyatli kirdingiz!"}
         </div>
       )}
 
@@ -190,7 +202,7 @@ const navigate = useNavigate();
       <div className="w-full lg:w-1/2 bg-white flex flex-col items-center justify-center py-6 px-4 sm:px-12 lg:px-24 relative overflow-y-auto">
         <div className="w-full max-w-[400px] flex flex-col items-center mt-auto pt-12">
           <h2 className="text-center text-[#243464] text-[11px] sm:text-[12px] font-bold tracking-[0.5px] leading-relaxed mb-6 uppercase">
-            MUHAMMAD AL-XORAZMIY NOMIDAGI<br/>TOSHKENT AXBOROT TEXNOLOGIYALARI<br/>UNIVERSITETI
+            MUHAMMAD AL-XORAZMIY NOMIDAGI<br />TOSHKENT AXBOROT TEXNOLOGIYALARI<br />UNIVERSITETI
           </h2>
           <img src="/logo.png" className="w-16 h-16 sm:w-20 sm:h-20 mb-6 object-contain" alt="" />
           <h2 className="font-bold text-[14px] sm:text-[16px] tracking-[1.5px] text-center text-[#243464] uppercase mb-12">
@@ -212,13 +224,22 @@ const navigate = useNavigate();
             <div className="relative mb-3">
               <input
                 onChange={(e) => setPassword(e.target.value)}
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••••"
                 className="outline-0 w-full h-[52px] bg-[#EEF2F6] rounded-[12px] px-4 text-[14px] font-medium text-[#1e293b] tracking-[4px] placeholder:tracking-normal placeholder-[#9CA3AF]"
               />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] flex items-center">
-                <VisibilityOffIcon sx={{ fontSize: 20 }} />
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] flex items-center bg-transparent border-0 cursor-pointer p-0"
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <VisibilityIcon sx={{ fontSize: 20 }} />
+                ) : (
+                  <VisibilityOffIcon sx={{ fontSize: 20 }} />
+                )}
+              </button>
             </div>
 
             <div className="flex justify-end mb-8">
@@ -283,15 +304,14 @@ const navigate = useNavigate();
             </button>
             <div className="flex items-center gap-4 mb-7">
               <div className="w-[46px] h-[46px] rounded-full bg-[#F4F4F7] text-[#243464] flex items-center justify-center text-[20px] shrink-0">
-                <i className={`fa-solid ${
-                  forgotStep === "otp"
-                    ? "fa-shield-halved"
-                    : forgotStep === "password"
-                      ? "fa-key"
-                      : forgotStep === "done"
-                        ? "fa-check"
-                        : "fa-phone"
-                }`}></i>
+                <i className={`fa-solid ${forgotStep === "otp"
+                  ? "fa-shield-halved"
+                  : forgotStep === "password"
+                    ? "fa-key"
+                    : forgotStep === "done"
+                      ? "fa-check"
+                      : "fa-phone"
+                  }`}></i>
               </div>
               <div>
                 <h2 className="text-[20px] leading-tight font-extrabold text-[#243464] m-0">
@@ -419,7 +439,7 @@ const navigate = useNavigate();
                     className="outline-0 w-full h-[48px] border border-[#DDE2EA] focus:border-[#243464] rounded-[12px] px-4 text-[15px] font-medium text-[#1F2D5A] placeholder-[#9AA3B2]"
                   />
                 </div>
-                
+
                 <label className="text-[12px] font-extrabold text-[#6F7788] uppercase tracking-wide mb-2">
                   {"PAROLNI TASDIQLANG"}
                 </label>

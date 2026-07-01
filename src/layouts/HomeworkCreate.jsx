@@ -4,7 +4,7 @@ import { fetchApi } from "../api/user.api";
 import CustomSelect from "../components/CustomSelect";
 
 export default function HomeworkCreate() {
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
   const backPath = location.pathname.startsWith("/teacher")
@@ -19,10 +19,10 @@ const navigate = useNavigate();
   const [topics, setTopics] = useState([]);
 
   const create = async () => {
-     if (!topic.trim() || !description.trim()) {
-        alert("Mavzu va izoh majburiy maydonlar");
-        return;
-      }
+    if (!topic || !description.trim()) {
+      alert("Mavzu va izoh majburiy maydonlar");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -31,7 +31,8 @@ const navigate = useNavigate();
       formData.append("lesson_id", topic);
       formData.append("group_id", id);
       if (file) {
-      formData.append("file", file);}
+        formData.append("file", file);
+      }
       formData.append("title", description);
 
       const res = await fetchApi.post("homework", formData);
@@ -43,6 +44,8 @@ const navigate = useNavigate();
     } catch (error) {
       alert("Xatolik yuz berdi. Iltimos barcha ma'lumotlarni to'ldiring.");
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,16 +53,18 @@ const navigate = useNavigate();
     async function fetchTopics() {
       try {
         const res = await fetchApi(`lessons/my/group/${id}`);
+        console.log(res.data);
         if (res.status === 200) {
-          setTopics(res.data?.data);
+          const data = res.data?.data;
+          setTopics(Array.isArray(data) ? data : []);
         }
-        console.log(res.data?.data);
       } catch (error) {
         console.error(error);
+        setTopics([]);
       }
     }
     fetchTopics();
-  }, []);
+  }, [id]);
 
   // Handle file drop
   const handleDrop = (e) => {

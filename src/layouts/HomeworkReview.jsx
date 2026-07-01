@@ -3,7 +3,6 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { fetchApi } from "../api/user.api";
 const FILE_BASE = "https://najot-edu.softwareengineer.uz/files/";
 const IMAGE_EXT = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"];
-
 function filePath(f) {
   if (!f) return "";
   if (typeof f === "string") return f;
@@ -31,7 +30,7 @@ function deepFindByKeys(obj, keys, depth = 0) {
 }
 
 export default function HomeworkReview() {
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const location = useLocation();
   const { groupId, homeworkId, studentId } = useParams();
 
@@ -46,6 +45,7 @@ const navigate = useNavigate();
   const [comment, setComment] = useState("");
   const [files, setFiles] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState(null); // { type: "success" | "error", message: string }
 
   const isTeacherPath = location.pathname.startsWith("/teacher");
   const backToList = () =>
@@ -125,7 +125,7 @@ const navigate = useNavigate();
       }
     }
     if (groupId && homeworkId && studentId) loadResult();
-  }, [groupId, homeworkId, studentId, t, location.state]);
+  }, [groupId, homeworkId, studentId, location.state]);
 
   // Field extraction — API javob shakli: { id, file, title, students: { id, full_name } }
   const studentName =
@@ -149,19 +149,19 @@ const navigate = useNavigate();
   const homeworkFiles = data?.homework?.file
     ? [data.homework.file]
     : Array.isArray(data?.homework?.files)
-    ? data.homework.files
-    : [];
+      ? data.homework.files
+      : [];
   const submissionFiles = Array.isArray(data?.files)
     ? data.files
     : Array.isArray(data?.homework_files)
-    ? data.homework_files
-    : Array.isArray(data?.answer_files)
-    ? data.answer_files
-    : Array.isArray(data?.answer?.files)
-    ? data.answer.files
-    : data?.file
-    ? [data.file]
-    : [];
+      ? data.homework_files
+      : Array.isArray(data?.answer_files)
+        ? data.answer_files
+        : Array.isArray(data?.answer?.files)
+          ? data.answer.files
+          : data?.file
+            ? [data.file]
+            : [];
   // Answer id boshqa nom bilan kelishi mumkin — javob obyektini chuqur qidiramiz
   const answerId =
     deepFindByKeys(data, [
@@ -208,7 +208,8 @@ const navigate = useNavigate();
 
   const handleSubmit = async () => {
     if (!answerId) {
-      alert("Homework answer ID topilmadi — baholab bo'lmaydi.");
+      setToast({ type: "error", message: "Homework answer ID topilmadi — baholab bo'lmaydi." });
+      setTimeout(() => setToast(null), 2500);
       return;
     }
     setSubmitting(true);
@@ -218,17 +219,21 @@ const navigate = useNavigate();
         title: comment,
         homework_answer_id: Number(answerId),
       });
-      alert(
-        isPassed
-          ? "Vazifa qabul qilindi!"
-          : "Vazifa qaytarildi!"
-      );
-      backToList();
+      setToast({
+        type: "success",
+        message: isPassed ? "Vazifa qabul qilindi!" : "Vazifa qaytarildi!",
+      });
+      setTimeout(() => {
+        setToast(null);
+        backToList();
+      }, 1200);
     } catch (err) {
       console.error("Baholashda xatolik:", err);
-      alert(
-        err.response?.data?.message || "Baholashda xatolik yuz berdi."
-      );
+      setToast({
+        type: "error",
+        message: err.response?.data?.message || "Baholashda xatolik yuz berdi.",
+      });
+      setTimeout(() => setToast(null), 2500);
     } finally {
       setSubmitting(false);
     }
@@ -295,6 +300,21 @@ const navigate = useNavigate();
 
   return (
     <div style={{ padding: "24px", minHeight: "100vh", background: "#f8fafc" }}>
+      {toast && (
+        <div
+          style={{
+            position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)",
+            zIndex: 999, display: "flex", alignItems: "center", gap: 12,
+            background: toast.type === "success" ? "#2E8738" : "#dc2626",
+            color: "#fff", borderRadius: 16, padding: "16px 24px",
+            boxShadow: "0 12px 30px rgba(0,0,0,0.2)", fontSize: 16, fontWeight: 600,
+            minWidth: 300, justifyContent: "center",
+          }}
+        >
+          <i className={`fa-solid ${toast.type === "success" ? "fa-circle-check" : "fa-circle-exclamation"}`} style={{ fontSize: 20 }}></i>
+          {toast.message}
+        </div>
+      )}
       <style>{`
         .hr-container { max-width: 860px; margin: 0; }
         .hr-breadcrumbs {
