@@ -409,7 +409,10 @@ const [users, setUsers] = useState([]);
         .g-table { width: 100%; border-collapse: collapse; background: #fff; }
         .g-th { padding: 16px 20px; text-align: left; font-size: 13.5px; font-weight: 700; color: #1e293b; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
         .g-td { padding: 16px 20px; font-size: 14px; font-weight: 500; color: #1e293b; border-bottom: 1px solid #f1f5f9; vertical-align: middle; white-space: nowrap; }
-        .g-row:hover { background: #f8fafc; }
+        .g-row { transition:background .15s; }
+        .g-row.clickable { cursor:pointer; }
+        .g-row.clickable:hover { background:#f8fafc; }
+        .g-row.clickable:hover .g-name-text { color:#7c3aed; text-decoration:underline; }
 
         /* ── Teacher Column Scroll ── */
         .g-oqituvchi-cell { max-height: 90px; overflow-y: auto; min-width: 150px; padding-right: 8px; }
@@ -774,7 +777,11 @@ const [users, setUsers] = useState([]);
               {(activeTab === "arxiv" ? archived : users?.data || []).map(g => {
                 const active = isGroupActive(g);
                 return (
-                <tr key={g.id} className="g-row">
+                <tr 
+                  key={g.id} 
+                  className="g-row clickable"
+                  onClick={() => navigate(`/dashboard/sinflar/${g.id}`)}
+                >
                   <td className="g-td">
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       {activeTab === "arxiv" ? (
@@ -782,7 +789,7 @@ const [users, setUsers] = useState([]);
                           <button
                             className={`g-toggle ${active ? "on" : ""}`}
                             type="button"
-                            onClick={() => toggleGroupFrontend(g)}
+                            onClick={(e) => { e.stopPropagation(); toggleGroupFrontend(g); }}
                           />
                           <span style={{
                             fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
@@ -797,7 +804,7 @@ const [users, setUsers] = useState([]);
                           <button
                             className={`g-toggle ${active ? "on" : ""}`}
                             type="button"
-                            onClick={() => toggleGroupFrontend(g)}
+                            onClick={(e) => { e.stopPropagation(); toggleGroupFrontend(g); }}
                           />
                           <span style={{
                             fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
@@ -810,12 +817,8 @@ const [users, setUsers] = useState([]);
                       )}
                     </div>
                   </td>
-                  <td
-                    className="g-td"
-                    style={{ fontWeight: 600, color: "#222", cursor: "pointer" }}
-                    onClick={() => navigate(`/dashboard/sinflar/${g.id}`)}
-                  >
-                    <span style={{ borderBottom: "1px dashed #aaa", paddingBottom: "2px" }}>
+                  <td className="g-td">
+                    <span className="g-name-text" style={{ fontWeight: 600, color: "#222", borderBottom: "1px dashed #aaa", paddingBottom: "2px" }}>
                       {g.name}
                     </span>
                   </td>
@@ -844,12 +847,12 @@ const [users, setUsers] = useState([]);
                     {activeTab === "arxiv" ? (
                       <div style={{ textAlign: "right", color: "#bbb" }}>—</div>
                     ) : (
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: 4 }}>
-                        <button className="g-act-btn blue" title={"Tahrirlash"} onClick={() => openEditGroup(g)}>
-                          <i className="fa-solid fa-pen"></i>
+                      <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                        <button className="g-act-btn blue" title={"Tahrirlash"} onClick={(e) => { e.stopPropagation(); openEditGroup(g); }}>
+                          <i className="fa-solid fa-pen" />
                         </button>
-                        <button className="g-act-btn red" title={"O'chirish"} onClick={() => confirmDelete(g.id)}>
-                          <i className="fa-regular fa-trash-can"></i>
+                        <button className="g-act-btn red" title={"O'chirish"} onClick={(e) => { e.stopPropagation(); confirmDelete(g.id); }}>
+                          <i className="fa-solid fa-trash" />
                         </button>
                       </div>
                     )}

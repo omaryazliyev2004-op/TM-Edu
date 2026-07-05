@@ -96,8 +96,12 @@ const navigate = useNavigate();
         .tg-table th { text-align:left; font-size:13.5px; font-weight:900; color:#63708a; padding:15px 20px; white-space:nowrap; background:#fff; }
         .tg-table th:first-child, .tg-table td:first-child { padding-left:22px; }
         .tg-table th:last-child, .tg-table td:last-child { padding-right:18px; text-align:right; }
-        .tg-row { border-top:1px solid #edf0f6; }
+        .tg-row { border-top:1px solid #edf0f6; transition:background .15s; }
+        .tg-row.clickable { cursor:pointer; }
+        .tg-row.clickable:hover { background:#f8fafc; }
         .tg-table td { font-size:13.5px; color:#2a354d; padding:18px 20px; vertical-align:middle; }
+        .tg-name-text { font-size:14px; font-weight:900; color:#2a354d; }
+        .tg-row.clickable:hover .tg-name-text { color:#831eff; text-decoration:underline; }
 
         .tg-status { display:flex; align-items:center; gap:10px; }
         .tg-toggle { width:42px; height:22px; border-radius:50px; border:none; cursor:pointer; position:relative; padding:0; transition:background .2s; }
@@ -109,8 +113,6 @@ const navigate = useNavigate();
         .tg-faol { color:#00b775; background:#e9fff4; }
         .tg-arxiv-lbl { color:#8c96a8; background:#f2f4f8; }
 
-        .tg-name-link { border:none; background:none; padding:0; cursor:pointer; font-size:14px; font-weight:900; color:#831eff; text-align:left; }
-        .tg-name-link:hover { color:#6417ce; text-decoration:underline; }
         .tg-kurs { display:inline-flex; align-items:center; padding:6px 13px; border-radius:50px; background:#fff1ff; color:#e100d8; font-size:11.5px; font-weight:900; }
         .tg-duration { font-weight:800; color:#6d7890; font-size:13.5px; }
         .tg-time { font-weight:900; color:#07122d; font-size:13.5px; }
@@ -187,13 +189,17 @@ const navigate = useNavigate();
                 const teacher = myName || g.teacher?.full_name || g.teacherName || "";
                 const studentsCount = g.studentsCount ?? g.students?.length ?? g.student_count ?? 0;
                 return (
-                  <tr className="tg-row" key={g.groupId ?? g.id ?? i}>
+                  <tr 
+                    className="tg-row clickable" 
+                    key={g.groupId ?? g.id ?? i}
+                    onClick={() => navigate(`/teacher/guruhlar/${g.groupId ?? g.id}`)}
+                  >
                     <td>
                       <div className="tg-status">
                         <button
                           className={`tg-toggle ${active ? "on" : "off"}`}
                           type="button"
-                          onClick={() => toggleGroupStatus(g)}
+                          onClick={(e) => { e.stopPropagation(); toggleGroupStatus(g); }}
                         >
                           <span />
                         </button>
@@ -203,12 +209,9 @@ const navigate = useNavigate();
                       </div>
                     </td>
                     <td>
-                      <button
-                        className="tg-name-link"
-                        onClick={() => navigate(`/teacher/guruhlar/${g.groupId ?? g.id}`)}
-                      >
+                      <span className="tg-name-text">
                         {g.groupName || g.name || "—"}
-                      </button>
+                      </span>
                     </td>
                     <td><span className="tg-kurs">{g.courseName || g.course?.name || "—"}</span></td>
                     <td><span className="tg-duration">{duration ? `${duration} ${"oy"}` : "—"}</span></td>

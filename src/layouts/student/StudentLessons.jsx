@@ -72,11 +72,14 @@ const groupName = location.state?.groupName || "";
     return () => { alive = false; };
   }, [groupId]);
 
-  const statuses = useMemo(() => {
-    const fromData = Array.from(new Set(lessons.map((l) => l.status).filter(Boolean)));
-    const merged = Array.from(new Set([...fromData, "Bajarilmagan"]));
-    return ["Barchasi", ...merged];
-  }, [lessons]);
+  const statuses = [
+    "Barchasi",
+    "Qabul qilingan",
+    "Berilmagan",
+    "Qaytarilgan",
+    "Bajarilmagan",
+    "Kutayotganlar"
+  ];
 
   // Tugash vaqti = dars yaratilgan vaqt + 20 soat
   const deadlineOf = (l) => {
@@ -126,38 +129,35 @@ const groupName = location.state?.groupName || "";
 
         .sl-select-wrap { position:relative; width:230px; }
         .sl-select-btn {
-          width:100%; height:46px; padding:0 40px 0 16px; border:1px solid #e3e6ea; border-radius:10px;
-          background:#fff; cursor:pointer; font-size:15px; color:#333; outline:none;
-          display:flex; align-items:center; justify-content:space-between; transition:border-color .15s;
+          width:100%; height:46px; padding:0 16px; border:1px solid #b88645; border-radius:6px;
+          background:#fff; cursor:pointer; font-size:16px; color:#111; outline:none;
+          display:flex; align-items:center; justify-content:space-between;
         }
-        .sl-select-btn:hover { border-color:#c9c2f0; }
-        .sl-select-btn:focus { border-color:#7c3aed; }
-        .sl-select-chevron { color:#888; font-size:12px; transition:transform .15s; }
+        .sl-select-chevron { color:#666; font-size:14px; transition:transform .15s; }
         .sl-select-chevron.open { transform:rotate(180deg); }
         .sl-select-list {
-          position:absolute; top:calc(100% + 6px); left:0; width:100%; background:#fff;
-          border:1px solid #e3e6ea; border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.1);
-          z-index:20; overflow:hidden; padding:6px;
+          position:absolute; top:calc(100% + 4px); left:0; width:100%; background:#fff;
+          border-radius:4px; box-shadow:0 6px 20px rgba(0,0,0,.15);
+          z-index:20; overflow:hidden;
           animation:sl-select-fade .12s ease;
         }
         @keyframes sl-select-fade { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
         .sl-select-option {
-          display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px;
-          font-size:14.5px; color:#333; cursor:pointer; transition:background .12s;
+          padding:12px 16px; font-size:15px; cursor:pointer; transition:filter .15s;
         }
-        .sl-select-option:hover { background:#f5f3ff; }
-        .sl-select-option.selected { background:#ede9fe; font-weight:600; }
-        .sl-select-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+        .sl-select-option:hover { filter:brightness(0.95); }
 
         .sl-wrap { background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.05); margin-top:14px; }
         .sl-table { width:100%; border-collapse:collapse; }
         .sl-table th { text-align:left; font-size:15px; font-weight:700; color:#222; padding:18px 22px; white-space:nowrap; }
         .sl-table th.sortable { cursor:pointer; user-select:none; }
         .sl-table th.sortable i { margin-left:8px; color:#7c3aed; }
-        .sl-row { border-top:1px solid #f0f0f0; }
+        .sl-row { border-top:1px solid #f0f0f0; transition:background .15s; }
+        .sl-row.clickable { cursor:pointer; }
+        .sl-row.clickable:hover { background:#f8fafc; }
         .sl-table td { font-size:15px; color:#333; padding:16px 22px; }
-        .sl-topic-link { border:none; background:none; padding:0; cursor:pointer; font-size:15px; font-weight:500; color:#333; text-align:left; }
-        .sl-topic-link:hover { color:#7c3aed; text-decoration:underline; }
+        .sl-topic-text { font-size:15px; font-weight:500; color:#333; }
+        .sl-row.clickable:hover .sl-topic-text { color:#7c3aed; text-decoration:underline; }
         .sl-topic-locked { font-size:15px; font-weight:500; color:#333; cursor:default; }
         .sl-video {
           display:inline-flex; align-items:center; justify-content:center;
@@ -189,14 +189,20 @@ const groupName = location.state?.groupName || "";
           {selectOpen && (
             <div className="sl-select-list">
               {statuses.map((s) => {
-                const dotColor = s === "Barchasi" ? "#9ca3af" : statusStyle(s).bg;
+                const isBarchasi = s === "Barchasi";
+                const st = statusStyle(s);
                 return (
                   <div
                     key={s}
-                    className={`sl-select-option${filter === s ? " selected" : ""}`}
+                    className="sl-select-option"
+                    style={{
+                      background: isBarchasi ? "#fff" : st.bg,
+                      color: isBarchasi ? "#333" : st.color,
+                      borderBottom: isBarchasi ? "1px solid #eee" : "none",
+                      borderTop: !isBarchasi ? "1px solid rgba(255,255,255,0.1)" : "none"
+                    }}
                     onClick={() => { setFilter(s); setSelectOpen(false); }}
                   >
-                    <span className="sl-select-dot" style={{ background: dotColor }}></span>
                     {s}
                   </div>
                 );
@@ -237,21 +243,24 @@ const groupName = location.state?.groupName || "";
                 const notGiven = String(l.status || "").toLowerCase() === "berilmagan";
                 const locked = noVideo && notGiven;
                 return (
-                  <tr className="sl-row" key={l.id ?? i}>
+                  <tr 
+                    className={`sl-row${!locked ? " clickable" : ""}`} 
+                    key={l.id ?? i}
+                    onClick={() => {
+                      if (!locked) {
+                        navigate(`/student/guruhlarim/${groupId}/${l.id}`, {
+                          state: { groupName },
+                        });
+                      }
+                    }}
+                  >
                     <td>
                       {locked ? (
                         <span className="sl-topic-locked">{l.topic || "—"}</span>
                       ) : (
-                        <button
-                          className="sl-topic-link"
-                          onClick={() =>
-                            navigate(`/student/guruhlarim/${groupId}/${l.id}`, {
-                              state: { groupName },
-                            })
-                          }
-                        >
+                        <span className="sl-topic-text">
                           {l.topic || "—"}
-                        </button>
+                        </span>
                       )}
                     </td>
                     <td>

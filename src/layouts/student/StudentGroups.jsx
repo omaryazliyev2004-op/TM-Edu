@@ -76,13 +76,12 @@ export default function StudentGroups() {
         .sg-table { width:100%; border-collapse:collapse; }
         .sg-table th { text-align:left; font-size:15px; font-weight:700; color:#222; padding:18px 20px; }
         .sg-table th:first-child, .sg-table td:first-child { padding-left:26px; }
-        .sg-row { border-top:1px solid #f0f0f0; }
-        .sg-table td { font-size:15px; color:#333; padding:18px 20px; }
-        .sg-group-link {
-          border:none; background:none; padding:0; cursor:pointer; font-size:15px;
-          font-weight:600; color:#333; text-align:left; transition:color .15s;
-        }
-        .sg-group-link:hover { color:#7c3aed; text-decoration:underline; }
+        .sg-row { border-top:1px solid #f0f0f0; transition:background .15s; }
+        .sg-row.clickable { cursor:pointer; }
+        .sg-row.clickable:hover { background:#f8fafc; }
+        .sg-table td { font-size:15px; color:#333; padding:16px 22px; }
+        .sg-group-text { font-size:15px; font-weight:600; color:#333; }
+        .sg-row.clickable:hover .sg-group-text { color:#7c3aed; text-decoration:underline; }
         .sg-count {
           min-width:34px; height:34px; padding:0 9px; border-radius:50px; background:#f97316; color:#fff;
           font-size:13px; font-weight:700; display:inline-flex; align-items:center; justify-content:center;
@@ -148,25 +147,26 @@ export default function StudentGroups() {
               </thead>
               <tbody>
                 {filtered.map((g, i) => (
-                  <tr className="sg-row" key={g.groupId ?? i}>
+                  <tr 
+                    className="sg-row clickable" 
+                    key={g.groupId ?? i}
+                    onClick={() =>
+                      navigate(`/student/guruhlarim/${g.groupId}`, {
+                        state: { groupName: g.groupName },
+                      })
+                    }
+                  >
                     <td>{i + 1}</td>
                     <td>
-                      <button
-                        className="sg-group-link"
-                        onClick={() =>
-                          navigate(`/student/guruhlarim/${g.groupId}`, {
-                            state: { groupName: g.groupName },
-                          })
-                        }
-                      >
+                      <span className="sg-group-text">
                         {g.groupName || "—"}
-                      </button>
+                      </span>
                     </td>
                     <td>{g.courseName || "—"}</td>
                     <td>
                       <button
                         className="sg-count"
-                        onClick={() => setModalGroup(g)}
+                        onClick={(e) => { e.stopPropagation(); setModalGroup(g); }}
                         title={"O'qituvchilarni ko'rish"}
                       >
                         {g.teachersCount ?? g.teachers?.length ?? 0}

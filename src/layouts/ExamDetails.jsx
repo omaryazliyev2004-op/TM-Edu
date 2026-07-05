@@ -358,20 +358,26 @@ const navigate = useNavigate();
           font-weight: 500;
         }
 
-        .ed-student-link {
-          color: #7c3aed;
-          text-decoration: none;
+        .ed-student-text {
+          color: #334155;
           font-weight: 600;
-          cursor: pointer;
-          background: none;
-          border: none;
-          padding: 0;
           font-size: 14px;
-          font-family: inherit;
-          text-align: left;
         }
 
-        .ed-student-link:hover {
+        .ed-table tr {
+          transition: background 0.15s;
+        }
+
+        .ed-table tr.clickable {
+          cursor: pointer;
+        }
+
+        .ed-table tr.clickable:hover {
+          background: #f8fafc;
+        }
+
+        .ed-table tr.clickable:hover .ed-student-text {
+          color: #7c3aed;
           text-decoration: underline;
         }
 
@@ -564,14 +570,15 @@ const navigate = useNavigate();
                 </thead>
                 <tbody>
                   {getActiveList().map((student) => (
-                    <tr key={student.id}>
+                    <tr 
+                      key={student.id}
+                      className="clickable"
+                      onClick={() => navigate(reviewPath(student.id))}
+                    >
                       <td>
-                        <button
-                          className="ed-student-link"
-                          onClick={() => navigate(reviewPath(student.id))}
-                        >
+                        <span className="ed-student-text">
                           {student.name}
-                        </button>
+                        </span>
                       </td>
                       <td>{student.submittedTime}</td>
                       <td>{student.checkedTime}</td>

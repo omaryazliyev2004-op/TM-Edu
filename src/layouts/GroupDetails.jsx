@@ -1081,12 +1081,12 @@ const isTeacherPath = location.pathname.startsWith("/teacher");
 
         /* Darsliklar Table */
         .gd-table-container {
-          background: #fff;
-          border: 1px solid #e0e0e0;
-          border-radius: 12px;
-          overflow: hidden;
-          margin-bottom: 24px;
+          background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 24px;
         }
+        .gd-table-row { transition:background .15s; border-bottom: 1px solid #f1f5f9; }
+        .gd-table-row.clickable { cursor:pointer; }
+        .gd-table-row.clickable:hover { background:#f8fafc; }
+        .gd-table-row.clickable:hover .gd-table-subject { color:#7c3aed !important; text-decoration:underline; }
         .gd-table {
           width: 100%;
           border-collapse: collapse;
@@ -1464,7 +1464,7 @@ const isTeacherPath = location.pathname.startsWith("/teacher");
           <button className="gd-back" onClick={() => navigate(-1)}>
             <i className="fa-solid fa-chevron-left"></i>
           </button>
-          {group?.name || "Yuklanmoqda..."}
+          {group ? (group.name || group.course?.name || "Guruh") : "Yuklanmoqda..."}
           <span className="gd-badge">{"Aktiv"}</span>
         </div>
         <button className="gd-stat-btn">
@@ -1995,14 +1995,17 @@ const isTeacherPath = location.pathname.startsWith("/teacher");
                   </tr>
                 </thead>
                 <tbody>
-                  {homework.map((hw) => {
+                  {homework.map((hw, idx) => {
                     return (
-                      <tr key={hw.id}>
-                        <td className="gd-table-index">{hw.id}</td>
+                      <tr 
+                        key={hw.id}
+                        className="gd-table-row clickable"
+                        onClick={() => navigate(homeworkDetailsPath(hw.homework?.[0]?.id ?? hw.id))}
+                      >
+                        <td className="gd-table-index">{idx + 1}</td>
                         <td
                           className="gd-table-subject"
-                          onClick={() => navigate(homeworkDetailsPath(hw.homework?.[0]?.id ?? hw.id))}
-                          style={{ cursor: "pointer", fontWeight: 600, color: "#1e293b" }}
+                          style={{ fontWeight: 600, color: "#1e293b" }}
                         >
                           {hw.topic}
                         </td>
@@ -2248,15 +2251,18 @@ const isTeacherPath = location.pathname.startsWith("/teacher");
                         ? new Date(ex.deadline).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
                         : "-";
                       return (
-                        <tr key={ex.id}>
-                          <td className="gd-table-index">{ex.id || (idx + 1)}</td>
+                        <tr 
+                          key={ex.id}
+                          className="gd-table-row clickable"
+                          onClick={() => navigate(examDetailsPath(ex.id))}
+                        >
+                          <td className="gd-table-index">{idx + 1}</td>
                           <td>
-                            <button
+                            <span
                               className="exam-mavzu-link"
-                              onClick={() => navigate(examDetailsPath(ex.id))}
                             >
                               {ex.title || ex.topic || "Examination"}
-                            </button>
+                            </span>
                           </td>
                           <td style={{ textAlign: "center", color: "#666" }}>
                             {ex.totalStudents ?? ex.existStudentsIngroup ?? "-"}

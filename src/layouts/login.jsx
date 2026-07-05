@@ -157,7 +157,7 @@ export default function Login() {
   };
   return (
 
-    <div className="min-h-screen flex w-full font-sans bg-white relative overflow-hidden">
+    <div className="min-h-screen flex w-full font-sans bg-white relative overflow-x-hidden">
       {showAlert && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[999] flex items-center gap-3 bg-[#dc2626] border border-[#b91c1c] text-white rounded-2xl px-6 py-4 shadow-xl text-[16px] font-semibold min-w-[300px] justify-center">
           <i className="fa-solid fa-circle-exclamation text-[20px]"></i>
@@ -187,7 +187,7 @@ export default function Login() {
       )}
 
       {/* Left side */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-[#243464] items-center justify-center">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[#243464] items-center justify-center overflow-hidden">
         {/* Decorative circles */}
         <div className="absolute top-[-15%] left-[-15%] w-[60%] h-[60%] rounded-full bg-white/[0.03] blur-[2px]"></div>
         <div className="absolute bottom-[-15%] right-[-15%] w-[50%] h-[50%] rounded-full bg-white/[0.03] blur-[2px]"></div>
@@ -199,7 +199,7 @@ export default function Login() {
       </div>
 
       {/* Right side */}
-      <div className="w-full lg:w-1/2 bg-white flex flex-col items-center justify-center py-6 px-4 sm:px-12 lg:px-24 relative overflow-y-auto">
+      <div className="w-full lg:w-1/2 bg-white flex flex-col items-center justify-center py-6 px-4 sm:px-12 lg:px-24 relative">
         <div className="w-full max-w-[400px] flex flex-col items-center mt-auto pt-12">
           <h2 className="text-center text-[#243464] text-[11px] sm:text-[12px] font-bold tracking-[0.5px] leading-relaxed mb-6 uppercase">
             MUHAMMAD AL-XORAZMIY NOMIDAGI<br />TOSHKENT AXBOROT TEXNOLOGIYALARI<br />UNIVERSITETI
@@ -209,14 +209,17 @@ export default function Login() {
             LEARNING MANAGEMENT SYSTEM
           </h2>
 
+          <style>{`
+            .pwd-input::placeholder { letter-spacing: normal; }
+          `}</style>
           <form onSubmit={handleLogin} className="flex flex-col w-full">
             <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-2 text-left">{"Login"}</label>
             <div className="relative mb-6">
               <input
                 onChange={(e) => setLogin(e.target.value)}
                 type="text"
-                placeholder="975661099"
-                className="outline-0 w-full h-[52px] bg-[#EEF2F6] rounded-[12px] px-4 text-[14px] font-medium text-[#1e293b] placeholder-[#9CA3AF]"
+                placeholder="+9989xxxxxxxx"
+                className="w-full h-[52px] bg-[#edf0f7] rounded-[14px] px-5 text-[15px] font-medium text-[#64748b] placeholder-[#9CA3AF] border border-[#d8dde8] focus:border-[#8b9fd4] focus:outline-none focus:bg-[#edf2fc] transition-all"
               />
             </div>
 
@@ -225,8 +228,9 @@ export default function Login() {
               <input
                 onChange={(e) => setPassword(e.target.value)}
                 type={showPassword ? "text" : "password"}
-                placeholder="••••••••••"
-                className="outline-0 w-full h-[52px] bg-[#EEF2F6] rounded-[12px] px-4 text-[14px] font-medium text-[#1e293b] tracking-[4px] placeholder:tracking-normal placeholder-[#9CA3AF]"
+                placeholder="password"
+                className="pwd-input w-full h-[52px] bg-[#edf0f7] rounded-[14px] px-5 pr-12 text-[15px] font-medium text-[#64748b] placeholder-[#9CA3AF] border border-[#d8dde8] focus:border-[#8b9fd4] focus:outline-none focus:bg-[#edf2fc] transition-all"
+                style={{ letterSpacing: showPassword ? "normal" : "3px" }}
               />
               <button
                 type="button"
